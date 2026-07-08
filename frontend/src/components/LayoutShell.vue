@@ -2,10 +2,12 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { applyThemeSettings, getThemeSettings, type ThemeSettings } from '../composables/useTheme'
+import { useUi } from '../composables/useUi'
 
 const theme = ref<ThemeSettings>(getThemeSettings())
 const sidebarOpen = ref(false)
 const isDesktop = ref(false)
+const { globalDateFilter, hasDateFilter, resetGlobalDateFilter, setGlobalDateFilter, toasts, removeToast } = useUi()
 
 const syncViewport = () => {
   isDesktop.value = window.innerWidth > 900
@@ -68,11 +70,39 @@ onBeforeUnmount(() => {
         <RouterLink to="/reports" class="nav-link" @click="closeSidebar">Reports</RouterLink>
         <RouterLink to="/settings" class="nav-link" @click="closeSidebar">Settings</RouterLink>
       </nav>
+
+      <section class="filter-panel">
+        <div class="filter-head">
+          <strong>Filter tanggal</strong>
+          <button v-if="hasDateFilter" class="clear-btn" type="button" @click="resetGlobalDateFilter">Reset</button>
+        </div>
+        <label class="filter-field">
+          <span>Dari</span>
+          <input :value="globalDateFilter.start" type="date" @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })" />
+        </label>
+        <label class="filter-field">
+          <span>Sampai</span>
+          <input :value="globalDateFilter.end" type="date" @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })" />
+        </label>
+      </section>
     </aside>
 
     <main class="content">
       <RouterView />
     </main>
+
+    <div class="toast-stack">
+      <button
+        v-for="item in toasts"
+        :key="item.id"
+        class="toast"
+        :class="item.tone"
+        type="button"
+        @click="removeToast(item.id)"
+      >
+        {{ item.message }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -150,6 +180,46 @@ nav {
   margin-top: 0.6rem;
 }
 
+.filter-panel {
+  margin-top: auto;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+  padding: 0.9rem;
+  background: rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.filter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--sidebar-text);
+}
+
+.filter-field input {
+  background: rgba(255,255,255,0.12);
+  color: var(--sidebar-text);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.clear-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: rgba(255,255,255,0.16);
+  color: white;
+  cursor: pointer;
+}
+
 .nav-link {
   color: var(--sidebar-text);
   text-decoration: none;
@@ -168,6 +238,33 @@ nav {
 .content {
   padding: 1.35rem;
 }
+
+.toast-stack {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.toast {
+  min-width: 220px;
+  max-width: 320px;
+  text-align: left;
+  border: none;
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  color: white;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.toast.success { background: #15803d; }
+.toast.info { background: #2563eb; }
+.toast.warning { background: #d97706; }
+.toast.error { background: #b91c1c; }
 
 @media (max-width: 900px) {
   .shell {
@@ -196,6 +293,16 @@ nav {
 
   .content {
     padding-top: 4.8rem;
+  }
+
+  .toast-stack {
+    left: 1rem;
+    right: 1rem;
+  }
+
+  .toast {
+    max-width: none;
+    width: 100%;
   }
 }
 </style>

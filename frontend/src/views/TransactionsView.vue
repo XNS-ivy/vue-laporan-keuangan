@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import TransactionForm from '../components/TransactionForm.vue'
 import { useFinance } from '../composables/useFinance'
 
-const { transactions, categories, recurringTransactions, upcomingRecurring, addTransaction, addCategory, addRecurringTransaction, applyRecurringTransaction, deleteRecurringTransaction, deleteTransaction } = useFinance()
+const { filteredTransactions: transactions, categories, recurringTransactions, upcomingRecurring, addTransaction, addCategory, addRecurringTransaction, applyRecurringTransaction, deleteRecurringTransaction, deleteTransaction } = useFinance()
 const filter = ref<'all' | 'income' | 'expense'>('all')
 const recurringForm = ref({
   title: '',

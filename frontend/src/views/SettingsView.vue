@@ -12,12 +12,14 @@ import {
   type ThemeMode,
   type ThemeSettings,
 } from '../composables/useTheme'
+import { useUi } from '../composables/useUi'
 
 const themeOptions: ThemeMode[] = ['light', 'dark', 'midnight']
 const themeDraft = ref<ThemeSettings>(getThemeSettings())
 const selectedPreset = ref('')
 const savedMessage = ref('')
 const pickerOpen = ref(false)
+const { pushToast } = useUi()
 
 const quickSwatches = ['#2563eb', '#0f766e', '#ea580c', '#dc2626', '#4f46e5', '#0f172a', '#f59e0b', '#14b8a6']
 
@@ -49,6 +51,7 @@ const savePreferences = () => {
   applyThemeSettings(normalized)
   dispatchThemeChange(normalized)
   savedMessage.value = `Tema disimpan: ${labelForTheme(normalized.mode)} dengan aksen ${normalized.primary.toUpperCase()}`
+  pushToast('Preferensi tema berhasil disimpan', 'success')
 }
 
 const applyPreset = () => {

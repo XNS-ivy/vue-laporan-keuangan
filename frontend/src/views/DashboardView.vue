@@ -7,7 +7,7 @@ import TransactionForm from '../components/TransactionForm.vue'
 import { useFinance } from '../composables/useFinance'
 
 const {
-  transactions,
+  filteredTransactions: transactions,
   categories,
   incomeTotal,
   expenseTotal,

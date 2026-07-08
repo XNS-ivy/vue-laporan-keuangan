@@ -2,9 +2,8 @@
 import { computed } from 'vue'
 import { useFinance } from '../composables/useFinance'
 
-const { automatedInsights, budgetAlerts, downloadCsvReport, exportSummaryText, monthlyComparison, transactions } = useFinance()
-
-const canExport = computed(() => transactions.value.length > 0)
+const { automatedInsights, budgetAlerts, downloadCsvReport, downloadPdfReport, exportSummaryText, filteredTransactions, monthlyComparison } = useFinance()
+const canExport = computed(() => filteredTransactions.value.length > 0)
 </script>
 
 <template>
@@ -13,15 +12,18 @@ const canExport = computed(() => transactions.value.length > 0)
       <div>
         <p class="eyebrow">Reports</p>
         <h1>Export laporan dan baca insight cepat</h1>
-        <p>Halaman ini menyiapkan ringkasan yang bisa diexport ke CSV dan mempermudah membaca insight tanpa harus membuka semua halaman.</p>
+        <p>Export sekarang mendukung CSV dan PDF. Isi laporan otomatis mengikuti filter tanggal global yang ada di sidebar.</p>
       </div>
     </header>
 
     <section class="grid">
       <article class="card">
         <h2>Export</h2>
-        <p class="subtle">Gunakan CSV untuk dibuka di Excel, Google Sheets, atau tools analisis lainnya.</p>
-        <button class="primary-btn" type="button" :disabled="!canExport" @click="downloadCsvReport">Download CSV</button>
+        <p class="subtle">CSV cocok untuk analisis lanjutan. PDF cocok untuk dibagikan atau disimpan sebagai laporan rapi.</p>
+        <div class="actions">
+          <button class="primary-btn" type="button" :disabled="!canExport" @click="downloadCsvReport">Download CSV</button>
+          <button class="ghost-btn" type="button" :disabled="!canExport" @click="downloadPdfReport">Download PDF</button>
+        </div>
       </article>
 
       <article class="card">
@@ -30,6 +32,7 @@ const canExport = computed(() => transactions.value.length > 0)
           <li>Pemasukan berubah {{ monthlyComparison.incomeChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.incomeChange.toLocaleString('id-ID') }}</li>
           <li>Pengeluaran berubah {{ monthlyComparison.expenseChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.expenseChange.toLocaleString('id-ID') }}</li>
           <li>Net berubah {{ monthlyComparison.netChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.netChange.toLocaleString('id-ID') }}</li>
+          <li>Transaksi terfilter: {{ filteredTransactions.length }}</li>
         </ul>
       </article>
     </section>
@@ -68,6 +71,7 @@ const canExport = computed(() => transactions.value.length > 0)
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1rem; box-shadow: var(--shadow); }
 .subtle { color: var(--muted); }
+.actions { display: flex; gap: 0.7rem; flex-wrap: wrap; }
 .alert-list { display: flex; flex-direction: column; gap: 0.7rem; }
 .alert-item { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.8rem 0.9rem; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border); }
 .alert-item.warning { border-color: #f59e0b; }
