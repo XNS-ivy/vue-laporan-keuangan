@@ -2,9 +2,10 @@
 import { computed, ref } from 'vue'
 import { useFinance } from '../composables/useFinance'
 
-const { budgets, addBudget, categories, deleteBudget, getBudgetSummary } = useFinance()
+const { addBudget, budgetAlerts, categories, currentMonthBudgetSummary, deleteBudget, getBudgetSummary, monthlyComparison } = useFinance()
 const month = ref(new Date().toISOString().slice(0, 7))
 const budgetItems = computed(() => getBudgetSummary(month.value))
+const expenseCategories = computed(() => categories.value.filter((item) => item.type === 'expense'))
 const form = ref({ category: '', amount: '', month: month.value })
 
 const submitBudget = () => {
@@ -19,9 +20,20 @@ const submitBudget = () => {
       <div>
         <p class="eyebrow">Planning</p>
         <h1>Atur batas pengeluaran bulanan</h1>
+        <p class="subtle">Budget sekarang dilengkapi alert otomatis dan konteks perbandingan bulan ke bulan.</p>
       </div>
       <input v-model="month" type="month" />
     </header>
+
+    <section v-if="budgetAlerts.length" class="card alert-card">
+      <h2>Alert Bulan Ini</h2>
+      <div class="alert-list">
+        <div v-for="item in budgetAlerts" :key="item.id" class="alert-item" :class="item.level">
+          <strong>{{ item.category }}</strong>
+          <span>{{ item.message }}</span>
+        </div>
+      </div>
+    </section>
 
     <div class="content-grid">
       <section class="card">
@@ -29,7 +41,10 @@ const submitBudget = () => {
         <div class="form-grid">
           <label>
             Kategori
-            <input v-model="form.category" placeholder="Contoh: Belanja" />
+            <input v-model="form.category" list="expense-categories" placeholder="Contoh: Belanja" />
+            <datalist id="expense-categories">
+              <option v-for="item in expenseCategories" :key="item.id" :value="item.name"></option>
+            </datalist>
           </label>
           <label>
             Nominal
@@ -42,7 +57,7 @@ const submitBudget = () => {
         </div>
         <button class="primary-btn" @click="submitBudget">Simpan Anggaran</button>
         <div class="chip-list">
-          <span v-for="item in categories" :key="item.id" class="chip">{{ item.name }}</span>
+          <span v-for="item in expenseCategories" :key="item.id" class="chip">{{ item.name }}</span>
         </div>
       </section>
 
@@ -61,28 +76,51 @@ const submitBudget = () => {
         </div>
       </section>
     </div>
+
+    <section class="card">
+      <h2>Perbandingan Bulan Berjalan</h2>
+      <div class="comparison-grid">
+        <div class="comparison-item">
+          <span>Pemasukan</span>
+          <strong>{{ monthlyComparison.incomeChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.incomeChange.toLocaleString('id-ID') }}</strong>
+        </div>
+        <div class="comparison-item">
+          <span>Pengeluaran</span>
+          <strong>{{ monthlyComparison.expenseChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.expenseChange.toLocaleString('id-ID') }}</strong>
+        </div>
+        <div class="comparison-item">
+          <span>Net</span>
+          <strong>{{ monthlyComparison.netChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.netChange.toLocaleString('id-ID') }}</strong>
+        </div>
+      </div>
+      <p class="subtle">Budget aktif bulan ini: {{ currentMonthBudgetSummary.length }} kategori.</p>
+    </section>
   </div>
 </template>
 
 <style scoped>
 .page { display: flex; flex-direction: column; gap: 1rem; }
 .page-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; color: #64748b; }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; color: var(--muted); }
+.subtle { color: var(--muted); }
 .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.card { background: white; border-radius: 16px; padding: 1rem; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1rem; box-shadow: var(--shadow); }
 .form-grid { display: grid; gap: 0.8rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 0.8rem; }
-label { display: flex; flex-direction: column; gap: 0.35rem; }
-input { border: 1px solid #cbd5e1; border-radius: 10px; padding: 0.7rem 0.8rem; background: #f8fafc; }
-.primary-btn, .ghost-btn { border: none; border-radius: 999px; padding: 0.65rem 1rem; cursor: pointer; }
-.primary-btn { background: #2563eb; color: white; }
-.ghost-btn { background: #fee2e2; color: #b91c1c; }
+label { display: flex; flex-direction: column; gap: 0.35rem; color: var(--text); }
 .chip-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
-.chip { background: #eff6ff; color: #1d4ed8; border-radius: 999px; padding: 0.4rem 0.7rem; font-size: 0.85rem; }
-.budget-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 0.7rem 0; border-bottom: 1px solid #e2e8f0; }
+.chip { border-radius: 999px; padding: 0.4rem 0.7rem; font-size: 0.85rem; }
+.budget-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
 .right { display: flex; flex-direction: column; gap: 0.4rem; min-width: 140px; }
-.bar { width: 100%; height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
-.bar span { display: block; height: 100%; background: linear-gradient(90deg, #2563eb, #22c55e); }
-.good { color: #16a34a; font-weight: 600; }
-.warn { color: #dc2626; font-weight: 600; }
+.bar { width: 100%; height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); }
+.good { color: var(--success); font-weight: 600; }
+.warn { color: var(--danger); font-weight: 600; }
+.alert-card { border-color: color-mix(in srgb, var(--danger) 20%, var(--border)); }
+.alert-list { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+.alert-item { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.8rem 0.9rem; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border); }
+.alert-item.warning { border-color: #f59e0b; }
+.alert-item.danger { border-color: var(--danger); }
+.comparison-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem; }
+.comparison-item { border: 1px solid var(--border); border-radius: 14px; padding: 0.85rem; background: var(--surface-2); display: flex; flex-direction: column; gap: 0.35rem; }
 @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } .page-header { flex-direction: column; align-items: flex-start; } .form-grid { grid-template-columns: 1fr; } .budget-item { flex-direction: column; align-items: flex-start; } }
 </style>

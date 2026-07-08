@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { TransactionType } from '../composables/useFinance'
 
 const props = defineProps<{
@@ -8,6 +8,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'submit', payload: { type: TransactionType; amount: number; category: string; note: string; date: string }): void
+  (e: 'add-category', payload: { name: string; type: TransactionType }): void
 }>()
 
 const form = ref({
@@ -16,6 +17,18 @@ const form = ref({
   category: '',
   note: '',
   date: new Date().toISOString().slice(0, 10),
+})
+
+const categorySuggestions = computed(() =>
+  props.categories.filter((item) => item.type === form.value.type).map((item) => item.name),
+)
+
+const canAddCategory = computed(() => {
+  const categoryName = form.value.category.trim()
+  if (!categoryName) return false
+  return !props.categories.some(
+    (item) => item.type === form.value.type && item.name.toLowerCase() === categoryName.toLowerCase(),
+  )
 })
 
 const submit = () => {
@@ -38,6 +51,12 @@ const submit = () => {
     date: new Date().toISOString().slice(0, 10),
   }
 }
+
+const addCategory = () => {
+  const categoryName = form.value.category.trim()
+  if (!categoryName || !canAddCategory.value) return
+  emit('add-category', { name: categoryName, type: form.value.type })
+}
 </script>
 
 <template>
@@ -57,7 +76,17 @@ const submit = () => {
       </label>
       <label>
         Kategori
-        <input v-model="form.category" :placeholder="form.type === 'income' ? 'Contoh: Gaji' : 'Contoh: Makan'" />
+        <div class="category-input">
+          <input
+            v-model="form.category"
+            :list="`category-options-${form.type}`"
+            :placeholder="form.type === 'income' ? 'Contoh: Gaji atau Bonus' : 'Contoh: Makan atau Kopi'"
+          />
+          <button v-if="canAddCategory" class="ghost-btn" type="button" @click="addCategory">Tambah kategori</button>
+        </div>
+        <datalist :id="`category-options-${form.type}`">
+          <option v-for="item in categorySuggestions" :key="item" :value="item"></option>
+        </datalist>
       </label>
       <label>
         Tanggal
@@ -69,18 +98,27 @@ const submit = () => {
       </label>
     </div>
     <button class="primary-btn" @click="submit">Simpan Transaksi</button>
-    <div class="suggestions" v-if="props.categories.length">
-      <span v-for="item in props.categories" :key="item.name" class="chip">{{ item.name }}</span>
+    <div class="suggestions" v-if="categorySuggestions.length">
+      <button
+        v-for="item in categorySuggestions"
+        :key="item"
+        class="chip chip-btn"
+        type="button"
+        @click="form.category = item"
+      >
+        {{ item }}
+      </button>
     </div>
   </section>
 </template>
 
 <style scoped>
 .card {
-  background: white;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 1rem;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow);
 }
 
 .form-grid {
@@ -95,34 +133,17 @@ label {
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.95rem;
-  color: #334155;
-}
-
-input,
-select,
-button {
-  font: inherit;
-}
-
-input,
-select {
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 0.7rem 0.8rem;
-  background: #f8fafc;
+  color: var(--text);
 }
 
 .full {
   grid-column: 1 / -1;
 }
 
-.primary-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 0.65rem 1rem;
-  cursor: pointer;
-  background: #2563eb;
-  color: white;
+.category-input {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
 }
 
 .suggestions {
@@ -133,16 +154,23 @@ select {
 }
 
 .chip {
-  background: #eff6ff;
-  color: #1d4ed8;
   border-radius: 999px;
   padding: 0.4rem 0.7rem;
   font-size: 0.85rem;
 }
 
+.chip-btn {
+  border: none;
+  cursor: pointer;
+}
+
 @media (max-width: 700px) {
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .category-input {
+    flex-direction: column;
   }
 }
 </style>

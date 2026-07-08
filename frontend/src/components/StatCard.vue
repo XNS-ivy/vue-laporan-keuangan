@@ -39,14 +39,14 @@ defineProps<{
 }
 
 .positive {
-  border-left: 4px solid #16a34a;
+  border-left: 4px solid var(--success);
 }
 
 .negative {
-  border-left: 4px solid #dc2626;
+  border-left: 4px solid var(--danger);
 }
 
 .neutral {
-  border-left: 4px solid #2563eb;
+  border-left: 4px solid var(--primary);
 }
 </style>
