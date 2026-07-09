@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import StatCard from '../components/StatCard.vue'
 import FinanceChart from '../components/FinanceChart.vue'
 import TransactionForm from '../components/TransactionForm.vue'
 import { useFinance } from '../composables/useFinance'
+import { getThemeSettings } from '../composables/useTheme'
 
 const {
   filteredTransactions: transactions,
@@ -31,6 +32,106 @@ const {
   addTransaction,
   addCategory,
 } = useFinance()
+
+const isDark = ref(false)
+
+const updateThemeStatus = () => {
+  const settings = getThemeSettings()
+  isDark.value = settings.mode === 'dark' || settings.mode === 'midnight'
+}
+
+onMounted(() => {
+  updateThemeStatus()
+  window.addEventListener('theme-preference-changed', updateThemeStatus)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('theme-preference-changed', updateThemeStatus)
+})
+
+const gridColor = computed(() => isDark.value ? '#334155' : '#e2e8f0')
+const textColor = computed(() => isDark.value ? '#94a3b8' : '#64748b')
+const tooltipBgColor = computed(() => isDark.value ? '#111827' : '#ffffff')
+const tooltipBorderColor = computed(() => isDark.value ? '#334155' : '#e2e8f0')
+const tooltipTextColor = computed(() => isDark.value ? '#f8fafc' : '#0f172a')
+
+const scaledChartOptions = computed(() => ({
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'bottom' as const,
+      labels: {
+        color: textColor.value,
+        font: { family: 'Segoe UI, system-ui, sans-serif', size: 12 }
+      }
+    },
+    tooltip: {
+      padding: 12,
+      backgroundColor: tooltipBgColor.value,
+      titleColor: tooltipTextColor.value,
+      bodyColor: textColor.value,
+      borderColor: tooltipBorderColor.value,
+      borderWidth: 1,
+      cornerRadius: 12,
+      boxPadding: 6,
+    }
+  },
+  scales: {
+    x: {
+      grid: { color: gridColor.value, drawTicks: false },
+      ticks: { color: textColor.value, font: { family: 'Segoe UI, system-ui, sans-serif' } }
+    },
+    y: {
+      grid: { color: gridColor.value, drawTicks: false },
+      ticks: { color: textColor.value, font: { family: 'Segoe UI, system-ui, sans-serif' } }
+    }
+  }
+}))
+
+const selectedDrilldownCategory = ref<string | null>(null)
+
+const doughnutChartOptions = computed(() => ({
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'bottom' as const,
+      labels: {
+        color: textColor.value,
+        font: { family: 'Segoe UI, system-ui, sans-serif', size: 12 }
+      }
+    },
+    tooltip: {
+      padding: 12,
+      backgroundColor: tooltipBgColor.value,
+      titleColor: tooltipTextColor.value,
+      bodyColor: textColor.value,
+      borderColor: tooltipBorderColor.value,
+      borderWidth: 1,
+      cornerRadius: 12,
+      boxPadding: 6,
+    }
+  },
+  onClick: (event: any, elements: any[]) => {
+    if (elements.length > 0) {
+      const elementIndex = elements[0].index
+      const entry = expenseByCategory.value[elementIndex]
+      if (entry) {
+        selectedDrilldownCategory.value = entry[0]
+      }
+    } else {
+      selectedDrilldownCategory.value = null
+    }
+  }
+}))
+
+const drilldownTransactions = computed(() => {
+  if (!selectedDrilldownCategory.value) return []
+  return transactions.value.filter(
+    (t) =>
+      t.category.toLowerCase() === selectedDrilldownCategory.value!.toLowerCase() &&
+      t.type === 'expense'
+  )
+})
 
 const palette = ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#ef4444']
 
@@ -157,10 +258,29 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
     </section>
 
     <section class="chart-grid">
-      <FinanceChart type="doughnut" title="Pengeluaran per Kategori" :data="expenseChartData" />
-      <FinanceChart type="bar" title="Tren 6 Bulan" :data="monthlyChartData" />
-      <FinanceChart type="line" title="Arus Kas Bersih per Bulan" :data="cashflowChartData" />
-      <FinanceChart type="bar" title="Kategori Paling Aktif" :data="categoryActivityChartData" />
+      <FinanceChart type="doughnut" title="Pengeluaran per Kategori" :data="expenseChartData" :options="doughnutChartOptions" />
+      <FinanceChart type="bar" title="Tren 6 Bulan" :data="monthlyChartData" :options="scaledChartOptions" />
+      <FinanceChart type="line" title="Arus Kas Bersih per Bulan" :data="cashflowChartData" :options="scaledChartOptions" />
+      <FinanceChart type="bar" title="Kategori Paling Aktif" :data="categoryActivityChartData" :options="scaledChartOptions" />
+    </section>
+
+    <section v-if="selectedDrilldownCategory" class="card drilldown-card">
+      <div class="drilldown-header">
+        <h3>Detail Pengeluaran: {{ selectedDrilldownCategory }}</h3>
+        <button class="ghost-btn close-drilldown-btn" type="button" @click="selectedDrilldownCategory = null">Tutup</button>
+      </div>
+      <ul class="list">
+        <li v-for="item in drilldownTransactions" :key="item.id" class="list-item">
+          <div>
+            <strong>{{ item.category }}</strong>
+            <p>{{ item.note || 'Tanpa catatan' }} • {{ item.date }}</p>
+          </div>
+          <span class="warn">- Rp {{ item.amount.toLocaleString('id-ID') }}</span>
+        </li>
+        <li v-if="!drilldownTransactions.length" class="empty-state">
+          Tidak ada transaksi pengeluaran untuk kategori ini.
+        </li>
+      </ul>
     </section>
 
     <section class="analytics-grid">
@@ -238,5 +358,32 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
   .hero-actions { justify-content: flex-start; }
   .content-grid { grid-template-columns: 1fr; }
   .list-item { flex-direction: column; align-items: flex-start; }
+}
+
+.drilldown-card {
+  border-color: var(--primary);
+  margin-top: 1rem;
+}
+.drilldown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+.close-drilldown-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.close-drilldown-btn:hover {
+  background: var(--border);
+}
+.empty-state {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  color: var(--muted);
+  list-style: none;
 }
 </style>

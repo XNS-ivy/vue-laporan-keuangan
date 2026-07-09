@@ -13,6 +13,7 @@ import {
   type ThemeSettings,
 } from '../composables/useTheme'
 import { useUi } from '../composables/useUi'
+import { useFinance } from '../composables/useFinance'
 
 const themeOptions: ThemeMode[] = ['light', 'dark', 'midnight']
 const themeDraft = ref<ThemeSettings>(getThemeSettings())
@@ -20,6 +21,14 @@ const selectedPreset = ref('')
 const savedMessage = ref('')
 const pickerOpen = ref(false)
 const { pushToast } = useUi()
+const {
+  exportJsonData,
+  importJsonData,
+  categories,
+  addCategory,
+  deleteCategory,
+  updateCategory,
+} = useFinance()
 
 const quickSwatches = ['#2563eb', '#0f766e', '#ea580c', '#dc2626', '#4f46e5', '#0f172a', '#f59e0b', '#14b8a6']
 
@@ -73,6 +82,84 @@ const previewSwatchStyle = computed(() => ({
 
 const applySwatch = (value: string) => {
   themeDraft.value.primary = value
+}
+
+const exportBackup = () => {
+  const dataStr = exportJsonData()
+  const blob = new Blob([dataStr], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  const today = new Date().toISOString().slice(0, 10)
+  link.download = `backup-laporan-keuangan-${today}.json`
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+const handleFileImport = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files || !input.files[0]) return
+  const file = input.files[0]
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const text = e.target?.result as string
+    if (text) {
+      const success = importJsonData(text)
+      if (success) {
+        input.value = ''
+      }
+    }
+  }
+  reader.readAsText(file)
+}
+
+// Category Management State & Handlers
+const categoryForm = ref({
+  name: '',
+  type: 'expense' as 'income' | 'expense',
+  color: '#3b82f6',
+  icon: '🍟',
+})
+
+const editingCategoryId = ref<number | null>(null)
+const editingCategoryForm = ref({
+  name: '',
+  color: '#3b82f6',
+  icon: '🍟',
+})
+
+const quickEmojis = ['🍔', '☕', '🚗', '🛍️', '🔌', '🏠', '🎬', '🩺', '📚', '💰', '💻', '📈', '🎁', '✈️', '🏋️', '🧸']
+
+const handleAddCategory = () => {
+  const name = categoryForm.value.name.trim()
+  if (!name) return
+  const success = addCategory(name, categoryForm.value.type, categoryForm.value.color, categoryForm.value.icon)
+  if (success) {
+    categoryForm.value.name = ''
+  }
+}
+
+const startEditCategory = (item: any) => {
+  editingCategoryId.value = item.id
+  editingCategoryForm.value = {
+    name: item.name,
+    color: item.color || '#3b82f6',
+    icon: item.icon || '🍔',
+  }
+}
+
+const handleUpdateCategory = () => {
+  if (editingCategoryId.value === null) return
+  updateCategory(editingCategoryId.value, {
+    name: editingCategoryForm.value.name,
+    color: editingCategoryForm.value.color,
+    icon: editingCategoryForm.value.icon,
+  })
+  editingCategoryId.value = null
+}
+
+const cancelEditCategory = () => {
+  editingCategoryId.value = null
 }
 </script>
 
@@ -175,6 +262,117 @@ const applySwatch = (value: string) => {
       <button class="primary-btn" @click="savePreferences">Simpan Preferensi</button>
       <p v-if="savedMessage" class="status">{{ savedMessage }}</p>
     </section>
+
+    <section class="card">
+      <h2>Kelola Kategori Keuangan</h2>
+      <p class="subtle">Kelola nama, warna aksen, dan emoji ikon untuk setiap kategori.</p>
+      
+      <div class="category-manager">
+        <!-- Form Editor Kategori -->
+        <div class="category-editor-card">
+          <h3>{{ editingCategoryId ? 'Edit Kategori' : 'Tambah Kategori Baru' }}</h3>
+          
+          <div v-if="!editingCategoryId" class="form-grid-small">
+            <label>
+              <span>Nama Kategori</span>
+              <input v-model="categoryForm.name" placeholder="Contoh: Hiburan" />
+            </label>
+            <label>
+              <span>Jenis</span>
+              <select v-model="categoryForm.type">
+                <option value="expense">Pengeluaran</option>
+                <option value="income">Pemasukan</option>
+              </select>
+            </label>
+            <label>
+              <span>Warna</span>
+              <input v-model="categoryForm.color" type="color" class="color-picker-input" />
+            </label>
+            <label>
+              <span>Ikon (Emoji)</span>
+              <select v-model="categoryForm.icon">
+                <option v-for="item in quickEmojis" :key="item" :value="item">{{ item }}</option>
+              </select>
+            </label>
+            <button class="primary-btn full-width" type="button" @click="handleAddCategory">Tambah Kategori</button>
+          </div>
+
+          <div v-else class="form-grid-small">
+            <label>
+              <span>Nama Kategori</span>
+              <input v-model="editingCategoryForm.name" placeholder="Contoh: Hiburan" />
+            </label>
+            <label>
+              <span>Warna</span>
+              <input v-model="editingCategoryForm.color" type="color" class="color-picker-input" />
+            </label>
+            <label>
+              <span>Ikon (Emoji)</span>
+              <select v-model="editingCategoryForm.icon">
+                <option v-for="item in quickEmojis" :key="item" :value="item">{{ item }}</option>
+              </select>
+            </label>
+            <div class="button-group-row">
+              <button class="primary-btn flex-grow" type="button" @click="handleUpdateCategory">Simpan</button>
+              <button class="secondary-btn" type="button" @click="cancelEditCategory">Batal</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daftar Kategori Aktif -->
+        <div class="categories-list-container">
+          <h3>Daftar Kategori</h3>
+          
+          <div class="category-columns">
+            <div class="category-col">
+              <h4>Pemasukan</h4>
+              <ul class="settings-category-list">
+                <li v-for="item in categories.filter(c => c.type === 'income')" :key="item.id" class="settings-category-item">
+                  <div class="category-item-info">
+                    <span class="category-item-icon">{{ item.icon || '📈' }}</span>
+                    <span class="category-item-dot" :style="{ background: item.color || '#16a34a' }"></span>
+                    <span class="category-item-name">{{ item.name }}</span>
+                  </div>
+                  <div class="category-item-actions">
+                    <button class="small-edit-btn" type="button" @click="startEditCategory(item)">✏️</button>
+                    <button class="small-delete-btn" type="button" @click="deleteCategory(item.id)">🗑️</button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="category-col">
+              <h4>Pengeluaran</h4>
+              <ul class="settings-category-list">
+                <li v-for="item in categories.filter(c => c.type === 'expense')" :key="item.id" class="settings-category-item">
+                  <div class="category-item-info">
+                    <span class="category-item-icon">{{ item.icon || '💸' }}</span>
+                    <span class="category-item-dot" :style="{ background: item.color || '#ef4444' }"></span>
+                    <span class="category-item-name">{{ item.name }}</span>
+                  </div>
+                  <div class="category-item-actions">
+                    <button class="small-edit-btn" type="button" @click="startEditCategory(item)">✏️</button>
+                    <button class="small-delete-btn" type="button" @click="deleteCategory(item.id)">🗑️</button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Backup & Restore Data</h2>
+      <p class="subtle">Ekspor seluruh data transaksi, anggaran, aset, target tabungan, dan utang piutang ke file JSON atau pulihkan data dari file JSON sebelumnya.</p>
+      <div class="backup-actions">
+        <button class="primary-btn" type="button" @click="exportBackup">Ekspor Data (.json)</button>
+        <label class="file-import-label">
+          <span>Impor Data (.json)</span>
+          <input type="file" accept=".json" @change="handleFileImport" class="file-input" />
+        </label>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -198,4 +396,39 @@ const applySwatch = (value: string) => {
 .preview-button { border: none; border-radius: 999px; padding: 0.75rem 1rem; width: fit-content; }
 .preview-field { border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 0.9rem; background: var(--surface); color: var(--muted); }
 .status { color: var(--success); margin-top: 0.6rem; }
+.subtle { color: var(--muted); margin-top: 0.1rem; }
+.backup-actions { display: flex; gap: 0.9rem; flex-wrap: wrap; margin-top: 1rem; }
+.file-import-label { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 999px; padding: 0.72rem 1rem; background: var(--surface-2); color: var(--text); cursor: pointer; transition: transform 0.2s ease, background-color 0.25s ease; }
+.file-import-label:hover { transform: translateY(-1px); background: var(--border); }
+.file-input { display: none; }
+
+/* Category Manager Styles */
+.category-manager { display: grid; grid-template-columns: 260px 1fr; gap: 1.2rem; margin-top: 1rem; }
+.category-editor-card { border: 1px solid var(--border); border-radius: 16px; padding: 1rem; background: var(--surface-2); height: fit-content; }
+.category-editor-card h3, .categories-list-container h3 { margin-top: 0; margin-bottom: 0.8rem; font-size: 1.1rem; }
+.form-grid-small { display: flex; flex-direction: column; gap: 0.8rem; }
+.form-grid-small label span { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
+.color-picker-input { padding: 0.2rem; min-height: 2.5rem; border-radius: 10px; cursor: pointer; }
+.full-width { width: 100%; }
+.button-group-row { display: flex; gap: 0.5rem; }
+.flex-grow { flex-grow: 1; }
+.secondary-btn { border: 1px solid var(--border); border-radius: 999px; padding: 0.72rem 1rem; background: var(--surface-2); color: var(--text); cursor: pointer; transition: transform 0.2s ease, background-color 0.25s ease; }
+.secondary-btn:hover { transform: translateY(-1px); background: var(--border); }
+.categories-list-container { border: 1px solid var(--border); border-radius: 16px; padding: 1rem; background: var(--surface); }
+.category-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.category-col h4 { margin-top: 0; margin-bottom: 0.6rem; font-size: 0.95rem; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+.settings-category-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.settings-category-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.6rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; }
+.category-item-info { display: flex; align-items: center; gap: 0.5rem; }
+.category-item-icon { font-size: 1.1rem; }
+.category-item-dot { width: 10px; height: 10px; border-radius: 999px; flex-shrink: 0; }
+.category-item-name { font-size: 0.95rem; font-weight: 500; }
+.category-item-actions { display: flex; gap: 0.3rem; }
+.small-edit-btn, .small-delete-btn { border: none; background: transparent; cursor: pointer; padding: 0.2rem; font-size: 0.9rem; border-radius: 6px; transition: background-color 0.2s ease; }
+.small-edit-btn:hover { background: rgba(37, 99, 235, 0.1); }
+.small-delete-btn:hover { background: var(--danger-soft); }
+@media (max-width: 900px) {
+  .category-manager { grid-template-columns: 1fr; }
+  .category-columns { grid-template-columns: 1fr; }
+}
 </style>

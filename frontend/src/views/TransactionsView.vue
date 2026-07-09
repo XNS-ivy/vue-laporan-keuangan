@@ -1,10 +1,32 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import TransactionForm from '../components/TransactionForm.vue'
-import { useFinance } from '../composables/useFinance'
+import { useFinance, type Transaction } from '../composables/useFinance'
 
-const { filteredTransactions: transactions, categories, recurringTransactions, upcomingRecurring, addTransaction, addCategory, addRecurringTransaction, applyRecurringTransaction, deleteRecurringTransaction, deleteTransaction } = useFinance()
+const {
+  filteredTransactions: transactions,
+  categories,
+  recurringTransactions,
+  upcomingRecurring,
+  addTransaction,
+  addCategory,
+  addRecurringTransaction,
+  applyRecurringTransaction,
+  deleteRecurringTransaction,
+  deleteTransaction,
+  updateTransaction,
+} = useFinance()
+
 const filter = ref<'all' | 'income' | 'expense'>('all')
+const searchQuery = ref('')
+const minAmount = ref<number | ''>('')
+const maxAmount = ref<number | ''>('')
+
+const currentPage = ref(1)
+const itemsPerPage = 10
+
+const editingTransaction = ref<Transaction | null>(null)
+
 const recurringForm = ref({
   title: '',
   type: 'expense' as 'income' | 'expense',
@@ -15,9 +37,52 @@ const recurringForm = ref({
 })
 
 const filteredTransactions = computed(() => {
-  if (filter.value === 'all') return transactions.value
-  return transactions.value.filter((item) => item.type === filter.value)
+  let list = transactions.value
+
+  if (filter.value !== 'all') {
+    list = list.filter((item) => item.type === filter.value)
+  }
+
+  const query = searchQuery.value.trim().toLowerCase()
+  if (query) {
+    list = list.filter(
+      (item) =>
+        item.category.toLowerCase().includes(query) ||
+        item.note.toLowerCase().includes(query),
+    )
+  }
+
+  if (minAmount.value !== '') {
+    list = list.filter((item) => item.amount >= (minAmount.value as number))
+  }
+
+  if (maxAmount.value !== '') {
+    list = list.filter((item) => item.amount <= (maxAmount.value as number))
+  }
+
+  return list
 })
+
+const totalPages = computed(() => Math.ceil(filteredTransactions.value.length / itemsPerPage))
+
+const paginatedTransactions = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredTransactions.value.slice(start, start + itemsPerPage)
+})
+
+// Watch filters to reset page to 1
+watch([filter, searchQuery, minAmount, maxAmount], () => {
+  currentPage.value = 1
+})
+
+const handleUpdateTransaction = (id: number, payload: Omit<Transaction, 'id'>) => {
+  updateTransaction(id, payload)
+  editingTransaction.value = null
+}
+
+const handleCancelEdit = () => {
+  editingTransaction.value = null
+}
 
 const submitRecurring = () => {
   addRecurringTransaction({
@@ -47,11 +112,28 @@ const submitRecurring = () => {
     </header>
 
     <div class="content-grid">
-      <TransactionForm :categories="categories" @submit="addTransaction" @add-category="({ name, type }) => addCategory(name, type)" />
+      <TransactionForm
+        :categories="categories"
+        :edit-transaction="editingTransaction"
+        @submit="addTransaction"
+        @update="handleUpdateTransaction"
+        @cancel-edit="handleCancelEdit"
+        @add-category="({ name, type }) => addCategory(name, type)"
+      />
+      
       <section class="card">
         <h2>Riwayat Transaksi</h2>
+        
+        <div class="filter-bar">
+          <input v-model="searchQuery" placeholder="Cari catatan atau kategori..." type="text" class="search-input" />
+          <div class="range-inputs">
+            <input v-model.number="minAmount" placeholder="Nominal Min (Rp)" type="number" min="0" />
+            <input v-model.number="maxAmount" placeholder="Nominal Max (Rp)" type="number" min="0" />
+          </div>
+        </div>
+
         <ul class="list">
-          <li v-for="item in filteredTransactions" :key="item.id" class="list-item">
+          <li v-for="item in paginatedTransactions" :key="item.id" class="list-item">
             <div>
               <strong>{{ item.category }}</strong>
               <p>{{ item.note || 'Tanpa catatan' }} • {{ item.date }}</p>
@@ -60,10 +142,22 @@ const submitRecurring = () => {
               <span :class="item.type === 'income' ? 'good' : 'warn'">
                 {{ item.type === 'income' ? '+' : '-' }} Rp {{ item.amount.toLocaleString('id-ID') }}
               </span>
-              <button class="ghost-btn" @click="deleteTransaction(item.id)">Hapus</button>
+              <div class="item-actions">
+                <button class="ghost-btn edit-btn" type="button" @click="editingTransaction = item">Edit</button>
+                <button class="ghost-btn delete-btn" type="button" @click="deleteTransaction(item.id)">Hapus</button>
+              </div>
             </div>
           </li>
+          <li v-if="!paginatedTransactions.length" class="empty-state">
+            Tidak ada transaksi ditemukan.
+          </li>
         </ul>
+
+        <div v-if="totalPages > 1" class="pagination">
+          <button class="pagination-btn" :disabled="currentPage === 1" @click="currentPage--">Sebelumnya</button>
+          <span class="pagination-info">Halaman {{ currentPage }} dari {{ totalPages }}</span>
+          <button class="pagination-btn" :disabled="currentPage === totalPages" @click="currentPage++">Selanjutnya</button>
+        </div>
       </section>
     </div>
 
@@ -113,7 +207,7 @@ const submitRecurring = () => {
             </div>
             <div class="actions">
               <button class="primary-btn" type="button" @click="applyRecurringTransaction(item.id)">Terapkan</button>
-              <button class="ghost-btn" type="button" @click="deleteRecurringTransaction(item.id)">Hapus</button>
+              <button class="ghost-btn delete-btn" type="button" @click="deleteRecurringTransaction(item.id)">Hapus</button>
             </div>
           </article>
           <p v-if="!recurringTransactions.length" class="subtle">Belum ada transaksi rutin.</p>
@@ -162,5 +256,91 @@ const submitRecurring = () => {
 .goal-list { display: flex; flex-direction: column; gap: 0.8rem; }
 .goal-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
 .actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-@media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } .page-header { flex-direction: column; align-items: flex-start; } .form-grid { grid-template-columns: 1fr; } .goal-item, .list-item { flex-direction: column; align-items: flex-start; } }
+
+.filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.range-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.item-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.edit-btn {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.edit-btn:hover {
+  background: var(--primary-muted);
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+
+.delete-btn:hover {
+  background: var(--danger-soft);
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.2rem;
+  gap: 1rem;
+}
+
+.pagination-btn {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--muted);
+  list-style: none;
+}
+
+@media (max-width: 900px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .form-grid { grid-template-columns: 1fr; }
+  .goal-item, .list-item { flex-direction: column; align-items: flex-start; }
+}
 </style>

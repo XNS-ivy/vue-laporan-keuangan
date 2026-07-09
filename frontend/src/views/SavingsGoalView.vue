@@ -2,7 +2,17 @@
 import { computed, ref } from 'vue'
 import { useFinance } from '../composables/useFinance'
 
-const { savingsGoals, savingsGoalCurrent, savingsGoalMonthly, savingsGoalProgress, savingsGoalTarget, monthsToGoal, addSavingsGoal, updateSavingsGoal, deleteSavingsGoal } = useFinance()
+const {
+  savingsGoals,
+  savingsGoalCurrent,
+  savingsGoalMonthly,
+  savingsGoalProgress,
+  savingsGoalTarget,
+  monthsToGoal,
+  addSavingsGoal,
+  deleteSavingsGoal,
+  depositToSavingsGoal,
+} = useFinance()
 
 const form = ref({
   name: '',
@@ -11,6 +21,10 @@ const form = ref({
   monthlyContribution: '',
   targetDate: '',
 })
+
+const activeDepositGoalId = ref<number | null>(null)
+const depositAmount = ref<number | ''>('')
+const withdrawFromBalance = ref(true)
 
 const remaining = computed(() => Math.max(0, savingsGoalTarget.value - savingsGoalCurrent.value))
 
@@ -24,6 +38,22 @@ const submitGoal = () => {
   })
   form.value = { name: '', targetAmount: '', currentAmount: '', monthlyContribution: '', targetDate: '' }
 }
+
+const startDeposit = (id: number) => {
+  activeDepositGoalId.value = id
+  depositAmount.value = ''
+  withdrawFromBalance.value = true
+}
+
+const handleDeposit = () => {
+  if (activeDepositGoalId.value === null) return
+  const amount = Number(depositAmount.value)
+  if (!amount || amount <= 0) return
+  const success = depositToSavingsGoal(activeDepositGoalId.value, amount, withdrawFromBalance.value)
+  if (success) {
+    activeDepositGoalId.value = null
+  }
+}
 </script>
 
 <template>
@@ -32,7 +62,7 @@ const submitGoal = () => {
       <div>
         <p class="eyebrow">Target Tabungan</p>
         <h1>Kelola lebih dari satu goal</h1>
-        <p>Sekarang target tabungan tidak lagi satu angka global. User bisa punya beberapa tujuan sekaligus seperti dana darurat, liburan, atau gadget.</p>
+        <p>Sekrawang target tabungan tidak lagi satu angka global. User bisa punya beberapa tujuan sekaligus seperti dana darurat, liburan, atau gadget.</p>
       </div>
     </header>
 
@@ -83,15 +113,32 @@ const submitGoal = () => {
     <section class="card">
       <h2>Daftar Goal</h2>
       <div class="goal-list">
-        <article v-for="item in savingsGoals" :key="item.id" class="goal-item">
-          <div>
-            <strong>{{ item.name }}</strong>
-            <p>Target Rp {{ item.targetAmount.toLocaleString('id-ID') }} • Terkumpul Rp {{ item.currentAmount.toLocaleString('id-ID') }}</p>
-            <p>Setoran bulanan Rp {{ item.monthlyContribution.toLocaleString('id-ID') }} • {{ item.targetDate || 'Tanpa target tanggal' }}</p>
+        <article v-for="item in savingsGoals" :key="item.id" class="goal-item-wrapper">
+          <div class="goal-item">
+            <div>
+              <strong>{{ item.name }}</strong>
+              <p>Target Rp {{ item.targetAmount.toLocaleString('id-ID') }} • Terkumpul Rp {{ item.currentAmount.toLocaleString('id-ID') }}</p>
+              <p>Setoran bulanan Rp {{ item.monthlyContribution.toLocaleString('id-ID') }} • {{ item.targetDate || 'Tanpa target tanggal' }}</p>
+            </div>
+            <div class="actions">
+              <button class="primary-btn small-btn" type="button" @click="startDeposit(item.id)">Setor</button>
+              <button class="ghost-btn" type="button" @click="deleteSavingsGoal(item.id)">Hapus</button>
+            </div>
           </div>
-          <div class="actions">
-            <button class="ghost-btn" type="button" @click="updateSavingsGoal(item.id, { currentAmount: item.currentAmount + item.monthlyContribution })">Tambah progres</button>
-            <button class="ghost-btn" type="button" @click="deleteSavingsGoal(item.id)">Hapus</button>
+
+          <div v-if="activeDepositGoalId === item.id" class="deposit-inline-form">
+            <label class="deposit-label">
+              <span>Nominal Setoran (Rp)</span>
+              <input v-model.number="depositAmount" type="number" min="0" placeholder="500000" />
+            </label>
+            <label class="deposit-checkbox-label">
+              <input v-model="withdrawFromBalance" type="checkbox" />
+              <span>Potong dari Saldo Utama (catat sebagai pengeluaran)</span>
+            </label>
+            <div class="deposit-buttons">
+              <button class="primary-btn small-btn" type="button" @click="handleDeposit">Konfirmasi</button>
+              <button class="secondary-btn small-btn" type="button" @click="activeDepositGoalId = null">Batal</button>
+            </div>
           </div>
         </article>
       </div>
@@ -114,7 +161,33 @@ label { display: flex; flex-direction: column; gap: 0.35rem; color: var(--text);
 .facts { margin: 0; padding-left: 1rem; color: var(--muted); }
 .facts strong { color: var(--text); }
 .goal-list { display: flex; flex-direction: column; gap: 0.8rem; }
-.goal-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
+.goal-item-wrapper { padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
+.goal-item-wrapper:last-child { border-bottom: none; }
+.goal-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
 .actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-@media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } .goal-item { flex-direction: column; align-items: flex-start; } }
+.small-btn { padding: 0.45rem 0.8rem; font-size: 0.85rem; }
+
+/* Deposit Form styling */
+.deposit-inline-form {
+  margin-top: 0.8rem;
+  padding: 0.8rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.deposit-label { display: flex; flex-direction: column; gap: 0.25rem; }
+.deposit-label span { font-size: 0.85rem; color: var(--muted); }
+.deposit-checkbox-label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem; }
+.deposit-checkbox-label input { width: auto; }
+.deposit-buttons { display: flex; gap: 0.5rem; }
+.secondary-btn { border: 1px solid var(--border); border-radius: 999px; padding: 0.72rem 1rem; background: var(--surface-2); color: var(--text); cursor: pointer; transition: transform 0.2s ease, background-color 0.25s ease; }
+.secondary-btn:hover { transform: translateY(-1px); background: var(--border); }
+
+@media (max-width: 900px) { 
+  .form-grid { grid-template-columns: 1fr; } 
+  .goal-item { flex-direction: column; align-items: flex-start; } 
+}
 </style>

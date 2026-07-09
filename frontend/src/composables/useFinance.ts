@@ -3,7 +3,7 @@ import { useUi } from './useUi'
 
 export type TransactionType = 'income' | 'expense'
 export type Transaction = { id: number; type: TransactionType; amount: number; category: string; note: string; date: string }
-export type CategoryItem = { id: number; name: string; type: TransactionType }
+export type CategoryItem = { id: number; name: string; type: TransactionType; color?: string; icon?: string }
 export type BudgetItem = { id: number; category: string; amount: number; month: string }
 export type AssetItem = { id: number; name: string; amount: number; type: 'cash' | 'bank' | 'investment'; date: string }
 export type SavingsGoal = { id: number; name: string; targetAmount: number; currentAmount: number; monthlyContribution: number; targetDate: string }
@@ -24,13 +24,15 @@ type FinanceData = {
 
 const storageKey = 'finance-app-data-v3'
 const defaultCategories: CategoryItem[] = [
-  { id: 1, name: 'Gaji', type: 'income' },
-  { id: 2, name: 'Freelance', type: 'income' },
-  { id: 3, name: 'Makan', type: 'expense' },
-  { id: 4, name: 'Transport', type: 'expense' },
-  { id: 5, name: 'Tagihan', type: 'expense' },
-  { id: 6, name: 'Belanja', type: 'expense' },
+  { id: 1, name: 'Gaji', type: 'income', color: '#16a34a', icon: '💰' },
+  { id: 2, name: 'Freelance', type: 'income', color: '#0d9488', icon: '💻' },
+  { id: 3, name: 'Makan', type: 'expense', color: '#f59e0b', icon: '🍔' },
+  { id: 4, name: 'Transport', type: 'expense', color: '#3b82f6', icon: '🚗' },
+  { id: 5, name: 'Tagihan', type: 'expense', color: '#ef4444', icon: '🔌' },
+  { id: 6, name: 'Belanja', type: 'expense', color: '#ec4899', icon: '🛍️' },
 ]
+
+const categoryPalette = ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#ef4444', '#10b981', '#f97316']
 
 const defaultGoal = (): SavingsGoal => ({ id: Date.now(), name: 'Dana Darurat', targetAmount: 5000000, currentAmount: 0, monthlyContribution: 500000, targetDate: '' })
 const defaultRecurring: RecurringTransaction[] = [
@@ -63,12 +65,19 @@ const normalizeLegacyGoal = (value: number | LegacySavingsGoal | undefined) => {
 
 const normalizeAsset = (item: AssetItem | Omit<AssetItem, 'id'>) => ({ ...item, date: 'date' in item && item.date ? item.date : currentDate() })
 
-const ensureCategory = (name: string, type: TransactionType) => {
+const ensureCategory = (name: string, type: TransactionType, color?: string, icon?: string) => {
   const categoryName = toTitle(name)
   if (!categoryName) return false
   const exists = categories.value.some((item) => item.name.toLowerCase() === categoryName.toLowerCase() && item.type === type)
   if (exists) return false
-  categories.value.push({ id: Date.now() + Math.floor(Math.random() * 1000), name: categoryName, type })
+  const randomColor = categoryPalette[Math.floor(Math.random() * categoryPalette.length)]
+  categories.value.push({
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    name: categoryName,
+    type,
+    color: color || randomColor,
+    icon: icon || (type === 'income' ? '📈' : '💸'),
+  })
   return true
 }
 
@@ -133,7 +142,49 @@ export function useFinance() {
   }
 
   const addTransaction = (payload: Omit<Transaction, 'id'>) => baseAddTransaction(payload)
-  const addCategory = (name: string, type: TransactionType) => ensureCategory(name, type)
+  const addCategory = (name: string, type: TransactionType, color?: string, icon?: string) => ensureCategory(name, type, color, icon)
+  const deleteCategory = (id: number) => {
+    const categoryItem = categories.value.find((c) => c.id === id)
+    if (!categoryItem) return false
+    const isUsed = transactions.value.some((t) => t.category.toLowerCase() === categoryItem.name.toLowerCase() && t.type === categoryItem.type)
+    if (isUsed) {
+      pushToast(`Kategori "${categoryItem.name}" masih digunakan dalam transaksi`, 'error')
+      return false
+    }
+    const isUsedRecurring = recurringTransactions.value.some((r) => r.category.toLowerCase() === categoryItem.name.toLowerCase() && r.type === categoryItem.type)
+    if (isUsedRecurring) {
+      pushToast(`Kategori "${categoryItem.name}" masih digunakan dalam transaksi rutin`, 'error')
+      return false
+    }
+    const isUsedBudget = budgets.value.some((b) => b.category.toLowerCase() === categoryItem.name.toLowerCase())
+    if (isUsedBudget) {
+      pushToast(`Kategori "${categoryItem.name}" masih digunakan dalam anggaran`, 'error')
+      return false
+    }
+    categories.value = categories.value.filter((c) => c.id !== id)
+    pushToast(`Kategori "${categoryItem.name}" berhasil dihapus`, 'success')
+    return true
+  }
+
+  const updateCategory = (id: number, payload: Partial<CategoryItem>) => {
+    categories.value = categories.value.map((c) => {
+      if (c.id === id) {
+        const newName = payload.name !== undefined ? toTitle(payload.name) : c.name
+        if (newName && newName.toLowerCase() !== c.name.toLowerCase()) {
+          transactions.value = transactions.value.map((t) => t.category.toLowerCase() === c.name.toLowerCase() && t.type === c.type ? { ...t, category: newName } : t)
+          recurringTransactions.value = recurringTransactions.value.map((r) => r.category.toLowerCase() === c.name.toLowerCase() && r.type === c.type ? { ...r, category: newName } : r)
+          budgets.value = budgets.value.map((b) => b.category.toLowerCase() === c.name.toLowerCase() ? { ...b, category: newName } : b)
+        }
+        return {
+          ...c,
+          ...payload,
+          name: newName || c.name
+        }
+      }
+      return c
+    })
+    pushToast('Kategori berhasil diperbarui', 'success')
+  }
   const addBudget = (payload: Omit<BudgetItem, 'id'>) => {
     const amount = safeNumber(payload.amount)
     const category = toTitle(payload.category)
@@ -157,6 +208,29 @@ export function useFinance() {
   const updateSavingsGoal = (id: number, payload: Partial<Omit<SavingsGoal, 'id'>>) => {
     savingsGoals.value = savingsGoals.value.map((item) => item.id === id ? { ...item, ...payload, targetAmount: payload.targetAmount !== undefined ? safeNumber(payload.targetAmount) : item.targetAmount, currentAmount: payload.currentAmount !== undefined ? safeNumber(payload.currentAmount) : item.currentAmount, monthlyContribution: payload.monthlyContribution !== undefined ? safeNumber(payload.monthlyContribution) : item.monthlyContribution } : item)
     pushToast('Progress goal diperbarui', 'success')
+  }
+  const depositToSavingsGoal = (id: number, amount: number, withdrawFromBalance = false) => {
+    const goalIndex = savingsGoals.value.findIndex((item) => item.id === id)
+    if (goalIndex === -1) return false
+    const goal = savingsGoals.value[goalIndex]
+    if (!goal) return false
+    const depositAmount = safeNumber(amount)
+    if (depositAmount <= 0) return false
+    savingsGoals.value[goalIndex] = {
+      ...goal,
+      currentAmount: goal.currentAmount + depositAmount
+    }
+    if (withdrawFromBalance) {
+      baseAddTransaction({
+        type: 'expense',
+        amount: depositAmount,
+        category: 'Tabungan',
+        note: `Setoran tabungan: ${goal.name}`,
+        date: currentDate()
+      }, true)
+    }
+    pushToast(`Berhasil menyetor Rp ${depositAmount.toLocaleString('id-ID')} ke ${goal.name}`, 'success')
+    return true
   }
   const deleteSavingsGoal = (id: number) => { savingsGoals.value = savingsGoals.value.filter((item) => item.id !== id) }
 
@@ -201,6 +275,72 @@ export function useFinance() {
   const toggleDebtStatus = (id: number) => { debts.value = debts.value.map((item) => item.id === id ? { ...item, status: item.status === 'open' ? 'paid' : 'open' } : item) }
 
   const deleteTransaction = (id: number) => { transactions.value = transactions.value.filter((item) => item.id !== id) }
+  const updateTransaction = (id: number, payload: Omit<Transaction, 'id'>) => {
+    const amount = safeNumber(payload.amount)
+    const categoryName = toTitle(payload.category)
+    if (!amount || !categoryName) return false
+    ensureCategory(categoryName, payload.type)
+    const index = transactions.value.findIndex((item) => item.id === id)
+    if (index === -1) return false
+    transactions.value[index] = {
+      id,
+      type: payload.type,
+      amount,
+      category: categoryName,
+      note: payload.note.trim(),
+      date: payload.date,
+    }
+    pushToast('Transaksi berhasil diperbarui', 'success')
+    return true
+  }
+
+  const exportJsonData = () => {
+    const payload: FinanceData = {
+      transactions: transactions.value,
+      categories: categories.value,
+      budgets: budgets.value,
+      assets: assets.value,
+      savingsGoals: savingsGoals.value,
+      recurringTransactions: recurringTransactions.value,
+      debts: debts.value,
+    }
+    return JSON.stringify(payload, null, 2)
+  }
+
+  const importJsonData = (jsonString: string) => {
+    try {
+      const parsed = JSON.parse(jsonString) as Partial<FinanceData>
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Format JSON tidak valid')
+      }
+      if (parsed.transactions && !Array.isArray(parsed.transactions)) throw new Error('Format transaksi salah')
+      if (parsed.categories && !Array.isArray(parsed.categories)) throw new Error('Format kategori salah')
+      if (parsed.budgets && !Array.isArray(parsed.budgets)) throw new Error('Format anggaran salah')
+      if (parsed.assets && !Array.isArray(parsed.assets)) throw new Error('Format aset salah')
+      if (parsed.savingsGoals && !Array.isArray(parsed.savingsGoals)) throw new Error('Format target tabungan salah')
+      if (parsed.recurringTransactions && !Array.isArray(parsed.recurringTransactions)) throw new Error('Format transaksi rutin salah')
+      if (parsed.debts && !Array.isArray(parsed.debts)) throw new Error('Format utang/piutang salah')
+
+      if (parsed.transactions) transactions.value = parsed.transactions
+      if (parsed.categories) categories.value = parsed.categories
+      if (parsed.budgets) budgets.value = parsed.budgets
+      if (parsed.assets) assets.value = parsed.assets.map((item, index) => ({
+        ...normalizeAsset(item as AssetItem | Omit<AssetItem, 'id'>),
+        id: 'id' in item && typeof item.id === 'number' ? item.id : Date.now() + index,
+      }))
+      if (parsed.savingsGoals) savingsGoals.value = parsed.savingsGoals
+      if (parsed.recurringTransactions) recurringTransactions.value = parsed.recurringTransactions
+      if (parsed.debts) debts.value = parsed.debts
+
+      saveData()
+      pushToast('Data berhasil diimpor', 'success')
+      return true
+    } catch (e: any) {
+      pushToast(`Gagal mengimpor data: ${e.message || e}`, 'error')
+      return false
+    }
+  }
+
   const deleteBudget = (id: number) => { budgets.value = budgets.value.filter((item) => item.id !== id) }
   const deleteAsset = (id: number) => { assets.value = assets.value.filter((item) => item.id !== id) }
   const deleteDebt = (id: number) => { debts.value = debts.value.filter((item) => item.id !== id) }
@@ -416,10 +556,13 @@ export function useFinance() {
     automatedInsights,
     addTransaction,
     addCategory,
+    deleteCategory,
+    updateCategory,
     addBudget,
     addAsset,
     addSavingsGoal,
     updateSavingsGoal,
+    depositToSavingsGoal,
     deleteSavingsGoal,
     addRecurringTransaction,
     applyRecurringTransaction,
@@ -428,6 +571,9 @@ export function useFinance() {
     addDebt,
     toggleDebtStatus,
     deleteTransaction,
+    updateTransaction,
+    exportJsonData,
+    importJsonData,
     deleteBudget,
     deleteAsset,
     deleteDebt,
