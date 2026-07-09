@@ -45,13 +45,24 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="shell">
-    <button class="menu-toggle" type="button" @click="sidebarOpen = !sidebarOpen" :aria-label="sidebarStateLabel">
-      {{ sidebarOpen ? 'Tutup' : 'Menu' }}
+    <button v-if="!sidebarOpen" class="menu-toggle" type="button" @click="sidebarOpen = true" aria-label="Buka menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
     </button>
 
     <div v-if="sidebarOpen && !isDesktop" class="overlay" @click="closeSidebar"></div>
 
     <aside class="sidebar" :class="{ open: sidebarOpen }">
+      <button v-if="!isDesktop" class="sidebar-close" type="button" @click="closeSidebar" aria-label="Tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+
       <div class="brand-block">
         <div>
           <p class="eyebrow">Personal Finance</p>
@@ -59,7 +70,6 @@ onBeforeUnmount(() => {
         </div>
         <p class="subtitle">Pantau uang Anda dengan lebih tenang dan terarah.</p>
       </div>
-
       <nav>
         <RouterLink to="/" class="nav-link" @click="closeSidebar">Dashboard</RouterLink>
         <RouterLink to="/transactions" class="nav-link" @click="closeSidebar">Transaksi</RouterLink>
@@ -78,11 +88,13 @@ onBeforeUnmount(() => {
         </div>
         <label class="filter-field">
           <span>Dari</span>
-          <input :value="globalDateFilter.start" type="date" @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })" />
+          <input :value="globalDateFilter.start" type="date"
+            @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })" />
         </label>
         <label class="filter-field">
           <span>Sampai</span>
-          <input :value="globalDateFilter.end" type="date" @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })" />
+          <input :value="globalDateFilter.end" type="date"
+            @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })" />
         </label>
       </section>
     </aside>
@@ -92,14 +104,8 @@ onBeforeUnmount(() => {
     </main>
 
     <div class="toast-stack">
-      <button
-        v-for="item in toasts"
-        :key="item.id"
-        class="toast"
-        :class="item.tone"
-        type="button"
-        @click="removeToast(item.id)"
-      >
+      <button v-for="item in toasts" :key="item.id" class="toast" :class="item.tone" type="button"
+        @click="removeToast(item.id)">
         {{ item.message }}
       </button>
     </div>
@@ -110,7 +116,7 @@ onBeforeUnmount(() => {
 .shell {
   display: grid;
   grid-template-columns: 280px 1fr;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--bg-soft);
   position: relative;
 }
@@ -121,13 +127,21 @@ onBeforeUnmount(() => {
   left: 1rem;
   z-index: 30;
   border: none;
-  border-radius: 999px;
-  padding: 0.72rem 1rem;
+  border-radius: 12px;
+  width: 44px;
+  height: 44px;
   background: var(--primary);
   color: var(--primary-contrast);
   cursor: pointer;
   box-shadow: var(--shadow);
   display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-toggle svg {
+  width: 22px;
+  height: 22px;
 }
 
 .overlay {
@@ -146,6 +160,34 @@ onBeforeUnmount(() => {
   gap: 1rem;
   box-shadow: 12px 0 30px rgba(15, 23, 42, 0.14);
   z-index: 20;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-close {
+  display: none;
+  align-self: flex-start;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--sidebar-text);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: -0.4rem;
+}
+
+.sidebar-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-close:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .brand-block {
@@ -182,10 +224,10 @@ nav {
 
 .filter-panel {
   margin-top: auto;
-  border: 1px solid rgba(255,255,255,0.14);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
   padding: 0.9rem;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
@@ -206,16 +248,16 @@ nav {
 }
 
 .filter-field input {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
   color: var(--sidebar-text);
-  border-color: rgba(255,255,255,0.18);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .clear-btn {
   border: none;
   border-radius: 999px;
   padding: 0.35rem 0.7rem;
-  background: rgba(255,255,255,0.16);
+  background: rgba(255, 255, 255, 0.16);
   color: white;
   cursor: pointer;
 }
@@ -230,13 +272,36 @@ nav {
 
 .nav-link:hover,
 .nav-link.router-link-active {
-  background: rgba(255,255,255,0.16);
+  background: rgba(255, 255, 255, 0.16);
   color: white;
   transform: translateX(2px);
 }
 
 .content {
   padding: 1.35rem;
+  height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+}
+
+.content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.5);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.8);
 }
 
 .toast-stack {
@@ -261,10 +326,21 @@ nav {
   box-shadow: var(--shadow);
 }
 
-.toast.success { background: #15803d; }
-.toast.info { background: #2563eb; }
-.toast.warning { background: #d97706; }
-.toast.error { background: #b91c1c; }
+.toast.success {
+  background: #15803d;
+}
+
+.toast.info {
+  background: #2563eb;
+}
+
+.toast.warning {
+  background: #d97706;
+}
+
+.toast.error {
+  background: #b91c1c;
+}
 
 @media (max-width: 900px) {
   .shell {
@@ -285,6 +361,11 @@ nav {
     width: min(82vw, 320px);
     transform: translateX(-105%);
     transition: transform 0.25s ease;
+    overflow-y: auto;
+  }
+
+  .sidebar-close {
+    display: inline-flex;
   }
 
   .sidebar.open {
@@ -304,5 +385,19 @@ nav {
     max-width: none;
     width: 100%;
   }
+}
+
+.sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
 }
 </style>

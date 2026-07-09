@@ -279,6 +279,8 @@ const calculateSimulation = () => {
 
 <style scoped>
 .page { display: flex; flex-direction: column; gap: 1rem; }
+.hero { background: linear-gradient(135deg, var(--sidebar-bg), var(--hero-accent)); color: white; border-radius: 24px; padding: 1.3rem 1.4rem; box-shadow: var(--shadow); }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; opacity: 0.8; }
 .page-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; color: var(--muted); }
 .subtle { color: var(--muted); }
