@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="brand-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.15" />
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#0f172a" />
+  <!-- Dynamic lines representing cash flow & chart curves -->
+  <path d="M 32 80 C 44 65, 52 90, 68 64 C 84 38, 92 68, 104 48" fill="none" stroke="url(#brand-gradient)" stroke-width="10" stroke-linecap="round" filter="url(#shadow)" />
+  <!-- Node dots representing tracking points -->
+  <circle cx="32" cy="80" r="6" fill="#3b82f6" />
+  <circle cx="68" cy="64" r="6" fill="#10b981" />
+  <circle cx="104" cy="48" r="6" fill="#06b6d4" />
+</svg>

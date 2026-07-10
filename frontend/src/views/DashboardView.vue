@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import StatCard from '../components/StatCard.vue'
 import FinanceChart from '../components/FinanceChart.vue'
+import BalanceCandlestickChart from '../components/BalanceCandlestickChart.vue'
 import TransactionForm from '../components/TransactionForm.vue'
 import { useFinance } from '../composables/useFinance'
 import { getThemeSettings } from '../composables/useTheme'
@@ -26,6 +27,7 @@ const {
   savingsGoalTarget,
   monthsToGoal,
   budgetAlerts,
+  currentMonthBudgetSummary,
   automatedInsights,
   totalDebt,
   totalReceivable,
@@ -78,11 +80,11 @@ const scaledChartOptions = computed(() => ({
   },
   scales: {
     x: {
-      grid: { color: gridColor.value, drawTicks: false },
+      grid: { display: false },
       ticks: { color: textColor.value, font: { family: 'Inter, system-ui, sans-serif', size: 10 } }
     },
     y: {
-      grid: { color: gridColor.value, drawTicks: false },
+      grid: { color: gridColor.value, drawTicks: false, borderDash: [4, 4], lineWidth: 1 },
       ticks: { color: textColor.value, font: { family: 'Inter, system-ui, sans-serif', size: 10 } }
     }
   }
@@ -92,6 +94,7 @@ const selectedDrilldownCategory = ref<string | null>(null)
 
 const doughnutChartOptions = computed(() => ({
   responsive: true,
+  cutout: '76%',
   plugins: {
     legend: {
       position: 'bottom' as const,
@@ -133,18 +136,21 @@ const drilldownTransactions = computed(() => {
   )
 })
 
-const palette = ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#ef4444']
+const palette = computed(() => isDark.value
+  ? ['#38bdf8', '#fb7185', '#34d399', '#fbbf24', '#c084fc', '#2dd4bf', '#818cf8']
+  : ['#0284c7', '#e11d48', '#16a34a', '#d97706', '#7c3aed', '#0d9488', '#4f46e5']
+)
 
 const expenseChartData = computed(() => ({
   labels: expenseByCategory.value.map(([category]) => category),
-  datasets: [{ data: expenseByCategory.value.map(([, amount]) => amount), backgroundColor: palette }],
+  datasets: [{ data: expenseByCategory.value.map(([, amount]) => amount), backgroundColor: palette.value }],
 }))
 
 const monthlyChartData = computed(() => ({
   labels: monthlyTrend.value.map(([month]) => month),
   datasets: [
-    { label: 'Pemasukan', data: monthlyTrend.value.map(([, values]) => values.income), backgroundColor: '#16a34a' },
-    { label: 'Pengeluaran', data: monthlyTrend.value.map(([, values]) => values.expense), backgroundColor: '#ef4444' },
+    { label: 'Pemasukan', data: monthlyTrend.value.map(([, values]) => values.income), backgroundColor: isDark.value ? '#4ade80' : '#16a34a' },
+    { label: 'Pengeluaran', data: monthlyTrend.value.map(([, values]) => values.expense), backgroundColor: isDark.value ? '#f87171' : '#dc2626' },
   ],
 }))
 
@@ -154,8 +160,8 @@ const cashflowChartData = computed(() => ({
     {
       label: 'Arus Kas Bersih',
       data: monthlyTrend.value.map(([, values]) => values.net),
-      borderColor: '#2563eb',
-      backgroundColor: 'rgba(37, 99, 235, 0.12)',
+      borderColor: isDark.value ? '#38bdf8' : '#0284c7',
+      backgroundColor: isDark.value ? 'rgba(56, 189, 248, 0.12)' : 'rgba(2, 132, 199, 0.12)',
       fill: true,
       tension: 0.32,
     },
@@ -168,10 +174,76 @@ const categoryActivityChartData = computed(() => ({
     {
       label: 'Frekuensi Transaksi',
       data: categoryAnalytics.value.slice(0, 6).map((item) => item.count),
-      backgroundColor: categoryAnalytics.value.slice(0, 6).map((_, index) => palette[index % palette.length]),
+      backgroundColor: categoryAnalytics.value.slice(0, 6).map((_, index) => palette.value[index % palette.value.length]),
     },
   ],
 }))
+
+const budgetVsExpenseChartData = computed(() => {
+  const activeBudgets = currentMonthBudgetSummary.value.filter((b) => b.amount > 0)
+  const labels = activeBudgets.map((item) => item.category)
+  const budgetAmounts = activeBudgets.map((item) => item.amount)
+  const usedAmounts = activeBudgets.map((item) => item.used)
+
+  return {
+    labels,
+    datasets: [
+      {
+        label: 'Anggaran',
+        data: budgetAmounts,
+        backgroundColor: isDark.value ? 'rgba(56, 189, 248, 0.65)' : 'rgba(2, 132, 199, 0.75)',
+      },
+      {
+        label: 'Realisasi',
+        data: usedAmounts,
+        backgroundColor: isDark.value ? 'rgba(248, 113, 113, 0.65)' : 'rgba(220, 38, 38, 0.75)',
+      },
+    ],
+  }
+})
+
+const balanceCandlesticks = computed(() => {
+  const sorted = [...transactions.value].sort((a, b) => a.date.localeCompare(b.date))
+  const monthsMap = new Map<string, typeof transactions.value>()
+  
+  sorted.forEach(t => {
+    const m = t.date.slice(0, 7)
+    if (!monthsMap.has(m)) monthsMap.set(m, [])
+    monthsMap.get(m)!.push(t)
+  })
+  
+  const sortedMonths = Array.from(monthsMap.keys()).sort()
+  let runningBalance = 0
+  const candlesticks: Array<{ month: string; open: number; close: number; high: number; low: number }> = []
+  
+  sortedMonths.forEach(m => {
+    const monthTx = monthsMap.get(m)!
+    const open = runningBalance
+    let high = runningBalance
+    let low = runningBalance
+    
+    monthTx.forEach(t => {
+      if (t.type === 'income') {
+        runningBalance += t.amount
+      } else {
+        runningBalance -= t.amount
+      }
+      if (runningBalance > high) high = runningBalance
+      if (runningBalance < low) low = runningBalance
+    })
+    
+    const close = runningBalance
+    candlesticks.push({
+      month: m,
+      open,
+      close,
+      high,
+      low
+    })
+  })
+  
+  return candlesticks.slice(-6)
+})
 
 const latestTransactions = computed(() => [...transactions.value].slice(0, 6))
 const biggestExpense = computed(() => expenseByCategory.value[0])
@@ -297,7 +369,9 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
     </section>
 
     <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <BalanceCandlestickChart :data="balanceCandlesticks" title="Volatilitas & Pergerakan Saldo (Candlestick)" class="md:col-span-2" />
       <FinanceChart type="doughnut" title="Pengeluaran per Kategori" :data="expenseChartData" :options="doughnutChartOptions" />
+      <FinanceChart v-if="currentMonthBudgetSummary.some(b => b.amount > 0)" type="bar" title="Anggaran vs Pengeluaran Aktual" :data="budgetVsExpenseChartData" :options="scaledChartOptions" />
       <FinanceChart type="bar" title="Tren 6 Bulan" :data="monthlyChartData" :options="scaledChartOptions" />
       <FinanceChart type="line" title="Arus Kas Bersih per Bulan" :data="cashflowChartData" :options="scaledChartOptions" />
       <FinanceChart type="bar" title="Kategori Paling Aktif" :data="categoryActivityChartData" :options="scaledChartOptions" />
