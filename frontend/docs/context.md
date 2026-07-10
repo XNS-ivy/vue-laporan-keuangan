@@ -43,6 +43,8 @@ frontend/
 │   ├── routing-navigation.md
 │   └── features.md
 ├── public/                # Aset statis public
+│   ├── sw.js              # Service Worker (Offline caching & PWA)
+│   └── manifest.webmanifest # Manifest PWA untuk instalasi aplikasi
 ├── src/
 │   ├── assets/            # Aset CSS global, logo, dsb.
 │   ├── types/             # Layer Type Definition
@@ -79,6 +81,13 @@ frontend/
 ├── tsconfig.json          # Konfigurasi TypeScript
 └── vite.config.ts         # Konfigurasi Vite
 ```
+
+### 🌐 Service Worker & Akses Offline
+Aplikasi dirancang dengan arsitektur **Offline-First**. Berkas `public/sw.js` bertindak sebagai Service Worker yang meng-cache aset statis aplikasi (HTML, JS, CSS, gambar) menggunakan strategi *Stale-While-Revalidate*. Hal ini memastikan:
+1. Aplikasi dapat diakses sepenuhnya meskipun perangkat sedang luring (tanpa koneksi internet).
+2. Performa pemuatan halaman sangat cepat karena aset diambil langsung dari cache lokal browser.
+3. Notifikasi pengingat lokal dapat dikirimkan secara terjadwal melalui registrasi Service Worker (`registration.showNotification`).
+4. Aplikasi dapat diinstal langsung di perangkat mobile/desktop sebagai Progressive Web App (PWA) berkat integrasi dengan `manifest.webmanifest`.
 
 ---
 

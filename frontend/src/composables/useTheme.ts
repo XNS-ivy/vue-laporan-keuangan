@@ -102,6 +102,17 @@ export const getThemeSettings = (): ThemeSettings => {
         surfaceMode: 'dark',
       }
     }
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      if (prefersDark) {
+        return {
+          mode: 'dark',
+          primary: '#0f766e',
+          primaryAlpha: 1,
+          surfaceMode: 'dark',
+        }
+      }
+    }
     return fallbackTheme
   }
 

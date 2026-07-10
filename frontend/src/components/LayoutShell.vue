@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { applyThemeSettings, getThemeSettings, type ThemeSettings, themePresets } from '../composables/useTheme'
+import { applyThemeSettings, getThemeSettings, type ThemeSettings, themePresets, type ThemeMode } from '../composables/useTheme'
 import { useUi } from '../composables/useUi'
 import { useFinance } from '../composables/useFinance'
 
@@ -62,10 +62,59 @@ const syncViewport = () => {
 
 const sidebarStateLabel = computed(() => (sidebarOpen.value ? 'Tutup menu' : 'Buka menu'))
 
+let systemThemeMedia: MediaQueryList | null = null
+let systemThemeListener: ((e: MediaQueryListEvent) => void) | null = null
+
+const setupSystemThemeListener = () => {
+  if (typeof window === 'undefined' || !window.matchMedia) return
+  cleanupSystemThemeListener()
+  
+  if (!localStorage.getItem('finance-theme-settings')) {
+    systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)')
+    systemThemeListener = (e: MediaQueryListEvent) => {
+      const mode = (e.matches ? 'dark' : 'light') as ThemeMode
+      const surfaceMode = (e.matches ? 'dark' : 'light') as 'light' | 'dark'
+      const primary = e.matches ? '#0f766e' : '#2563eb'
+      const newTheme: ThemeSettings = {
+        mode,
+        primary,
+        primaryAlpha: 1,
+        surfaceMode
+      }
+      theme.value = newTheme
+      applyThemeSettings(newTheme)
+      window.dispatchEvent(new CustomEvent('theme-preference-changed', { detail: newTheme }))
+    }
+    systemThemeMedia.addEventListener('change', systemThemeListener)
+  }
+}
+
+const cleanupSystemThemeListener = () => {
+  if (systemThemeMedia && systemThemeListener) {
+    systemThemeMedia.removeEventListener('change', systemThemeListener)
+  }
+  systemThemeMedia = null
+  systemThemeListener = null
+}
+
+const handleResetToSystem = () => {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const systemTheme: ThemeSettings = {
+    mode: (prefersDark ? 'dark' : 'light') as ThemeMode,
+    primary: prefersDark ? '#0f766e' : '#2563eb',
+    primaryAlpha: 1,
+    surfaceMode: (prefersDark ? 'dark' : 'light') as 'light' | 'dark'
+  }
+  theme.value = systemTheme
+  applyThemeSettings(systemTheme)
+  setupSystemThemeListener()
+}
+
 const handleThemeChange = (event: Event) => {
   const customEvent = event as CustomEvent<ThemeSettings>
   theme.value = customEvent.detail
   applyThemeSettings(theme.value)
+  setupSystemThemeListener()
 }
 
 const closeSidebar = () => {
@@ -140,11 +189,15 @@ onMounted(() => {
   syncViewport()
   window.addEventListener('resize', syncViewport)
   window.addEventListener('theme-preference-changed', handleThemeChange as EventListener)
+  window.addEventListener('theme-reset-to-system', handleResetToSystem)
+  setupSystemThemeListener()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', syncViewport)
   window.removeEventListener('theme-preference-changed', handleThemeChange as EventListener)
+  window.removeEventListener('theme-reset-to-system', handleResetToSystem)
+  cleanupSystemThemeListener()
 })
 </script>
 
@@ -174,7 +227,7 @@ onBeforeUnmount(() => {
 
     <!-- Sidebar -->
     <aside
-      class="fixed lg:static inset-y-0 left-0 w-70 h-screen max-h-screen p-5 bg-linear-to-b from-sidebar-bg to-sidebar-accent text-sidebar-text flex flex-col gap-6 shadow-2xl lg:shadow-none z-30 transition-transform duration-300 ease-in-out"
+      class="fixed lg:static inset-y-0 left-0 w-70 h-screen max-h-screen p-4 lg:p-5 bg-linear-to-b from-sidebar-bg to-sidebar-accent text-sidebar-text flex flex-col gap-4 lg:gap-6 shadow-2xl lg:shadow-none z-30 transition-transform duration-300 ease-in-out"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
     >
       <!-- Close Sidebar Button (Mobile) -->
@@ -265,71 +318,70 @@ onBeforeUnmount(() => {
           </svg>
           <span>Settings</span>
         </RouterLink>
-      </nav>
 
-      <!-- Date Filter Panel -->
-      <div class="mt-auto relative select-none">
-        <!-- Toggle Trigger Button -->
-        <button
-          class="w-full border border-white/10 rounded-2xl p-4 bg-white/5 hover:bg-white/10 active:bg-white/15 text-white flex items-center justify-between cursor-pointer transition-all"
-          type="button"
-          @click="dateFilterExpanded = !dateFilterExpanded"
-        >
-          <div class="flex items-center gap-2">
-            <svg 
-              class="w-4 h-4 text-white/80 transition-transform duration-200" 
-              :class="{ 'rotate-180': dateFilterExpanded }" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              stroke-width="2.5"
-            >
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-            <strong class="text-xs font-semibold">Filter Tanggal</strong>
-            <span v-if="hasDateFilter" class="text-[9px] bg-primary/30 text-white border border-white/10 rounded-sm px-1.5 py-0.5 font-bold uppercase tracking-wider scale-90">
-              Aktif
-            </span>
-          </div>
-          <span class="text-[10px] text-white/50">{{ dateFilterExpanded ? 'Tutup' : 'Buka' }}</span>
-        </button>
+        <!-- Date Filter Panel inside nav (raised and expands inline) -->
+        <div class="relative select-none mt-2 shrink-0">
+          <button
+            class="w-full border border-white/10 rounded-xl py-2 px-3.5 bg-white/5 hover:bg-white/10 active:bg-white/15 text-white flex items-center justify-between cursor-pointer transition-all"
+            type="button"
+            @click="dateFilterExpanded = !dateFilterExpanded"
+          >
+            <div class="flex items-center gap-2">
+              <svg 
+                class="w-3.5 h-3.5 text-white/80 transition-transform duration-200" 
+                :class="{ 'rotate-180': dateFilterExpanded }" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                stroke-width="2.5"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <strong class="text-xs font-semibold">Filter Tanggal</strong>
+              <span v-if="hasDateFilter" class="text-[9px] bg-primary/30 text-white border border-white/10 rounded-sm px-1.5 py-0.5 font-bold uppercase tracking-wider scale-90">
+                Aktif
+              </span>
+            </div>
+            <span class="text-[10px] text-white/50">{{ dateFilterExpanded ? 'Tutup' : 'Buka' }}</span>
+          </button>
 
-        <!-- Dropdown Menu (Floats upward over navigation) -->
-        <div
-          v-if="dateFilterExpanded"
-          class="absolute bottom-full left-0 right-0 mb-2 border border-white/15 rounded-2xl p-4 bg-slate-900/95 shadow-2xl flex flex-col gap-3.5 backdrop-blur-md z-40 animate-in fade-in slide-in-from-bottom-2 duration-200"
-        >
-          <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
-            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider">Rentang Waktu</span>
-            <button
-              v-if="hasDateFilter"
-              class="border-none rounded-full px-2.5 py-1 bg-white/10 hover:bg-white/20 active:bg-white/35 text-[10px] text-white cursor-pointer font-medium transition-colors"
-              type="button"
-              @click="resetGlobalDateFilter"
-            >
-              Reset
-            </button>
+          <!-- Inline Dropdown Menu (No floating absolute popup) -->
+          <div
+            v-if="dateFilterExpanded"
+            class="mt-2 border border-white/15 rounded-xl p-3 bg-slate-900/40 flex flex-col gap-3 transition-all animate-in fade-in duration-200"
+          >
+            <div class="flex items-center justify-between border-b border-white/10 pb-2">
+              <span class="text-[9px] font-bold text-white/60 uppercase tracking-wider">Rentang Waktu</span>
+              <button
+                v-if="hasDateFilter"
+                class="border-none rounded-full px-2 py-0.5 bg-white/10 hover:bg-white/20 active:bg-white/35 text-[9px] text-white cursor-pointer font-semibold transition-colors"
+                type="button"
+                @click="resetGlobalDateFilter"
+              >
+                Reset
+              </button>
+            </div>
+            <label class="flex flex-col gap-1 text-[10px] text-white/60">
+              <span class="font-bold uppercase tracking-wider">Dari</span>
+              <input
+                :value="globalDateFilter.start"
+                type="date"
+                class="bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white border border-white/10 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 w-full transition-all"
+                @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })"
+              />
+            </label>
+            <label class="flex flex-col gap-1 text-[10px] text-white/60">
+              <span class="font-bold uppercase tracking-wider">Sampai</span>
+              <input
+                :value="globalDateFilter.end"
+                type="date"
+                class="bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white border border-white/10 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 w-full transition-all"
+                @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })"
+              />
+            </label>
           </div>
-          <label class="flex flex-col gap-1 text-[11px] text-white/60">
-            <span class="font-bold uppercase tracking-wider">Dari</span>
-            <input
-              :value="globalDateFilter.start"
-              type="date"
-              class="bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 w-full transition-all"
-              @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })"
-            />
-          </label>
-          <label class="flex flex-col gap-1 text-[11px] text-white/60">
-            <span class="font-bold uppercase tracking-wider">Sampai</span>
-            <input
-              :value="globalDateFilter.end"
-              type="date"
-              class="bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 w-full transition-all"
-              @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })"
-            />
-          </label>
         </div>
-      </div>
+      </nav>
     </aside>
 
     <!-- Content Area -->
@@ -343,13 +395,25 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Footer -->
-      <footer class="mt-12 border-t border-border pt-5 pb-1 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-muted font-semibold">
-        <div>
-          <span>© 2026 MyFinanceFlow. Developed by </span>
-          <a href="https://github.com/XNS-ivy" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-bold">XNS-ivy</a>
+      <footer class="mt-12 border-t border-border/80 pt-6 pb-2 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-muted select-none shrink-0">
+        <div class="flex items-center gap-3">
+          <img src="https://avatars.githubusercontent.com/u/140568381?v=4" alt="XNS-ivy GitHub Profile" class="w-10 h-10 rounded-full border border-border/80 shadow-xs shrink-0" />
+          <div class="flex flex-col text-left">
+            <span class="font-bold text-text">Developed by XNS-ivy</span>
+            <span class="font-medium text-[10px] text-muted">Aplikasi Laporan Keuangan Pribadi (Offline-First)</span>
+          </div>
         </div>
-        <div class="flex gap-4">
+        <div class="flex items-center gap-4 font-semibold text-xs">
+          <a href="https://github.com/XNS-ivy" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors flex items-center gap-1.5">
+             GitHub
+          </a>
+          <span class="text-border/60">|</span>
+          <a href="mailto:ayramusic.nightcore@gmail.com" class="hover:text-primary transition-colors flex items-center gap-1.5">
+             Email
+          </a>
+          <span class="text-border/60">|</span>
           <RouterLink to="/privacy" class="hover:text-primary transition-colors">Kebijakan Privasi</RouterLink>
+          <span class="text-border/60">|</span>
           <RouterLink to="/terms" class="hover:text-primary transition-colors">Ketentuan Layanan</RouterLink>
         </div>
       </footer>

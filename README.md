@@ -24,6 +24,8 @@
     Buat kategori kustom dengan warna dan emoji unik. Personalisasikan tampilan aplikasi dengan 6 preset tema premium: *Ocean Light, Forest Light, Sunset Light, Midnight Blue, Graphite Dark,* dan *Ruby Dark*.
 *   🔒 **Keamanan Kunci PIN**: 
     Amankan privasi data keuangan Anda dari akses tidak sah dengan 4-digit sandi PIN yang divalidasi melalui virtual keypad beranimasi lengkap dengan feedback getar (vibration API).
+*   🌐 **Service Worker & Akses Offline (Offline-First)**:
+    Dilengkapi dengan Service Worker (`sw.js`) menggunakan strategi *Stale-While-Revalidate* untuk meng-cache aset statis. Aplikasi dapat diakses secara penuh dalam kondisi luring (offline) secara cepat dan andal, serta mendukung pengiriman notifikasi pengingat lokal.
 *   ⚡ **Floating Apps & Utilitas Cepat**: 
     Akses cepat melayang di pojok layar untuk menambahkan transaksi kilat, berganti tema secara instan, mengunduh file backup JSON data keuangan, serta tombol *scroll-to-top* yang mulus.
 

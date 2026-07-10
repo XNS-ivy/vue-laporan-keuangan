@@ -92,3 +92,15 @@ Menyediakan akses cepat ke beberapa fitur penting melalui tombol melayang di poj
   * Otomatis mendeteksi aktivitas scroll kontainer utama. Muncul tepat di atas tombol utilitas melayang ketika kontainer digulir melebihi `200px`.
   * Memungkinkan pengguna untuk kembali ke atas halaman secara instan dengan efek gulir yang mulus.
 
+---
+
+## 🌐 10. Service Worker & Akses Offline (Offline-First)
+Untuk mendukung konsep *offline-first* dan meningkatkan performa pemuatan aplikasi, **MyFinanceFlow** mengintegrasikan Service Worker:
+* **Service Worker (`sw.js`)**: Terdaftar di berkas `index.html` dan berlokasi di direktori `public/sw.js`.
+* **Strategi Caching (Stale-While-Revalidate)**:
+  * Ketika aplikasi meminta berkas statis (seperti berkas HTML, JavaScript, CSS, gambar), Service Worker akan langsung menyajikan versi cache yang tersedia (jika ada) untuk performa instan.
+  * Di latar belakang, Service Worker akan melakukan fetch ke jaringan untuk mengambil berkas terbaru dan memperbarui cache secara senyap.
+  * Menyediakan fallback halaman navigasi (`/index.html`) jika pengguna bernavigasi saat offline penuh.
+* **Notifikasi Lokal**: Digunakan oleh Composable `useNotifications.ts` untuk menampilkan push notification pengingat harian/mingguan/bulanan jika izin notifikasi diberikan oleh pengguna.
+* **Dukungan Progressive Web App (PWA)**: Bekerja bersama `manifest.webmanifest` untuk memungkinkan instalasi aplikasi langsung di homescreen perangkat Android/iOS atau desktop.
+

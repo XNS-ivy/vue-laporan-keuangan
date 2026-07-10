@@ -79,6 +79,24 @@ const savePreferences = () => {
   pushToast('Preferensi tema berhasil disimpan', 'success')
 }
 
+const useSystemTheme = () => {
+  localStorage.removeItem('finance-theme-settings')
+  localStorage.removeItem('finance-theme')
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const systemTheme = {
+    mode: (prefersDark ? 'dark' : 'light') as ThemeMode,
+    primary: prefersDark ? '#0f766e' : '#2563eb',
+    primaryAlpha: 1,
+    surfaceMode: (prefersDark ? 'dark' : 'light') as 'light' | 'dark'
+  }
+  themeDraft.value = systemTheme
+  applyThemeSettings(systemTheme)
+  dispatchThemeChange(systemTheme)
+  window.dispatchEvent(new Event('theme-reset-to-system'))
+  savedMessage.value = 'Tema disinkronkan ke setelan sistem (Auto)'
+  pushToast('Tema berhasil disinkronkan dengan sistem', 'success')
+}
+
 const applyPreset = () => {
   const preset = resolveThemePreset(selectedPreset.value)
   if (!preset) return
@@ -326,6 +344,9 @@ onMounted(() => {
       <div class="flex flex-col sm:flex-row sm:items-center gap-3.5 mt-2">
         <button class="px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-lg hover:shadow-primary/20 border-none" @click="savePreferences">
           Terapkan & Simpan Preferensi
+        </button>
+        <button class="px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-text bg-surface-2 border border-border hover:bg-border transition-all cursor-pointer" type="button" @click="useSystemTheme">
+          Gunakan Tema Sistem (Auto)
         </button>
         <p v-if="savedMessage" class="text-xs font-bold text-success">{{ savedMessage }}</p>
       </div>
