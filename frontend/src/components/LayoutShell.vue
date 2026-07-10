@@ -1,13 +1,55 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
-import { applyThemeSettings, getThemeSettings, type ThemeSettings } from '../composables/useTheme'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { applyThemeSettings, getThemeSettings, type ThemeSettings, themePresets } from '../composables/useTheme'
 import { useUi } from '../composables/useUi'
+import { useFinance } from '../composables/useFinance'
 
 const theme = ref<ThemeSettings>(getThemeSettings())
 const sidebarOpen = ref(false)
 const isDesktop = ref(false)
 const { globalDateFilter, hasDateFilter, resetGlobalDateFilter, setGlobalDateFilter, toasts, removeToast } = useUi()
+const { exportJsonData, addTransaction, categories } = useFinance()
+const route = useRoute()
+
+// Scroll tracking and Floating apps states
+const mainElement = ref<HTMLElement | null>(null)
+const showScrollTop = ref(false)
+const showFloatingMenu = ref(false)
+
+// Quick transaction form states
+const showQuickTxModal = ref(false)
+const quickTxForm = ref({
+  type: 'expense' as 'income' | 'expense',
+  amount: '',
+  category: '',
+  note: '',
+  date: new Date().toISOString().slice(0, 10)
+})
+
+const handleScroll = (event: Event) => {
+  const target = event.target as HTMLElement
+  if (target) {
+    showScrollTop.value = target.scrollTop > 200
+  }
+}
+
+const scrollToTop = () => {
+  if (mainElement.value) {
+    mainElement.value.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
+}
+
+// Reset main container scroll to top on route change
+watch(() => route.path, () => {
+  if (mainElement.value) {
+    mainElement.value.scrollTop = 0
+  }
+  showFloatingMenu.value = false
+})
 
 const syncViewport = () => {
   isDesktop.value = window.innerWidth > 900
@@ -29,6 +71,67 @@ const closeSidebar = () => {
     sidebarOpen.value = false
   }
 }
+
+// Cycle theme quickly (Light -> Dark -> Midnight -> Light)
+const cycleTheme = () => {
+  const modes: Array<'light' | 'dark' | 'midnight'> = ['light', 'dark', 'midnight']
+  const nextModeIndex = (modes.indexOf(theme.value.mode) + 1) % modes.length
+  const nextMode = modes[nextModeIndex]!
+  
+  const preset = themePresets.find(p => p.mode === nextMode) || themePresets[0]!
+  
+  const updatedTheme: ThemeSettings = {
+    mode: preset.mode,
+    primary: preset.primary,
+    primaryAlpha: theme.value.primaryAlpha,
+    surfaceMode: preset.surfaceMode
+  }
+  
+  theme.value = updatedTheme
+  applyThemeSettings(updatedTheme)
+  window.localStorage.setItem('finance-theme-settings', JSON.stringify(updatedTheme))
+  window.dispatchEvent(new CustomEvent('theme-preference-changed', { detail: updatedTheme }))
+  showFloatingMenu.value = false
+}
+
+// Download backup JSON file
+const downloadBackup = () => {
+  const jsonString = exportJsonData()
+  const blob = new Blob([jsonString], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `finance_backup_${new Date().toISOString().slice(0, 10)}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+  showFloatingMenu.value = false
+}
+
+// Submit quick transaction
+const submitQuickTx = () => {
+  if (!quickTxForm.value.amount || !quickTxForm.value.category) return
+  addTransaction({
+    type: quickTxForm.value.type,
+    amount: Number(quickTxForm.value.amount),
+    category: quickTxForm.value.category,
+    note: quickTxForm.value.note || 'Transaksi Pintas',
+    date: quickTxForm.value.date
+  })
+  
+  // Reset form
+  quickTxForm.value = {
+    type: 'expense',
+    amount: '',
+    category: '',
+    note: '',
+    date: new Date().toISOString().slice(0, 10)
+  }
+  showQuickTxModal.value = false
+}
+
+const filteredCategories = computed(() => {
+  return categories.value.filter(c => c.type === quickTxForm.value.type)
+})
 
 onMounted(() => {
   applyThemeSettings(theme.value)
@@ -197,9 +300,147 @@ onBeforeUnmount(() => {
     </aside>
 
     <!-- Content Area -->
-    <main class="h-screen overflow-y-auto p-5 lg:p-8 pt-20 lg:pt-8 bg-bg-soft">
-      <RouterView />
+    <main 
+      ref="mainElement" 
+      @scroll="handleScroll"
+      class="h-screen overflow-y-auto p-5 lg:p-8 pt-20 lg:pt-8 bg-bg-soft flex flex-col justify-between"
+    >
+      <div class="grow">
+        <RouterView />
+      </div>
+
+      <!-- Footer -->
+      <footer class="mt-12 border-t border-border pt-5 pb-1 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-muted font-semibold">
+        <div>
+          <span>© 2026 MyFinanceFlow. Developed by </span>
+          <a href="https://github.com/XNS-ivy" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-bold">XNS-ivy</a>
+        </div>
+        <div class="flex gap-4">
+          <RouterLink to="/privacy" class="hover:text-primary transition-colors">Kebijakan Privasi</RouterLink>
+          <RouterLink to="/terms" class="hover:text-primary transition-colors">Ketentuan Layanan</RouterLink>
+        </div>
+      </footer>
     </main>
+
+    <!-- Scroll to Top Button (Floating just above the utility button) -->
+    <button
+      v-if="showScrollTop"
+      class="fixed bottom-20.5 right-6 z-40 border-none rounded-full w-12 h-12 bg-primary text-primary-contrast flex items-center justify-center shadow-lg cursor-pointer hover:scale-105 active:scale-95 transition-all animate-bounce"
+      type="button"
+      @click="scrollToTop"
+      aria-label="Scroll ke atas"
+    >
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </button>
+
+    <!-- Floating Apps Utility Button -->
+    <div class="fixed bottom-6 right-6 z-40 flex flex-col items-end">
+      <!-- Floating Menu Popover -->
+      <div 
+        v-if="showFloatingMenu" 
+        class="bg-surface border border-border/50 rounded-2xl p-3.5 shadow-2xl w-48 mb-3.5 flex flex-col gap-2.5 animate-in fade-in slide-in-from-bottom-4 duration-200"
+      >
+        <div class="text-[9px] font-bold text-muted uppercase tracking-widest px-1 pb-1 border-b border-border/50">
+          Utilitas Cepat
+        </div>
+        <button 
+          class="w-full text-left px-2 py-2 rounded-xl text-xs font-bold text-text hover:bg-slate-500/10 cursor-pointer flex items-center gap-2.5 border-none bg-transparent"
+          @click="showQuickTxModal = true"
+        >
+          <span class="text-sm">📝</span> Tambah Transaksi
+        </button>
+        <button 
+          class="w-full text-left px-2 py-2 rounded-xl text-xs font-bold text-text hover:bg-slate-500/10 cursor-pointer flex items-center gap-2.5 border-none bg-transparent"
+          @click="cycleTheme"
+        >
+          <span class="text-sm">🎨</span> Ganti Tema Cepat
+        </button>
+        <button 
+          class="w-full text-left px-2 py-2 rounded-xl text-xs font-bold text-text hover:bg-slate-500/10 cursor-pointer flex items-center gap-2.5 border-none bg-transparent"
+          @click="downloadBackup"
+        >
+          <span class="text-sm">📥</span> Ekspor Backup
+        </button>
+      </div>
+
+      <!-- Toggle Button -->
+      <button
+        class="rounded-full w-12 h-12 bg-slate-900 text-white border border-slate-800/80 flex items-center justify-center shadow-lg cursor-pointer hover:scale-105 active:scale-95 transition-all focus:outline-none"
+        :class="{ 'bg-primary text-primary-contrast border-primary/20': showFloatingMenu }"
+        type="button"
+        @click="showFloatingMenu = !showFloatingMenu"
+        aria-label="Utilitas Cepat"
+      >
+        <span v-if="!showFloatingMenu" class="text-base select-none">⚡</span>
+        <span v-else class="text-xs font-extrabold select-none">✕</span>
+      </button>
+    </div>
+
+    <!-- Quick Transaction Modal -->
+    <div 
+      v-if="showQuickTxModal" 
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4"
+      @click.self="showQuickTxModal = false"
+    >
+      <div class="bg-surface border border-border rounded-3xl w-full max-w-md overflow-hidden flex flex-col shadow-2xl animate-in fade-in duration-200">
+        <!-- Modal Header -->
+        <header class="flex items-center justify-between border-b border-border px-6 py-4.5">
+          <div>
+            <span class="text-[10px] font-bold text-primary uppercase tracking-widest">Pintasan Cepat</span>
+            <h3 class="text-base font-extrabold text-text mt-0.5">Tambah Transaksi Baru</h3>
+          </div>
+          <button 
+            class="text-muted hover:text-text text-lg font-bold border-none bg-transparent cursor-pointer"
+            @click="showQuickTxModal = false"
+          >
+            ✕
+          </button>
+        </header>
+
+        <!-- Modal Form Body -->
+        <div class="p-6 flex flex-col gap-4 text-text">
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            Jenis Transaksi
+            <select v-model="quickTxForm.type" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none transition-all">
+              <option value="expense">Pengeluaran 💸</option>
+              <option value="income">Pemasukan 💰</option>
+            </select>
+          </label>
+
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            Nominal (Rp)
+            <input v-model="quickTxForm.amount" type="number" min="0" placeholder="10000" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
+          </label>
+
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            Kategori
+            <input v-model="quickTxForm.category" list="quick-categories" placeholder="Tulis atau pilih kategori..." class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
+            <datalist id="quick-categories">
+              <option v-for="cat in filteredCategories" :key="cat.id" :value="cat.name">{{ cat.name }}</option>
+            </datalist>
+          </label>
+
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            Catatan
+            <input v-model="quickTxForm.note" placeholder="Makan siang, freelance, dll." class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
+          </label>
+
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            Tanggal
+            <input v-model="quickTxForm.date" type="date" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
+          </label>
+
+          <button 
+            class="w-full mt-2 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:opacity-90 active:scale-95 transition-all cursor-pointer border-none"
+            @click="submitQuickTx"
+          >
+            Simpan Transaksi
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Toast stack notifications -->
     <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full px-4 lg:px-0">
@@ -251,4 +492,3 @@ onBeforeUnmount(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 </style>
-
