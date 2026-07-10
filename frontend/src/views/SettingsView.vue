@@ -14,6 +14,15 @@ import {
 } from '../composables/useTheme'
 import { useUi } from '../composables/useUi'
 import { useFinance } from '../composables/useFinance'
+import { useNotifications } from '../composables/useNotifications'
+
+const {
+  reminderInterval,
+  notificationPermission,
+  requestPermission,
+  setReminderInterval,
+  triggerImmediateTestNotification
+} = useNotifications()
 
 const themeOptions: ThemeMode[] = ['light', 'dark', 'midnight']
 const themeDraft = ref<ThemeSettings>(getThemeSettings())
@@ -207,7 +216,7 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <header class="bg-gradient-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom">
+    <header class="bg-linear-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom">
       <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Settings</p>
       <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Preferensi Pengguna</h1>
       <p class="text-sm text-white/80 leading-relaxed mt-2">Kustomisasi tema warna, kelola daftar kategori keuangan, atau lakukan pencadangan data Anda.</p>
@@ -370,7 +379,7 @@ onMounted(() => {
               </select>
             </label>
             <div class="flex gap-2 mt-1">
-              <button class="flex-grow px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm" type="button" @click="handleUpdateCategory">
+              <button class="grow px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm" type="button" @click="handleUpdateCategory">
                 Simpan
               </button>
               <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-text bg-surface border border-border hover:bg-surface-2 transition-all cursor-pointer" type="button" @click="cancelEditCategory">
@@ -394,7 +403,7 @@ onMounted(() => {
                   <div class="flex items-center gap-2 text-xs font-semibold text-text">
                     <span class="text-sm shrink-0">{{ item.icon || '📈' }}</span>
                     <span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs" :style="{ background: item.color || '#16a34a' }"></span>
-                    <span class="truncate max-w-[120px]">{{ item.name }}</span>
+                    <span class="truncate max-w-30">{{ item.name }}</span>
                   </div>
                   <div class="flex items-center gap-1">
                     <button class="p-1 text-xs hover:bg-primary-soft hover:text-primary transition-all rounded-lg cursor-pointer border-none" type="button" @click="startEditCategory(item)">✏️</button>
@@ -413,7 +422,7 @@ onMounted(() => {
                   <div class="flex items-center gap-2 text-xs font-semibold text-text">
                     <span class="text-sm shrink-0">{{ item.icon || '💸' }}</span>
                     <span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs" :style="{ background: item.color || '#ef4444' }"></span>
-                    <span class="truncate max-w-[120px]">{{ item.name }}</span>
+                    <span class="truncate max-w-30">{{ item.name }}</span>
                   </div>
                   <div class="flex items-center gap-1">
                     <button class="p-1 text-xs hover:bg-primary-soft hover:text-primary transition-all rounded-lg cursor-pointer border-none" type="button" @click="startEditCategory(item)">✏️</button>
@@ -464,6 +473,56 @@ onMounted(() => {
             @click="saveNewPin"
           >
             Simpan PIN
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pengingat Catat Keuangan (Notifikasi) -->
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Pengingat Catat Keuangan (Push Notification)</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Jaga kedisiplinan mencatat keuangan Anda dengan menyalakan push notification pengingat berkala.</p>
+
+      <div class="flex flex-col gap-4 mt-1 max-w-md">
+        <div class="flex items-center justify-between border-b border-border/40 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-xs font-bold text-muted uppercase tracking-wider">Izin Notifikasi Browser</span>
+            <span class="text-[10px] font-bold" :class="notificationPermission === 'granted' ? 'text-success' : notificationPermission === 'denied' ? 'text-danger' : 'text-amber-500'">
+              {{ notificationPermission === 'granted' ? 'Diizinkan (Aktif)' : notificationPermission === 'denied' ? 'Ditolak (Blokir)' : 'Meminta Persetujuan' }}
+            </span>
+          </div>
+          <button
+            v-if="notificationPermission !== 'granted'"
+            class="px-4 py-2 rounded-full text-xs font-bold bg-primary-soft text-primary hover:bg-primary/25 border-none cursor-pointer transition-colors"
+            type="button"
+            @click="requestPermission"
+          >
+            Izinkan Notifikasi
+          </button>
+          <span v-else class="text-xs font-bold text-success">✔️ Aktif</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider grow">
+            Frekuensi Pengingat
+            <select
+              :value="reminderInterval"
+              @change="setReminderInterval(($event.target as HTMLSelectElement).value as any)"
+              class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all"
+            >
+              <option value="off">Matikan Pengingat</option>
+              <option value="daily">Setiap Hari (Harian)</option>
+              <option value="weekly">Setiap Minggu (Mingguan)</option>
+              <option value="monthly">Setiap Bulan (Bulanan)</option>
+            </select>
+          </label>
+
+          <button
+            class="px-4 py-3 rounded-xl text-xs font-bold bg-surface-2 border border-border hover:bg-border text-text transition-all cursor-pointer sm:self-end shrink-0"
+            type="button"
+            @click="triggerImmediateTestNotification"
+          >
+            🔔 Uji Coba Notifikasi
           </button>
         </div>
       </div>

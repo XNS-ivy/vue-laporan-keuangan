@@ -28,6 +28,8 @@ const {
   monthsToGoal,
   budgetAlerts,
   currentMonthBudgetSummary,
+  nextMonthForecast,
+  categoryForecasts,
   automatedInsights,
   totalDebt,
   totalReceivable,
@@ -315,6 +317,66 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
               <strong class="font-bold text-success">{{ topIncome ? topIncome[0] : 'Belum ada' }}</strong>
             </li>
           </ul>
+        </section>
+
+        <!-- Smart Forecast Card -->
+        <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+          <div class="flex items-center justify-between border-b border-border pb-3">
+            <h3 class="text-base font-bold text-text tracking-tight flex items-center gap-1.5">
+              <span>🔮 Smart Forecast</span>
+            </h3>
+            <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-primary-soft text-primary uppercase tracking-wider">
+              Prediksi AI
+            </span>
+          </div>
+
+          <div v-if="!nextMonthForecast.hasEnoughData" class="text-xs text-muted leading-relaxed py-4 font-semibold text-center">
+            ⚠️ Butuh minimal 2 bulan histori transaksi untuk melakukan estimasi prediksi pengeluaran bulan depan.
+          </div>
+
+          <div v-else class="flex flex-col gap-3.5">
+            <!-- Prediksi Total -->
+            <div>
+              <p class="text-[10px] text-muted font-bold uppercase tracking-wider">Prakiraan Pengeluaran Bulan Depan</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <strong class="text-xl font-extrabold text-text">
+                  Rp {{ nextMonthForecast.predictedExpense.toLocaleString('id-ID') }}
+                </strong>
+                <span 
+                  class="text-xs font-bold flex items-center" 
+                  :class="nextMonthForecast.percentageChange > 0 ? 'text-danger' : nextMonthForecast.percentageChange < 0 ? 'text-success' : 'text-muted'"
+                >
+                  {{ nextMonthForecast.percentageChange > 0 ? '▲ +' : nextMonthForecast.percentageChange < 0 ? '▼ ' : '' }}{{ nextMonthForecast.percentageChange }}%
+                </span>
+              </div>
+              <p class="text-[11px] text-muted font-semibold mt-1">
+                {{ nextMonthForecast.trendDirection === 'up' 
+                  ? 'Tren pengeluaran Anda cenderung naik. Disarankan untuk memangkas beberapa biaya non-esensial.' 
+                  : nextMonthForecast.trendDirection === 'down'
+                  ? 'Kabar baik! Tren pengeluaran bulanan Anda menunjukkan penurunan.'
+                  : 'Tren pengeluaran Anda terpantau stabil.' }}
+              </p>
+            </div>
+
+            <!-- Breakdown Kategori Teratas -->
+            <div v-if="categoryForecasts.length > 0" class="border-t border-border/40 pt-3 flex flex-col gap-2">
+              <p class="text-[10px] text-muted font-bold uppercase tracking-wider mb-1">Prediksi Pengeluaran per Kategori</p>
+              <div class="flex flex-col gap-2 max-h-36 overflow-y-auto pr-1">
+                <div v-for="cf in categoryForecasts.slice(0, 3)" :key="cf.category" class="flex justify-between items-center text-xs font-semibold">
+                  <span class="text-muted">{{ cf.category }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-text">Rp {{ cf.predictedAmount.toLocaleString('id-ID') }}</span>
+                    <span 
+                      class="text-[10px] font-bold"
+                      :class="cf.percentageChange > 0 ? 'text-danger' : cf.percentageChange < 0 ? 'text-success' : 'text-muted'"
+                    >
+                      ({{ cf.percentageChange > 0 ? '+' : '' }}{{ cf.percentageChange }}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
  
         <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">

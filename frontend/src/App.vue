@@ -2,9 +2,11 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import LayoutShell from './components/LayoutShell.vue'
 import SecurityLock from './components/SecurityLock.vue'
+import { useNotifications } from './composables/useNotifications'
 
 const storedPin = ref<string | null>(null)
 const isLocked = ref(false)
+const { checkAndTriggerReminder } = useNotifications()
 
 const checkPin = () => {
   const pin = localStorage.getItem('finance_flow_pin')
@@ -28,6 +30,7 @@ const handleUnlock = () => {
 onMounted(() => {
   checkPin()
   window.addEventListener('pin-changed', checkPin)
+  checkAndTriggerReminder()
 })
 
 onBeforeUnmount(() => {

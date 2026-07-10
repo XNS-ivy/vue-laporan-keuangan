@@ -491,6 +491,114 @@ export function useFinance() {
   const totalReceivable = computed(() => openReceivables.value.reduce((sum, item) => sum + item.amount, 0))
   const upcomingRecurring = computed(() => recurringTransactions.value.slice().sort((a, b) => a.dayOfMonth - b.dayOfMonth).map((item) => ({ ...item, isApplied: item.lastAppliedMonth === currentMonth() })))
 
+  const nextMonthForecast = computed(() => {
+    const trend = monthlyTrend.value
+    if (trend.length < 2) {
+      return {
+        hasEnoughData: false,
+        predictedExpense: 0,
+        trendDirection: 'flat' as 'up' | 'down' | 'flat',
+        percentageChange: 0,
+      }
+    }
+
+    const N = trend.length
+    const x = Array.from({ length: N }, (_, i) => i)
+    const y = trend.map(([, val]) => val.expense)
+
+    const meanX = x.reduce((a, b) => a + b, 0) / N
+    const meanY = y.reduce((a, b) => a + b, 0) / N
+
+    let numerator = 0
+    let denominator = 0
+    for (let i = 0; i < N; i++) {
+      numerator += (x[i]! - meanX) * (y[i]! - meanY)
+      denominator += (x[i]! - meanX) ** 2
+    }
+
+    const slope = denominator === 0 ? 0 : numerator / denominator
+    const intercept = meanY - slope * meanX
+
+    const predictedExpense = Math.max(0, Math.round(slope * N + intercept))
+    const currentMonthExpense = y[N - 1] || 0
+    let percentageChange = 0
+    if (currentMonthExpense > 0) {
+      percentageChange = Math.round(((predictedExpense - currentMonthExpense) / currentMonthExpense) * 100)
+    }
+
+    const trendDirection = slope > 1000 ? 'up' as const : slope < -1000 ? 'down' as const : 'flat' as const
+
+    return {
+      hasEnoughData: true,
+      predictedExpense,
+      trendDirection,
+      percentageChange,
+      slope
+    }
+  })
+
+  const categoryForecasts = computed(() => {
+    const sorted = [...transactions.value].sort((a, b) => a.date.localeCompare(b.date))
+    const uniqueMonths = Array.from(new Set(sorted.map(t => t.date.slice(0, 7)))).sort()
+    
+    if (uniqueMonths.length < 2) return []
+
+    const monthCatMap = new Map<string, Map<string, number>>()
+    uniqueMonths.forEach(m => {
+      monthCatMap.set(m, new Map<string, number>())
+    })
+
+    sorted.forEach(t => {
+      if (t.type !== 'expense') return
+      const m = t.date.slice(0, 7)
+      const catMap = monthCatMap.get(m)!
+      catMap.set(t.category, (catMap.get(t.category) || 0) + t.amount)
+    })
+
+    const allCategories = Array.from(new Set(sorted.filter(t => t.type === 'expense').map(t => t.category)))
+    const forecasts: Array<{ category: string; predictedAmount: number; trendDirection: 'up' | 'down' | 'flat'; percentageChange: number }> = []
+
+    allCategories.forEach(category => {
+      const y = uniqueMonths.map(m => monthCatMap.get(m)!.get(category) || 0)
+      const totalSpent = y.reduce((a, b) => a + b, 0)
+      if (totalSpent === 0) return
+
+      const N = y.length
+      const x = Array.from({ length: N }, (_, i) => i)
+
+      const meanX = x.reduce((a, b) => a + b, 0) / N
+      const meanY = y.reduce((a, b) => a + b, 0) / N
+
+      let numerator = 0
+      let denominator = 0
+      for (let i = 0; i < N; i++) {
+        numerator += (x[i]! - meanX) * (y[i]! - meanY)
+        denominator += (x[i]! - meanX) ** 2
+      }
+
+      const slope = denominator === 0 ? 0 : numerator / denominator
+      const intercept = meanY - slope * meanX
+
+      const predictedAmount = Math.max(0, Math.round(slope * N + intercept))
+      const currentAmount = y[N - 1] || 0
+      let percentageChange = 0
+      if (currentAmount > 0) {
+        percentageChange = Math.round(((predictedAmount - currentAmount) / currentAmount) * 100)
+      }
+
+      const trendDirection = slope > 500 ? 'up' as const : slope < -500 ? 'down' as const : 'flat' as const
+
+      forecasts.push({
+        category,
+        predictedAmount,
+        trendDirection,
+        percentageChange
+      })
+    })
+
+    return forecasts.sort((a, b) => b.predictedAmount - a.predictedAmount)
+  })
+
   const automatedInsights = computed(() => {
     const insights: string[] = []
     const topExpense = expenseByCategory.value[0]
@@ -672,6 +780,8 @@ export function useFinance() {
     deleteAsset,
     deleteDebt,
     getBudgetSummary,
+    nextMonthForecast,
+    categoryForecasts,
     exportTransactionsCsv,
     downloadCsvReport,
     downloadExcelReport,
