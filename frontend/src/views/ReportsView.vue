@@ -2,79 +2,91 @@
 import { computed } from 'vue'
 import { useFinance } from '../composables/useFinance'
 
-const { automatedInsights, budgetAlerts, downloadCsvReport, downloadPdfReport, exportSummaryText, filteredTransactions, monthlyComparison } = useFinance()
+const { automatedInsights, budgetAlerts, downloadCsvReport, downloadExcelReport, downloadPdfReport, exportSummaryText, filteredTransactions, monthlyComparison } = useFinance()
 const canExport = computed(() => filteredTransactions.value.length > 0)
 </script>
 
 <template>
-  <div class="page">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">Reports</p>
-        <h1>Export laporan dan baca insight cepat</h1>
-        <p>Export sekarang mendukung CSV dan PDF. Isi laporan otomatis mengikuti filter tanggal global yang ada di sidebar.</p>
+  <div class="flex flex-col gap-6">
+    <header class="bg-linear-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+      <div class="z-10 grow max-w-2xl">
+        <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Reports</p>
+        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Ekspor laporan & analisis cepat</h1>
+        <p class="text-sm text-white/80 leading-relaxed mt-2">Unduh laporan dalam format CSV, Excel, atau PDF. Data laporan otomatis tersinkronisasi mengikuti filter rentang tanggal global.</p>
       </div>
     </header>
 
-    <section class="grid">
-      <article class="card">
-        <h2>Export</h2>
-        <p class="subtle">CSV cocok untuk analisis lanjutan. PDF cocok untuk dibagikan atau disimpan sebagai laporan rapi.</p>
-        <div class="actions">
-          <button class="primary-btn" type="button" :disabled="!canExport" @click="downloadCsvReport">Download CSV</button>
-          <button class="ghost-btn" type="button" :disabled="!canExport" @click="downloadPdfReport">Download PDF</button>
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <article class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Ekspor Berkas</h2>
+        <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">CSV/Excel sangat ideal untuk pemrosesan spreadsheet lanjutan. PDF cocok untuk dibagikan secara rapi.</p>
+        <div class="flex flex-wrap gap-3">
+          <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-md hover:shadow-primary/20 border-none disabled:opacity-50 disabled:cursor-not-allowed" type="button" :disabled="!canExport" @click="downloadCsvReport">
+            Download CSV
+          </button>
+          <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-emerald-600 hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-md hover:shadow-emerald-600/20 border-none disabled:opacity-50 disabled:cursor-not-allowed" type="button" :disabled="!canExport" @click="downloadExcelReport">
+            Download Excel
+          </button>
+          <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-danger-text bg-danger-soft hover:opacity-90 transition-all cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed" type="button" :disabled="!canExport" @click="downloadPdfReport">
+            Download PDF
+          </button>
         </div>
       </article>
 
-      <article class="card">
-        <h2>Snapshot Bulanan</h2>
-        <ul>
-          <li>Pemasukan berubah {{ monthlyComparison.incomeChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.incomeChange.toLocaleString('id-ID') }}</li>
-          <li>Pengeluaran berubah {{ monthlyComparison.expenseChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.expenseChange.toLocaleString('id-ID') }}</li>
-          <li>Net berubah {{ monthlyComparison.netChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.netChange.toLocaleString('id-ID') }}</li>
-          <li>Transaksi terfilter: {{ filteredTransactions.length }}</li>
+      <article class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Snapshot Bulanan</h2>
+        <ul class="flex flex-col gap-3 pr-1 text-sm font-semibold">
+          <li class="flex justify-between items-center text-muted pb-2 border-b border-border/40">
+            <span>Pemasukan:</span>
+            <strong :class="monthlyComparison.incomeChange >= 0 ? 'text-success' : 'text-danger'">
+              {{ monthlyComparison.incomeChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.incomeChange.toLocaleString('id-ID') }}
+            </strong>
+          </li>
+          <li class="flex justify-between items-center text-muted pb-2 border-b border-border/40">
+            <span>Pengeluaran:</span>
+            <strong :class="monthlyComparison.expenseChange >= 0 ? 'text-danger' : 'text-success'">
+              {{ monthlyComparison.expenseChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.expenseChange.toLocaleString('id-ID') }}
+            </strong>
+          </li>
+          <li class="flex justify-between items-center text-muted pb-2 border-b border-border/40">
+            <span>Net:</span>
+            <strong :class="monthlyComparison.netChange >= 0 ? 'text-success' : 'text-danger'">
+              {{ monthlyComparison.netChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.netChange.toLocaleString('id-ID') }}
+            </strong>
+          </li>
+          <li class="flex justify-between items-center text-muted">
+            <span>Transaksi Terfilter:</span>
+            <strong class="text-text">{{ filteredTransactions.length }}</strong>
+          </li>
         </ul>
       </article>
     </section>
 
-    <section class="grid">
-      <article class="card">
-        <h2>Insight Otomatis</h2>
-        <ul>
-          <li v-for="item in automatedInsights" :key="item">{{ item }}</li>
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <article class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Insight Otomatis</h2>
+        <ul class="flex flex-col gap-2.5 text-xs text-muted font-semibold list-disc pl-4">
+          <li v-for="item in automatedInsights" :key="item" class="leading-relaxed">{{ item }}</li>
         </ul>
       </article>
 
-      <article class="card">
-        <h2>Alert Anggaran</h2>
-        <div v-if="budgetAlerts.length" class="alert-list">
-          <div v-for="item in budgetAlerts" :key="item.id" class="alert-item" :class="item.level">
-            <strong>{{ item.category }}</strong>
-            <span>{{ item.message }}</span>
+      <article class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Alert Anggaran</h2>
+        <div v-if="budgetAlerts.length" class="flex flex-col gap-2.5">
+          <div v-for="item in budgetAlerts" :key="item.id" class="flex flex-col gap-0.5 px-4 py-2.5 rounded-xl bg-surface-2 border text-xs" :class="item.level === 'danger' ? 'border-danger/30 text-danger-text' : 'border-amber-500/30 text-amber-600'">
+            <strong class="font-bold uppercase tracking-wider">{{ item.category }}</strong>
+            <span class="font-medium opacity-90">{{ item.message }}</span>
           </div>
         </div>
-        <p v-else class="subtle">Belum ada alert. Semua anggaran masih aman.</p>
+        <p v-else class="text-center py-6 text-xs text-muted font-semibold">Semua anggaran aman. Belum ada peringatan batas limit.</p>
       </article>
     </section>
 
-    <section class="card">
-      <h2>Ringkasan Teks</h2>
-      <pre class="summary">{{ exportSummaryText }}</pre>
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Ringkasan Teks</h2>
+      <pre class="font-mono text-xs whitespace-pre-wrap leading-relaxed text-text bg-surface-2 border border-border rounded-xl p-4 overflow-x-auto">{{ exportSummaryText }}</pre>
     </section>
   </div>
 </template>
 
-<style scoped>
-.page { display: flex; flex-direction: column; gap: 1rem; }
-.hero { background: linear-gradient(135deg, var(--sidebar-bg), var(--hero-accent)); color: white; border-radius: 24px; padding: 1.3rem 1.4rem; box-shadow: var(--shadow); }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; opacity: 0.8; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1rem; box-shadow: var(--shadow); }
-.subtle { color: var(--muted); }
-.actions { display: flex; gap: 0.7rem; flex-wrap: wrap; }
-.alert-list { display: flex; flex-direction: column; gap: 0.7rem; }
-.alert-item { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.8rem 0.9rem; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border); }
-.alert-item.warning { border-color: #f59e0b; }
-.alert-item.danger { border-color: var(--danger); }
-.summary { white-space: pre-wrap; font: inherit; background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 1rem; color: var(--text); }
-</style>

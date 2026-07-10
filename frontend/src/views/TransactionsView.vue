@@ -98,20 +98,20 @@ const submitRecurring = () => {
 </script>
 
 <template>
-  <div class="page">
-    <header class="page-header">
+  <div class="flex flex-col gap-6">
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
       <div>
-        <p class="eyebrow">Transaksi</p>
-        <h1>Catat uang masuk, keluar, dan transaksi rutin</h1>
+        <p class="uppercase tracking-widest text-[10px] text-muted font-bold">Transaksi</p>
+        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">Catat uang masuk, keluar, & transaksi rutin</h1>
       </div>
-      <select v-model="filter">
-        <option value="all">Semua</option>
-        <option value="income">Pemasukan</option>
-        <option value="expense">Pengeluaran</option>
+      <select v-model="filter" class="border border-border rounded-xl px-4 py-2 bg-surface text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all w-full sm:w-auto">
+        <option value="all">Semua Jenis</option>
+        <option value="income">Pemasukan saja</option>
+        <option value="expense">Pengeluaran saja</option>
       </select>
     </header>
 
-    <div class="content-grid">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <TransactionForm
         :categories="categories"
         :edit-transaction="editingTransaction"
@@ -121,114 +121,123 @@ const submitRecurring = () => {
         @add-category="({ name, type }) => addCategory(name, type)"
       />
       
-      <section class="card">
-        <h2>Riwayat Transaksi</h2>
+      <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Riwayat Transaksi</h2>
         
-        <div class="filter-bar">
-          <input v-model="searchQuery" placeholder="Cari catatan atau kategori..." type="text" class="search-input" />
-          <div class="range-inputs">
-            <input v-model.number="minAmount" placeholder="Nominal Min (Rp)" type="number" min="0" />
-            <input v-model.number="maxAmount" placeholder="Nominal Max (Rp)" type="number" min="0" />
+        <div class="flex flex-col gap-3">
+          <input v-model="searchQuery" placeholder="Cari catatan atau kategori..." type="text" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
+          <div class="grid grid-cols-2 gap-3">
+            <input v-model.number="minAmount" placeholder="Nominal Min (Rp)" type="number" min="0" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
+            <input v-model.number="maxAmount" placeholder="Nominal Max (Rp)" type="number" min="0" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
           </div>
         </div>
 
-        <ul class="list">
-          <li v-for="item in paginatedTransactions" :key="item.id" class="list-item">
+        <ul class="flex flex-col gap-3 pr-1">
+          <li v-for="item in paginatedTransactions" :key="item.id" class="flex justify-between items-center gap-4 pb-3.5 border-b border-border last:border-0 last:pb-0">
             <div>
-              <strong>{{ item.category }}</strong>
-              <p>{{ item.note || 'Tanpa catatan' }} • {{ item.date }}</p>
+              <div class="flex items-center gap-2 flex-wrap">
+                <strong class="text-sm font-bold text-text">{{ item.category }}</strong>
+                <span v-if="item.subCategory" class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-primary-soft text-primary border border-primary/10">
+                  {{ item.subCategory }}
+                </span>
+              </div>
+              <p class="text-xs text-muted font-semibold mt-0.5">{{ item.note || 'Tanpa catatan' }} • {{ item.date }}</p>
             </div>
-            <div class="meta">
-              <span :class="item.type === 'income' ? 'good' : 'warn'">
+            <div class="flex items-center gap-3.5 shrink-0">
+              <span :class="item.type === 'income' ? 'text-success' : 'text-danger'" class="text-sm font-bold">
                 {{ item.type === 'income' ? '+' : '-' }} Rp {{ item.amount.toLocaleString('id-ID') }}
               </span>
-              <div class="item-actions">
-                <button class="ghost-btn edit-btn" type="button" @click="editingTransaction = item">Edit</button>
-                <button class="ghost-btn delete-btn" type="button" @click="deleteTransaction(item.id)">Hapus</button>
+              <div class="flex items-center gap-1.5">
+                <button class="px-3 py-1.5 rounded-full text-xs font-bold text-primary bg-primary-soft hover:bg-primary-muted transition-all cursor-pointer border-none" type="button" @click="editingTransaction = item">✏️</button>
+                <button class="px-3 py-1.5 rounded-full text-xs font-bold text-danger-text bg-danger-soft hover:opacity-90 transition-all cursor-pointer border-none" type="button" @click="deleteTransaction(item.id)">🗑️</button>
               </div>
             </div>
           </li>
-          <li v-if="!paginatedTransactions.length" class="empty-state">
+          <li v-if="!paginatedTransactions.length" class="text-center py-10 text-xs text-muted font-semibold">
             Tidak ada transaksi ditemukan.
           </li>
         </ul>
 
-        <div v-if="totalPages > 1" class="pagination">
-          <button class="pagination-btn" :disabled="currentPage === 1" @click="currentPage--">Sebelumnya</button>
-          <span class="pagination-info">Halaman {{ currentPage }} dari {{ totalPages }}</span>
-          <button class="pagination-btn" :disabled="currentPage === totalPages" @click="currentPage++">Selanjutnya</button>
+        <div v-if="totalPages > 1" class="flex items-center justify-between mt-4 pt-4 border-t border-border">
+          <button class="px-4 py-2 rounded-xl text-xs font-bold text-text bg-surface-2 border border-border hover:bg-border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentPage === 1" @click="currentPage--">Sebelumnya</button>
+          <span class="text-xs font-semibold text-muted">Halaman {{ currentPage }} dari {{ totalPages }}</span>
+          <button class="px-4 py-2 rounded-xl text-xs font-bold text-text bg-surface-2 border border-border hover:bg-border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentPage === totalPages" @click="currentPage++">Selanjutnya</button>
         </div>
       </section>
     </div>
 
-    <section class="content-grid">
-      <section class="card">
-        <h2>Recurring Transaction</h2>
-        <div class="form-grid">
-          <label>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Recurring Transaction</h2>
+        <div class="grid gap-4 grid-cols-1 sm:grid-cols-2">
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             Judul
-            <input v-model="recurringForm.title" placeholder="Contoh: Gaji Bulanan" />
+            <input v-model="recurringForm.title" placeholder="Contoh: Gaji Bulanan" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
           </label>
-          <label>
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             Jenis
-            <select v-model="recurringForm.type">
+            <select v-model="recurringForm.type" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all">
               <option value="income">Pemasukan</option>
               <option value="expense">Pengeluaran</option>
             </select>
           </label>
-          <label>
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             Kategori
-            <input v-model="recurringForm.category" placeholder="Contoh: Tagihan" />
+            <input v-model="recurringForm.category" placeholder="Contoh: Tagihan" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
           </label>
-          <label>
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             Nominal
-            <input v-model="recurringForm.amount" type="number" min="0" placeholder="350000" />
+            <input v-model="recurringForm.amount" type="number" min="0" placeholder="350000" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
           </label>
-          <label>
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             Tanggal setiap bulan
-            <input v-model="recurringForm.dayOfMonth" type="number" min="1" max="28" />
+            <input v-model="recurringForm.dayOfMonth" type="number" min="1" max="28" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all" />
           </label>
-          <label class="full">
+          <label class="sm:col-span-2 flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             Catatan
-            <input v-model="recurringForm.note" placeholder="Catatan transaksi rutin" />
+            <input v-model="recurringForm.note" placeholder="Catatan transaksi rutin" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
           </label>
         </div>
-        <button class="primary-btn" type="button" @click="submitRecurring">Tambah Transaksi Rutin</button>
+        <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-lg hover:shadow-primary/20 border-none mt-2 self-start" type="button" @click="submitRecurring">Tambah Transaksi Rutin</button>
       </section>
 
-      <section class="card">
-        <h2>Jadwal Transaksi Rutin</h2>
-        <div class="goal-list">
-          <article v-for="item in upcomingRecurring" :key="item.id" class="goal-item">
+      <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Jadwal Transaksi Rutin</h2>
+        <div class="flex flex-col gap-3">
+          <article v-for="item in upcomingRecurring" :key="item.id" class="flex justify-between items-center gap-4 pb-3.5 border-b border-border last:border-0 last:pb-0">
             <div>
-              <strong>{{ item.title }}</strong>
-              <p>{{ item.category }} • Tanggal {{ item.dayOfMonth }} • Rp {{ item.amount.toLocaleString('id-ID') }}</p>
-              <p>{{ item.note || 'Tanpa catatan' }} • {{ item.isApplied ? 'Sudah diterapkan bulan ini' : 'Belum diterapkan' }}</p>
+              <strong class="text-sm font-bold text-text">{{ item.title }}</strong>
+              <p class="text-xs text-muted font-semibold mt-0.5">{{ item.category }} • Tanggal {{ item.dayOfMonth }} • Rp {{ item.amount.toLocaleString('id-ID') }}</p>
+              <p class="text-[10px] text-muted font-bold mt-1 inline-block px-2 py-0.5 bg-surface-2 rounded-md border border-border">{{ item.isApplied ? 'Sudah diterapkan bulan ini' : 'Belum diterapkan' }}</p>
             </div>
-            <div class="actions">
-              <button class="primary-btn" type="button" @click="applyRecurringTransaction(item.id)">Terapkan</button>
-              <button class="ghost-btn delete-btn" type="button" @click="deleteRecurringTransaction(item.id)">Hapus</button>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button class="px-3.5 py-1.5 rounded-full text-xs font-bold text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm" type="button" @click="applyRecurringTransaction(item.id)">Terapkan</button>
+              <button class="px-3 py-1.5 rounded-full text-xs font-bold text-danger-text bg-danger-soft hover:opacity-90 transition-all cursor-pointer border-none" type="button" @click="deleteRecurringTransaction(item.id)">🗑️</button>
             </div>
           </article>
-          <p v-if="!recurringTransactions.length" class="subtle">Belum ada transaksi rutin.</p>
+          <p v-if="!recurringTransactions.length" class="text-center py-8 text-xs text-muted font-semibold">Belum ada transaksi rutin.</p>
         </div>
       </section>
-    </section>
+    </div>
 
-    <section class="card">
-      <h2>Kategori Aktif</h2>
-      <p class="subtle">Kategori akan bertambah otomatis saat transaksi baru disimpan, atau bisa ditambahkan langsung dari input form.</p>
-      <div class="category-groups">
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Kategori Aktif</h2>
+      <p class="text-xs text-muted font-medium -mt-2">Kategori ditambahkan otomatis saat transaksi baru disimpan, atau bisa dikelola secara mendetail dari Settings.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-1">
         <div>
-          <h3>Pemasukan</h3>
-          <div class="chips">
-            <span v-for="item in categories.filter((category) => category.type === 'income')" :key="item.id" class="chip">{{ item.name }}</span>
+          <h3 class="text-xs font-bold text-muted uppercase tracking-wider mb-3">Pemasukan</h3>
+          <div class="flex flex-wrap gap-2">
+            <span v-for="item in categories.filter((category) => category.type === 'income')" :key="item.id" class="px-3 py-1.5 rounded-full text-xs font-semibold text-primary bg-primary-soft">
+              {{ item.name }}
+            </span>
           </div>
         </div>
         <div>
-          <h3>Pengeluaran</h3>
-          <div class="chips">
-            <span v-for="item in categories.filter((category) => category.type === 'expense')" :key="item.id" class="chip">{{ item.name }}</span>
+          <h3 class="text-xs font-bold text-muted uppercase tracking-wider mb-3">Pengeluaran</h3>
+          <div class="flex flex-wrap gap-2">
+            <span v-for="item in categories.filter((category) => category.type === 'expense')" :key="item.id" class="px-3 py-1.5 rounded-full text-xs font-semibold text-danger bg-danger-soft">
+              {{ item.name }}
+            </span>
           </div>
         </div>
       </div>
@@ -236,113 +245,3 @@ const submitRecurring = () => {
   </div>
 </template>
 
-<style scoped>
-.page { display: flex; flex-direction: column; gap: 1rem; }
-.hero { background: linear-gradient(135deg, var(--sidebar-bg), var(--hero-accent)); color: white; border-radius: 24px; padding: 1.3rem 1.4rem; box-shadow: var(--shadow); }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; opacity: 0.8; }
-.page-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; color: var(--muted); }
-.content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1rem; box-shadow: var(--shadow); }
-.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.7rem; }
-.list-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding-bottom: 0.7rem; border-bottom: 1px solid var(--border); }
-.meta { display: flex; align-items: center; gap: 0.7rem; }
-.good { color: var(--success); font-weight: 600; }
-.warn { color: var(--danger); font-weight: 600; }
-.subtle { color: var(--muted); margin-top: -0.2rem; }
-.category-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
-.chips { display: flex; flex-wrap: wrap; gap: 0.55rem; }
-.chip { border-radius: 999px; padding: 0.42rem 0.75rem; }
-.form-grid { display: grid; gap: 0.8rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.full { grid-column: 1 / -1; }
-.goal-list { display: flex; flex-direction: column; gap: 0.8rem; }
-.goal-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
-.actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-
-.filter-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  margin-bottom: 1.2rem;
-}
-
-.range-inputs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-}
-
-.item-actions {
-  display: flex;
-  gap: 0.4rem;
-  align-items: center;
-}
-
-.edit-btn {
-  background: var(--primary-soft);
-  color: var(--primary);
-}
-
-.edit-btn:hover {
-  background: var(--primary-muted);
-  transform: translateY(-1px);
-}
-
-.delete-btn {
-  background: var(--danger-soft);
-  color: var(--danger-text);
-}
-
-.delete-btn:hover {
-  background: var(--danger-soft);
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 1.2rem;
-  gap: 1rem;
-}
-
-.pagination-btn {
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-  border-radius: 12px;
-  padding: 0.5rem 0.9rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: var(--border);
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-info {
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 2rem 1rem;
-  color: var(--muted);
-  list-style: none;
-}
-
-@media (max-width: 900px) {
-  .content-grid { grid-template-columns: 1fr; }
-  .page-header { flex-direction: column; align-items: flex-start; }
-  .form-grid { grid-template-columns: 1fr; }
-  .goal-item, .list-item { flex-direction: column; align-items: flex-start; }
-}
-</style>

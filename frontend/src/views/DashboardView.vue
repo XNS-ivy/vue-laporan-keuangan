@@ -49,10 +49,10 @@ onBeforeUnmount(() => {
   window.removeEventListener('theme-preference-changed', updateThemeStatus)
 })
 
-const gridColor = computed(() => isDark.value ? '#334155' : '#e2e8f0')
+const gridColor = computed(() => isDark.value ? 'rgba(255,255,255,0.06)' : '#e2e8f0')
 const textColor = computed(() => isDark.value ? '#94a3b8' : '#64748b')
 const tooltipBgColor = computed(() => isDark.value ? '#111827' : '#ffffff')
-const tooltipBorderColor = computed(() => isDark.value ? '#334155' : '#e2e8f0')
+const tooltipBorderColor = computed(() => isDark.value ? 'rgba(255,255,255,0.08)' : '#e2e8f0')
 const tooltipTextColor = computed(() => isDark.value ? '#f8fafc' : '#0f172a')
 
 const scaledChartOptions = computed(() => ({
@@ -62,7 +62,7 @@ const scaledChartOptions = computed(() => ({
       position: 'bottom' as const,
       labels: {
         color: textColor.value,
-        font: { family: 'Segoe UI, system-ui, sans-serif', size: 12 }
+        font: { family: 'Inter, system-ui, sans-serif', size: 11, weight: 'bold' }
       }
     },
     tooltip: {
@@ -79,11 +79,11 @@ const scaledChartOptions = computed(() => ({
   scales: {
     x: {
       grid: { color: gridColor.value, drawTicks: false },
-      ticks: { color: textColor.value, font: { family: 'Segoe UI, system-ui, sans-serif' } }
+      ticks: { color: textColor.value, font: { family: 'Inter, system-ui, sans-serif', size: 10 } }
     },
     y: {
       grid: { color: gridColor.value, drawTicks: false },
-      ticks: { color: textColor.value, font: { family: 'Segoe UI, system-ui, sans-serif' } }
+      ticks: { color: textColor.value, font: { family: 'Inter, system-ui, sans-serif', size: 10 } }
     }
   }
 }))
@@ -97,7 +97,7 @@ const doughnutChartOptions = computed(() => ({
       position: 'bottom' as const,
       labels: {
         color: textColor.value,
-        font: { family: 'Segoe UI, system-ui, sans-serif', size: 12 }
+        font: { family: 'Inter, system-ui, sans-serif', size: 11, weight: 'bold' }
       }
     },
     tooltip: {
@@ -155,7 +155,7 @@ const cashflowChartData = computed(() => ({
       label: 'Arus Kas Bersih',
       data: monthlyTrend.value.map(([, values]) => values.net),
       borderColor: '#2563eb',
-      backgroundColor: 'rgba(37, 99, 235, 0.18)',
+      backgroundColor: 'rgba(37, 99, 235, 0.12)',
       fill: true,
       tension: 0.32,
     },
@@ -181,209 +181,200 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
 </script>
 
 <template>
-  <div class="page">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">Dashboard</p>
-        <h1>Analisis keuangan yang lebih bisa ditindaklanjuti</h1>
-        <p>Ringkasan sekarang dilengkapi perbandingan bulanan, insight otomatis, alert budget, goal tabungan, dan status utang/piutang supaya user bisa langsung ambil keputusan.</p>
+  <div class="flex flex-col gap-6">
+    <header class="bg-linear-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+      <div class="z-10 grow max-w-2xl">
+        <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Dashboard</p>
+        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Analisis keuangan yang cerdas & terarah</h1>
+        <p class="text-sm text-white/80 leading-relaxed mt-2">Ringkasan dilengkapi perbandingan bulanan, insight otomatis, budget alert, goal tabungan, dan status utang/piutang untuk mendukung keputusan finansial Anda.</p>
       </div>
-      <div class="hero-actions">
-        <RouterLink to="/reports" class="hero-link">Export Laporan</RouterLink>
-        <RouterLink to="/savings-goal" class="hero-link">Kelola Goal</RouterLink>
+      <div class="flex flex-wrap gap-2.5 shrink-0 z-10">
+        <RouterLink to="/reports" class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white border border-white/20 bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-center">
+          Export Laporan
+        </RouterLink>
+        <RouterLink to="/savings-goal" class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-sidebar-bg bg-white hover:bg-white/90 active:scale-95 transition-all text-center shadow-md">
+          Kelola Goal
+        </RouterLink>
       </div>
     </header>
 
-    <section class="stats-grid">
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard label="Pemasukan" :value="`Rp ${incomeTotal.toLocaleString('id-ID')}`" tone="positive" />
       <StatCard label="Pengeluaran" :value="`Rp ${expenseTotal.toLocaleString('id-ID')}`" tone="negative" />
       <StatCard label="Saldo" :value="`Rp ${balance.toLocaleString('id-ID')}`" :tone="balance >= 0 ? 'positive' : 'negative'" />
       <StatCard label="Aset" :value="`Rp ${totalAssets.toLocaleString('id-ID')}`" tone="neutral" />
     </section>
 
-    <section class="content-grid">
+    <section class="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
       <TransactionForm
         :categories="categories"
         @submit="addTransaction"
         @add-category="({ name, type }) => addCategory(name, type)"
       />
 
-      <div class="stack">
-        <section class="card analytics-card">
-          <div class="section-head">
-            <h3>Insight Utama</h3>
-            <span class="pill">Transaksi {{ transactionCount }}</span>
+      <div class="flex flex-col gap-6">
+        <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+          <div class="flex items-center justify-between border-b border-border pb-3">
+            <h3 class="text-base font-bold text-text tracking-tight">Insight Utama</h3>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold text-primary bg-primary-soft uppercase tracking-wider">
+              Transaksi: {{ transactionCount }}
+            </span>
           </div>
-          <ul>
-            <li>Rasio tabungan saat ini: <strong>{{ savingsRate }}%</strong></li>
-            <li>Rata-rata pemasukan per transaksi: <strong>Rp {{ averageIncome.toLocaleString('id-ID') }}</strong></li>
-            <li>Rata-rata pengeluaran per transaksi: <strong>Rp {{ averageExpense.toLocaleString('id-ID') }}</strong></li>
-            <li>Kategori pengeluaran terbesar: <strong>{{ biggestExpense ? biggestExpense[0] : 'Belum ada' }}</strong></li>
-            <li>Sumber pemasukan utama: <strong>{{ topIncome ? topIncome[0] : 'Belum ada' }}</strong></li>
+          <ul class="flex flex-col gap-3 pr-1 text-sm">
+            <li class="flex justify-between items-center text-muted font-medium pb-2 border-b border-border/40">
+              <span>Rasio Tabungan:</span>
+              <strong class="text-text font-bold">{{ savingsRate }}%</strong>
+            </li>
+            <li class="flex justify-between items-center text-muted font-medium pb-2 border-b border-border/40">
+              <span>Avg Uang Masuk/Tx:</span>
+              <strong class="text-text font-bold">Rp {{ averageIncome.toLocaleString('id-ID') }}</strong>
+            </li>
+            <li class="flex justify-between items-center text-muted font-medium pb-2 border-b border-border/40">
+              <span>Avg Uang Keluar/Tx:</span>
+              <strong class="text-text font-bold">Rp {{ averageExpense.toLocaleString('id-ID') }}</strong>
+            </li>
+            <li class="flex justify-between items-center text-muted font-medium pb-2 border-b border-border/40">
+              <span>Pengeluaran Terbesar:</span>
+              <strong class="font-bold text-danger">{{ biggestExpense ? biggestExpense[0] : 'Belum ada' }}</strong>
+            </li>
+            <li class="flex justify-between items-center text-muted font-medium">
+              <span>Pemasukan Terbesar:</span>
+              <strong class="font-bold text-success">{{ topIncome ? topIncome[0] : 'Belum ada' }}</strong>
+            </li>
           </ul>
         </section>
-
-        <section class="card savings-overview">
-          <div class="section-head">
-            <h3>Status Goal Tabungan</h3>
-            <span>{{ savingsGoalProgress }}%</span>
+ 
+        <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+          <div class="flex items-center justify-between border-b border-border pb-3">
+            <h3 class="text-base font-bold text-text tracking-tight">Status Goal Tabungan</h3>
+            <span class="text-sm font-bold text-success">{{ savingsGoalProgress }}%</span>
           </div>
-          <div class="bar"><span :style="{ width: `${savingsGoalProgress}%` }"></span></div>
-          <p>
-            Total target <strong>Rp {{ savingsGoalTarget.toLocaleString('id-ID') }}</strong>
-            dengan estimasi
-            <strong>{{ monthsToGoal === null ? 'belum bisa dihitung' : `${monthsToGoal} bulan` }}</strong>.
+          <div class="w-full h-2.5 bg-surface-2 rounded-full overflow-hidden">
+            <div class="h-full bg-linear-to-r from-primary to-success transition-all duration-500" :style="{ width: `${savingsGoalProgress}%` }"></div>
+          </div>
+          <p class="text-xs text-muted leading-relaxed font-medium">
+            Total target <strong class="text-text font-semibold">Rp {{ savingsGoalTarget.toLocaleString('id-ID') }}</strong>
+            dengan estimasi tercapai dalam
+            <strong class="text-text font-semibold">{{ monthsToGoal === null ? 'belum bisa dihitung' : `${monthsToGoal} bulan` }}</strong>.
           </p>
         </section>
 
-        <section class="card comparison-card">
-          <h3>Perbandingan Bulanan</h3>
-          <ul>
-            <li>Pemasukan berubah <strong>{{ monthlyComparison.incomeChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.incomeChange.toLocaleString('id-ID') }}</strong></li>
-            <li>Pengeluaran berubah <strong>{{ monthlyComparison.expenseChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.expenseChange.toLocaleString('id-ID') }}</strong></li>
-            <li>Net cashflow berubah <strong>{{ monthlyComparison.netChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.netChange.toLocaleString('id-ID') }}</strong></li>
+        <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+          <h3 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Perbandingan Bulanan</h3>
+          <ul class="flex flex-col gap-3 pr-1 text-sm">
+            <li class="flex justify-between items-center text-muted font-medium pb-2 border-b border-border/40">
+              <span>Pemasukan:</span>
+              <strong :class="monthlyComparison.incomeChange >= 0 ? 'text-success' : 'text-danger'" class="font-bold">
+                {{ monthlyComparison.incomeChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.incomeChange.toLocaleString('id-ID') }}
+              </strong>
+            </li>
+            <li class="flex justify-between items-center text-muted font-medium pb-2 border-b border-border/40">
+              <span>Pengeluaran:</span>
+              <strong :class="monthlyComparison.expenseChange >= 0 ? 'text-danger' : 'text-success'" class="font-bold">
+                {{ monthlyComparison.expenseChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.expenseChange.toLocaleString('id-ID') }}
+              </strong>
+            </li>
+            <li class="flex justify-between items-center text-muted font-medium">
+              <span>Arus Kas Bersih:</span>
+              <strong :class="monthlyComparison.netChange >= 0 ? 'text-success' : 'text-danger'" class="font-bold">
+                {{ monthlyComparison.netChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.netChange.toLocaleString('id-ID') }}
+              </strong>
+            </li>
           </ul>
         </section>
       </div>
     </section>
 
-    <section v-if="budgetAlerts.length" class="card alert-card">
-      <h2>Budget Alert</h2>
-      <div class="alert-list">
-        <div v-for="item in budgetAlerts" :key="item.id" class="alert-item" :class="item.level">
-          <strong>{{ item.category }}</strong>
-          <span>{{ item.message }}</span>
+    <section v-if="budgetAlerts.length" class="bg-surface border-l-4 border-l-danger border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-3">
+      <h2 class="text-base font-bold text-text tracking-tight">Budget Alert</h2>
+      <div class="flex flex-wrap gap-2.5">
+        <div v-for="item in budgetAlerts" :key="item.id" class="flex flex-col gap-0.5 px-4 py-2.5 rounded-xl bg-surface-2 border text-xs" :class="item.level === 'danger' ? 'border-danger/30 text-danger-text' : 'border-amber-500/30 text-amber-600'">
+          <strong class="font-bold uppercase tracking-wider">{{ item.category }}</strong>
+          <span class="font-medium opacity-90">{{ item.message }}</span>
         </div>
       </div>
     </section>
 
-    <section class="chart-grid">
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <FinanceChart type="doughnut" title="Pengeluaran per Kategori" :data="expenseChartData" :options="doughnutChartOptions" />
       <FinanceChart type="bar" title="Tren 6 Bulan" :data="monthlyChartData" :options="scaledChartOptions" />
       <FinanceChart type="line" title="Arus Kas Bersih per Bulan" :data="cashflowChartData" :options="scaledChartOptions" />
       <FinanceChart type="bar" title="Kategori Paling Aktif" :data="categoryActivityChartData" :options="scaledChartOptions" />
     </section>
 
-    <section v-if="selectedDrilldownCategory" class="card drilldown-card">
-      <div class="drilldown-header">
-        <h3>Detail Pengeluaran: {{ selectedDrilldownCategory }}</h3>
-        <button class="ghost-btn close-drilldown-btn" type="button" @click="selectedDrilldownCategory = null">Tutup</button>
+    <section v-if="selectedDrilldownCategory" class="bg-surface border border-primary rounded-2xl p-5 shadow-xl transition-all">
+      <div class="flex items-center justify-between border-b border-border pb-3 mb-4">
+        <h3 class="text-base font-bold text-text tracking-tight">
+          Detail Pengeluaran: <span class="text-primary font-extrabold">{{ selectedDrilldownCategory }}</span>
+        </h3>
+        <button class="px-3.5 py-1.5 rounded-full text-xs font-bold text-text bg-surface-2 border border-border hover:bg-border transition-all cursor-pointer" type="button" @click="selectedDrilldownCategory = null">
+          Tutup
+        </button>
       </div>
-      <ul class="list">
-        <li v-for="item in drilldownTransactions" :key="item.id" class="list-item">
+      <ul class="flex flex-col gap-3 pr-1">
+        <li v-for="item in drilldownTransactions" :key="item.id" class="flex justify-between items-center gap-4 pb-3 border-b border-border last:border-0 last:pb-0">
           <div>
-            <strong>{{ item.category }}</strong>
-            <p>{{ item.note || 'Tanpa catatan' }} • {{ item.date }}</p>
+            <strong class="text-sm font-semibold text-text">{{ item.category }}</strong>
+            <p class="text-xs text-muted font-medium mt-0.5">{{ item.note || 'Tanpa catatan' }} • {{ item.date }}</p>
           </div>
-          <span class="warn">- Rp {{ item.amount.toLocaleString('id-ID') }}</span>
+          <span class="text-sm font-bold text-danger">- Rp {{ item.amount.toLocaleString('id-ID') }}</span>
         </li>
-        <li v-if="!drilldownTransactions.length" class="empty-state">
+        <li v-if="!drilldownTransactions.length" class="text-center py-6 text-xs text-muted font-semibold">
           Tidak ada transaksi pengeluaran untuk kategori ini.
         </li>
       </ul>
     </section>
 
-    <section class="analytics-grid">
-      <article class="card analytics-card">
-        <h3>Analisis Perilaku User</h3>
-        <ul>
-          <li v-for="item in automatedInsights" :key="item">{{ item }}</li>
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <article class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h3 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Analisis Perilaku User</h3>
+        <ul class="flex flex-col gap-2.5 text-xs text-muted font-medium list-disc pl-4">
+          <li v-for="item in automatedInsights" :key="item" class="leading-relaxed">{{ item }}</li>
         </ul>
       </article>
 
-      <article class="card analytics-card">
-        <h3>Analisis Kategori dan Kewajiban</h3>
-        <p v-if="healthiestCategory">
-          Kategori paling dominan saat ini adalah <strong>{{ healthiestCategory.name }}</strong>
-          dengan total <strong>Rp {{ healthiestCategory.total.toLocaleString('id-ID') }}</strong>
-          dari <strong>{{ healthiestCategory.count }} transaksi</strong>.
+      <article class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h3 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Analisis Kategori & Kewajiban</h3>
+        <p v-if="healthiestCategory" class="text-sm text-muted leading-relaxed font-medium">
+          Kategori paling dominan saat ini adalah <strong class="text-text font-bold">{{ healthiestCategory.name }}</strong>
+          dengan total akumulasi <strong class="text-text font-bold">Rp {{ healthiestCategory.total.toLocaleString('id-ID') }}</strong>
+          dari <strong class="text-text font-bold">{{ healthiestCategory.count }} transaksi</strong>.
         </p>
-        <p>Utang aktif: <strong>Rp {{ totalDebt.toLocaleString('id-ID') }}</strong></p>
-        <p>Piutang aktif: <strong>Rp {{ totalReceivable.toLocaleString('id-ID') }}</strong></p>
+        <div class="grid grid-cols-2 gap-4 mt-1 border-t border-border pt-4 text-xs font-semibold uppercase tracking-wider text-muted">
+          <div class="flex flex-col gap-1">
+            <span>Utang Aktif</span>
+            <strong class="text-sm font-bold text-danger mt-0.5">Rp {{ totalDebt.toLocaleString('id-ID') }}</strong>
+          </div>
+          <div class="flex flex-col gap-1">
+            <span>Piutang Aktif</span>
+            <strong class="text-sm font-bold text-success mt-0.5">Rp {{ totalReceivable.toLocaleString('id-ID') }}</strong>
+          </div>
+        </div>
       </article>
     </section>
 
-    <section class="card">
-      <div class="section-head">
-        <h2>Transaksi Terbaru</h2>
-        <span class="pill">Kategori aktif {{ categories.length }}</span>
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <div class="flex items-center justify-between border-b border-border pb-3">
+        <h2 class="text-base font-bold text-text tracking-tight">Transaksi Terbaru</h2>
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold text-success bg-emerald-600/10 uppercase tracking-wider border border-emerald-600/10">
+          Kategori Aktif: {{ categories.length }}
+        </span>
       </div>
-      <ul class="list">
-        <li v-for="item in latestTransactions" :key="item.id" class="list-item">
+      <ul class="flex flex-col gap-3 pr-1">
+        <li v-for="item in latestTransactions" :key="item.id" class="flex justify-between items-center gap-4 pb-3 border-b border-border last:border-0 last:pb-0 hover:bg-surface-2/20 transition-all px-1 rounded-lg">
           <div>
-            <strong>{{ item.category }}</strong>
-            <p>{{ item.note || 'Tanpa catatan' }} • {{ item.date }}</p>
+            <strong class="text-sm font-bold text-text">{{ item.category }}</strong>
+            <p class="text-xs text-muted font-semibold mt-0.5">{{ item.note || 'Tanpa catatan' }} • {{ item.date }}</p>
           </div>
-          <span :class="item.type === 'income' ? 'good' : 'warn'">
+          <span :class="item.type === 'income' ? 'text-success' : 'text-danger'" class="text-sm font-bold">
             {{ item.type === 'income' ? '+' : '-' }} Rp {{ item.amount.toLocaleString('id-ID') }}
           </span>
+        </li>
+        <li v-if="!latestTransactions.length" class="text-center py-8 text-xs text-muted font-semibold">
+          Belum ada transaksi terdaftar.
         </li>
       </ul>
     </section>
   </div>
 </template>
-
-<style scoped>
-.page { display: flex; flex-direction: column; gap: 1rem; }
-.hero { background: linear-gradient(135deg, var(--sidebar-bg), var(--hero-accent)); color: white; border-radius: 24px; padding: 1.3rem 1.4rem; box-shadow: var(--shadow); display: flex; justify-content: space-between; gap: 1rem; align-items: end; }
-.hero-actions { display: flex; gap: 0.7rem; flex-wrap: wrap; justify-content: flex-end; }
-.hero-link { color: white; text-decoration: none; border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 0.72rem 1rem; background: rgba(255,255,255,0.1); }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; opacity: 0.8; }
-.hero h1 { margin: 0.2rem 0; }
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
-.content-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1rem; }
-.stack { display: flex; flex-direction: column; gap: 1rem; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1rem; box-shadow: var(--shadow); }
-.section-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
-.analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
-.analytics-card ul { padding-left: 1rem; margin: 0.5rem 0 0; color: var(--muted); }
-.analytics-card li { margin-bottom: 0.4rem; }
-.analytics-card strong { color: var(--text); }
-.savings-overview { display: flex; flex-direction: column; gap: 0.75rem; }
-.comparison-card ul { padding-left: 1rem; margin: 0.3rem 0 0; color: var(--muted); }
-.alert-card { border-color: color-mix(in srgb, var(--danger) 20%, var(--border)); }
-.alert-list { display: flex; flex-wrap: wrap; gap: 0.7rem; }
-.alert-item { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.8rem 0.9rem; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border); }
-.alert-item.warning { border-color: #f59e0b; }
-.alert-item.danger { border-color: var(--danger); }
-.bar { width: 100%; height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-.bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); }
-.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.7rem; }
-.list-item { display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.7rem; border-bottom: 1px solid var(--border); }
-.good { color: var(--success); font-weight: 600; }
-.warn { color: var(--danger); font-weight: 600; }
-@media (max-width: 900px) {
-  .hero { flex-direction: column; align-items: flex-start; }
-  .hero-actions { justify-content: flex-start; }
-  .content-grid { grid-template-columns: 1fr; }
-  .list-item { flex-direction: column; align-items: flex-start; }
-}
-
-.drilldown-card {
-  border-color: var(--primary);
-  margin-top: 1rem;
-}
-.drilldown-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.8rem;
-}
-.close-drilldown-btn {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.85rem;
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-.close-drilldown-btn:hover {
-  background: var(--border);
-}
-.empty-state {
-  text-align: center;
-  padding: 1.5rem 1rem;
-  color: var(--muted);
-  list-style: none;
-}
-</style>

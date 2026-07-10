@@ -8,8 +8,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'submit', payload: { type: TransactionType; amount: number; category: string; note: string; date: string }): void
-  (e: 'update', id: number, payload: { type: TransactionType; amount: number; category: string; note: string; date: string }): void
+  (e: 'submit', payload: { type: TransactionType; amount: number; category: string; subCategory?: string; note: string; date: string }): void
+  (e: 'update', id: number, payload: { type: TransactionType; amount: number; category: string; subCategory?: string; note: string; date: string }): void
   (e: 'add-category', payload: { name: string; type: TransactionType }): void
   (e: 'cancel-edit'): void
 }>()
@@ -18,6 +18,7 @@ const form = ref({
   type: 'expense' as TransactionType,
   amount: '',
   category: '',
+  subCategory: '',
   note: '',
   date: new Date().toISOString().slice(0, 10),
 })
@@ -27,6 +28,7 @@ const resetForm = () => {
     type: 'expense',
     amount: '',
     category: '',
+    subCategory: '',
     note: '',
     date: new Date().toISOString().slice(0, 10),
   }
@@ -41,6 +43,7 @@ watch(
         type: newVal.type,
         amount: String(newVal.amount),
         category: newVal.category,
+        subCategory: newVal.subCategory || '',
         note: newVal.note,
         date: newVal.date,
       }
@@ -71,6 +74,7 @@ const submit = () => {
     type: form.value.type,
     amount,
     category: form.value.category,
+    subCategory: form.value.subCategory.trim() || undefined,
     note: form.value.note,
     date: form.value.date,
   }
@@ -97,58 +101,73 @@ const addCategory = () => {
 </script>
 
 <template>
-  <section class="card">
-    <h2>{{ props.editTransaction ? 'Edit Transaksi' : 'Tambah Transaksi' }}</h2>
-    <div class="form-grid">
-      <label>
+  <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+    <h2 class="text-lg font-bold text-text tracking-tight border-b border-border pb-2">
+      {{ props.editTransaction ? 'Edit Transaksi' : 'Tambah Transaksi' }}
+    </h2>
+    
+    <div class="grid gap-4 grid-cols-1 sm:grid-cols-2">
+      <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
         Jenis
-        <select v-model="form.type">
+        <select v-model="form.type" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all">
           <option value="income">Uang Masuk</option>
           <option value="expense">Uang Keluar</option>
         </select>
       </label>
-      <label>
+      
+      <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
         Nominal
-        <input v-model="form.amount" type="number" min="0" placeholder="100000" />
+        <input v-model="form.amount" type="number" min="0" placeholder="100000" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
       </label>
-      <label>
+      
+      <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
         Kategori
-        <div class="category-input">
+        <div class="flex gap-2">
           <input
             v-model="form.category"
             :list="`category-options-${form.type}`"
-            :placeholder="form.type === 'income' ? 'Contoh: Gaji atau Bonus' : 'Contoh: Makan atau Kopi'"
+            :placeholder="form.type === 'income' ? 'Contoh: Gaji' : 'Contoh: Makan'"
+            class="grow border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60"
           />
-          <button v-if="canAddCategory" class="ghost-btn" type="button" @click="addCategory">Tambah kategori</button>
+          <button v-if="canAddCategory" class="px-3.5 py-2.5 rounded-xl text-xs font-bold text-danger-text bg-danger-soft hover:opacity-95 transition-all cursor-pointer border-none shrink-0" type="button" @click="addCategory">
+            + Kategori
+          </button>
         </div>
         <datalist :id="`category-options-${form.type}`">
           <option v-for="item in categorySuggestions" :key="item" :value="item"></option>
         </datalist>
       </label>
-      <label>
-        Tanggal
-        <input v-model="form.date" type="date" />
+
+      <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+        Sub-Kategori
+        <input v-model="form.subCategory" placeholder="Contoh: Kopi / Pajak (opsional)" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
       </label>
-      <label class="full">
+      
+      <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+        Tanggal
+        <input v-model="form.date" type="date" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all" />
+      </label>
+      
+      <label class="sm:col-span-2 flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
         Catatan
-        <input v-model="form.note" placeholder="Tambahkan catatan" />
+        <input v-model="form.note" placeholder="Tambahkan catatan" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
       </label>
     </div>
     
-    <div class="button-group">
-      <button class="primary-btn" @click="submit">
+    <div class="flex items-center gap-3 mt-2 border-t border-border pt-4">
+      <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-lg hover:shadow-primary/20 border-none" @click="submit">
         {{ props.editTransaction ? 'Simpan Perubahan' : 'Simpan Transaksi' }}
       </button>
-      <button v-if="props.editTransaction" class="secondary-btn" type="button" @click="cancel">
+      <button v-if="props.editTransaction" class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-text bg-surface-2 border border-border hover:bg-border transition-all cursor-pointer" type="button" @click="cancel">
         Batal
       </button>
     </div>
 
-    <div class="suggestions" v-if="categorySuggestions.length">
+    <div class="flex flex-wrap gap-1.5 mt-2" v-if="categorySuggestions.length">
       <button
         v-for="item in categorySuggestions"
         :key="item"
-        class="chip chip-btn"
+        class="px-3 py-1.5 rounded-full text-xs font-semibold text-primary bg-primary-soft hover:bg-primary-muted transition-all cursor-pointer border-none"
         type="button"
         @click="form.category = item"
       >
@@ -157,87 +176,3 @@ const addCategory = () => {
     </div>
   </section>
 </template>
-
-<style scoped>
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1rem;
-  box-shadow: var(--shadow);
-}
-
-.form-grid {
-  display: grid;
-  gap: 0.8rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-bottom: 0.8rem;
-}
-
-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.95rem;
-  color: var(--text);
-}
-
-.full {
-  grid-column: 1 / -1;
-}
-
-.category-input {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
-.button-group {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-}
-
-.secondary-btn {
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 0.72rem 1rem;
-  background: var(--surface-2);
-  color: var(--text);
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease;
-}
-
-.secondary-btn:hover {
-  transform: translateY(-1px);
-  background: var(--border);
-}
-
-.suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.8rem;
-}
-
-.chip {
-  border-radius: 999px;
-  padding: 0.4rem 0.7rem;
-  font-size: 0.85rem;
-}
-
-.chip-btn {
-  border: none;
-  cursor: pointer;
-}
-
-@media (max-width: 700px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .category-input {
-    flex-direction: column;
-  }
-}
-</style>

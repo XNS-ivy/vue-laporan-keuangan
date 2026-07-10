@@ -32,20 +32,12 @@ const props = defineProps<{
 </script>
 
 <template>
-  <section class="card">
-    <h3>{{ title }}</h3>
-    <Doughnut v-if="props.type === 'doughnut'" :data="props.data as any" :options="props.options || { responsive: true, plugins: { legend: { position: 'bottom' } } }" />
-    <Bar v-else-if="props.type === 'bar'" :data="props.data as any" :options="props.options || { responsive: true, plugins: { legend: { position: 'bottom' } } }" />
-    <Line v-else :data="props.data as any" :options="props.options || { responsive: true, plugins: { legend: { position: 'bottom' } } }" />
+  <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+    <h3 class="text-base font-bold text-text tracking-tight border-b border-border pb-2">{{ title }}</h3>
+    <div class="relative w-full overflow-hidden">
+      <Doughnut v-if="props.type === 'doughnut'" :data="props.data as any" :options="props.options || { responsive: true, plugins: { legend: { position: 'bottom' } } }" />
+      <Bar v-else-if="props.type === 'bar'" :data="props.data as any" :options="props.options || { responsive: true, plugins: { legend: { position: 'bottom' } } }" />
+      <Line v-else :data="props.data as any" :options="props.options || { responsive: true, plugins: { legend: { position: 'bottom' } } }" />
+    </div>
   </section>
 </template>
-
-<style scoped>
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1rem;
-  box-shadow: var(--shadow);
-}
-</style>

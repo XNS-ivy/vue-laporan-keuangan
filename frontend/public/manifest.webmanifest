@@ -1,0 +1,17 @@
+{
+  "short_name": "MyFinanceFlow",
+  "name": "MyFinanceFlow - Personal Finance Tracker",
+  "description": "Pantau uang Anda dengan lebih tenang dan terarah secara lokal dan offline.",
+  "icons": [
+    {
+      "src": "logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "display": "standalone",
+  "orientation": "portrait"
+}

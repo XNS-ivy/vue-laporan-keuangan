@@ -161,68 +161,113 @@ const handleUpdateCategory = () => {
 const cancelEditCategory = () => {
   editingCategoryId.value = null
 }
+
+const isPinEnabled = ref(false)
+const isSettingNewPin = ref(false)
+const newPin = ref('')
+
+const checkLocalPin = () => {
+  const pin = localStorage.getItem('finance_flow_pin')
+  isPinEnabled.value = !!pin
+}
+
+const togglePinState = () => {
+  if (isPinEnabled.value) {
+    localStorage.removeItem('finance_flow_pin')
+    sessionStorage.removeItem('finance_flow_unlocked')
+    isPinEnabled.value = false
+    isSettingNewPin.value = false
+    newPin.value = ''
+    window.dispatchEvent(new Event('pin-changed'))
+    pushToast('Kunci PIN dinonaktifkan', 'success')
+  } else {
+    isSettingNewPin.value = true
+  }
+}
+
+const saveNewPin = () => {
+  const pinVal = newPin.value.trim()
+  if (pinVal.length !== 4 || isNaN(Number(pinVal))) {
+    pushToast('PIN harus berupa 4 digit angka!', 'error')
+    return
+  }
+  localStorage.setItem('finance_flow_pin', pinVal)
+  sessionStorage.setItem('finance_flow_unlocked', 'true')
+  isPinEnabled.value = true
+  isSettingNewPin.value = false
+  newPin.value = ''
+  window.dispatchEvent(new Event('pin-changed'))
+  pushToast('PIN berhasil disimpan & diaktifkan', 'success')
+}
+
+onMounted(() => {
+  checkLocalPin()
+})
 </script>
 
 <template>
-  <div class="page">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">Settings</p>
-        <h1>Preferensi pengguna</h1>
-        <p>Atur tampilan sesuai kenyamanan Anda sebelum diterapkan.</p>
-      </div>
+  <div class="flex flex-col gap-6">
+    <header class="bg-gradient-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom">
+      <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Settings</p>
+      <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Preferensi Pengguna</h1>
+      <p class="text-sm text-white/80 leading-relaxed mt-2">Kustomisasi tema warna, kelola daftar kategori keuangan, atau lakukan pencadangan data Anda.</p>
     </header>
 
-    <section class="card">
-      <h2>Tema</h2>
-      <p>Pilih mode dasar, masukkan warna HEX sendiri, atau pakai preset. Sekarang picker warna juga punya pop-up, preview lingkaran, dan slider alpha.</p>
-      <label class="field">
-        <span>Mode tema</span>
-        <select v-model="themeDraft.mode">
-          <option v-for="item in themeOptions" :key="item" :value="item">
-            {{ labelForTheme(item) }}
-          </option>
-        </select>
-      </label>
-
-      <div class="grid">
-        <label class="field">
-          <span>Background</span>
-          <select v-model="themeDraft.surfaceMode">
+    <!-- Tema Section -->
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Kustomisasi Tampilan</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Pilih mode tampilan dasar, kustom warna aksen secara dinamis, atau pilih preset palette yang kami sediakan.</p>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 my-2">
+        <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+          Mode Tema
+          <select v-model="themeDraft.mode" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
+            <option v-for="item in themeOptions" :key="item" :value="item">
+              {{ labelForTheme(item) }}
+            </option>
+          </select>
+        </label>
+        
+        <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+          Background Konten
+          <select v-model="themeDraft.surfaceMode" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
             <option value="light">Terang</option>
             <option value="dark">Gelap</option>
           </select>
         </label>
 
-        <div class="field">
-          <span>Warna utama</span>
-          <button class="picker-trigger" type="button" @click="pickerOpen = !pickerOpen">
-            <span class="picker-dot" :style="previewSwatchStyle"></span>
-            <span>{{ themeDraft.primary.toUpperCase() }}</span>
-            <span class="alpha-badge">Alpha {{ Math.round(themeDraft.primaryAlpha * 100) }}%</span>
+        <div class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider relative">
+          Warna Utama (Aksen)
+          <button class="flex items-center justify-between gap-3 border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold cursor-pointer w-full transition-all focus:outline-none focus:ring-2 focus:ring-primary-soft" type="button" @click="pickerOpen = !pickerOpen">
+            <span class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full border-2 border-white shadow-sm shrink-0" :style="previewSwatchStyle"></span>
+              <span>{{ themeDraft.primary.toUpperCase() }}</span>
+            </span>
+            <span class="text-[10px] text-muted font-bold">Alpha {{ Math.round(themeDraft.primaryAlpha * 100) }}%</span>
           </button>
 
-          <div v-if="pickerOpen" class="picker-popover">
-            <label class="picker-field">
-              <span>Pilih warna</span>
-              <input v-model="themeDraft.primary" type="color" />
+          <!-- Color Picker Popover -->
+          <div v-if="pickerOpen" class="absolute top-full left-0 right-0 mt-2 border border-border rounded-2xl p-4 bg-surface shadow-lg flex flex-col gap-3.5 z-20">
+            <label class="flex flex-col gap-1 text-[10px] font-bold text-muted uppercase tracking-wider">
+              Pilih Warna
+              <input v-model="themeDraft.primary" type="color" class="w-full h-11 p-1 bg-surface-2 border border-border rounded-xl cursor-pointer" />
             </label>
 
-            <label class="picker-field">
-              <span>HEX</span>
-              <input v-model="themeDraft.primary" type="text" placeholder="#2563eb" />
+            <label class="flex flex-col gap-1 text-[10px] font-bold text-muted uppercase tracking-wider">
+              Kode HEX
+              <input v-model="themeDraft.primary" type="text" placeholder="#2563eb" class="w-full border border-border rounded-xl px-3 py-1.5 bg-surface-2 text-text text-xs font-semibold focus:outline-none" />
             </label>
 
-            <label class="picker-field">
-              <span>Alpha</span>
-              <input v-model.number="themeDraft.primaryAlpha" type="range" min="0" max="1" step="0.01" />
+            <label class="flex flex-col gap-1 text-[10px] font-bold text-muted uppercase tracking-wider">
+              Slider Transparansi (Alpha)
+              <input v-model.number="themeDraft.primaryAlpha" type="range" min="0" max="1" step="0.01" class="w-full accent-primary h-2 bg-surface-2 rounded-lg cursor-pointer" />
             </label>
 
-            <div class="swatch-row">
+            <div class="flex flex-wrap gap-1.5 pt-1.5 border-t border-border/60">
               <button
                 v-for="item in quickSwatches"
                 :key="item"
-                class="swatch-btn"
+                class="w-6 h-6 rounded-full border-2 border-white shadow-sm hover:scale-110 active:scale-90 transition-all cursor-pointer shrink-0"
                 type="button"
                 :style="{ background: item }"
                 @click="applySwatch(item)"
@@ -231,10 +276,10 @@ const cancelEditCategory = () => {
           </div>
         </div>
 
-        <label class="field">
-          <span>Preset palette</span>
-          <select v-model="selectedPreset" @change="applyPreset">
-            <option value="">Pilih preset</option>
+        <label class="sm:col-span-2 md:col-span-3 flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+          Preset Palette Cepat
+          <select v-model="selectedPreset" @change="applyPreset" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
+            <option value="">Pilih Preset Siap Pakai</option>
             <option v-for="item in themePresets" :key="item.id" :value="item.id">
               {{ item.label }}
             </option>
@@ -242,117 +287,137 @@ const cancelEditCategory = () => {
         </label>
       </div>
 
-      <div class="preview-panel">
-        <div class="preview-card">
-          <span>Preview tombol</span>
+      <!-- Preview Panel -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1 border-t border-border pt-4">
+        <div class="border border-border rounded-xl p-4 bg-surface-2 flex flex-col gap-2.5">
+          <span class="text-[10px] font-bold text-muted uppercase tracking-wider">Preview Tombol Utama</span>
           <button
-            class="preview-button"
+            class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-md border-none self-start cursor-pointer"
             type="button"
             :style="{ background: toRgba(themeDraft.primary, themeDraft.primaryAlpha), color: previewContrast }"
           >
-            Simpan
+            Simpan Preferensi
           </button>
         </div>
-        <div class="preview-card">
-          <span>Preview form</span>
-          <div class="preview-field">Input akan menyesuaikan warna tema aktif</div>
+        <div class="border border-border rounded-xl p-4 bg-surface-2 flex flex-col gap-2.5">
+          <span class="text-[10px] font-bold text-muted uppercase tracking-wider">Preview Input Field</span>
+          <div class="border border-border rounded-xl px-4 py-2.5 bg-surface text-muted text-xs font-semibold leading-relaxed">
+            Input akan otomatis menyesuaikan visual aksen warna aktif
+          </div>
         </div>
       </div>
 
-      <button class="primary-btn" @click="savePreferences">Simpan Preferensi</button>
-      <p v-if="savedMessage" class="status">{{ savedMessage }}</p>
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3.5 mt-2">
+        <button class="px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-lg hover:shadow-primary/20 border-none" @click="savePreferences">
+          Terapkan & Simpan Preferensi
+        </button>
+        <p v-if="savedMessage" class="text-xs font-bold text-success">{{ savedMessage }}</p>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>Kelola Kategori Keuangan</h2>
-      <p class="subtle">Kelola nama, warna aksen, dan emoji ikon untuk setiap kategori.</p>
+    <!-- Kelola Kategori Keuangan -->
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Kelola Kategori Keuangan</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Tambahkan emoji kustom dan warna untuk membedakan kategori transaksi pemasukan dan pengeluaran.</p>
       
-      <div class="category-manager">
+      <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 mt-1">
         <!-- Form Editor Kategori -->
-        <div class="category-editor-card">
-          <h3>{{ editingCategoryId ? 'Edit Kategori' : 'Tambah Kategori Baru' }}</h3>
+        <div class="border border-border rounded-xl p-4 bg-surface-2 flex flex-col gap-3 height-fit">
+          <h3 class="text-sm font-bold text-text border-b border-border/60 pb-2">
+            {{ editingCategoryId ? 'Edit Kategori' : 'Tambah Kategori Baru' }}
+          </h3>
           
-          <div v-if="!editingCategoryId" class="form-grid-small">
-            <label>
-              <span>Nama Kategori</span>
-              <input v-model="categoryForm.name" placeholder="Contoh: Hiburan" />
+          <div v-if="!editingCategoryId" class="flex flex-col gap-3 text-xs">
+            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+              Nama Kategori
+              <input v-model="categoryForm.name" placeholder="Contoh: Belanja" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
             </label>
-            <label>
-              <span>Jenis</span>
-              <select v-model="categoryForm.type">
+            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+              Jenis Kategori
+              <select v-model="categoryForm.type" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none">
                 <option value="expense">Pengeluaran</option>
                 <option value="income">Pemasukan</option>
               </select>
             </label>
-            <label>
-              <span>Warna</span>
-              <input v-model="categoryForm.color" type="color" class="color-picker-input" />
+            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+              Warna Identitas
+              <input v-model="categoryForm.color" type="color" class="w-full h-10 p-0.5 bg-surface border border-border rounded-lg cursor-pointer" />
             </label>
-            <label>
-              <span>Ikon (Emoji)</span>
-              <select v-model="categoryForm.icon">
+            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+              Simbol (Emoji)
+              <select v-model="categoryForm.icon" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none">
                 <option v-for="item in quickEmojis" :key="item" :value="item">{{ item }}</option>
               </select>
             </label>
-            <button class="primary-btn full-width" type="button" @click="handleAddCategory">Tambah Kategori</button>
+            <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm mt-1" type="button" @click="handleAddCategory">
+              Tambah Kategori
+            </button>
           </div>
 
-          <div v-else class="form-grid-small">
-            <label>
-              <span>Nama Kategori</span>
-              <input v-model="editingCategoryForm.name" placeholder="Contoh: Hiburan" />
+          <div v-else class="flex flex-col gap-3 text-xs">
+            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+              Nama Kategori
+              <input v-model="editingCategoryForm.name" placeholder="Contoh: Belanja" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
             </label>
-            <label>
-              <span>Warna</span>
-              <input v-model="editingCategoryForm.color" type="color" class="color-picker-input" />
+            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+              Warna Identitas
+              <input v-model="editingCategoryForm.color" type="color" class="w-full h-10 p-0.5 bg-surface border border-border rounded-lg cursor-pointer" />
             </label>
-            <label>
-              <span>Ikon (Emoji)</span>
-              <select v-model="editingCategoryForm.icon">
+            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+              Simbol (Emoji)
+              <select v-model="editingCategoryForm.icon" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none">
                 <option v-for="item in quickEmojis" :key="item" :value="item">{{ item }}</option>
               </select>
             </label>
-            <div class="button-group-row">
-              <button class="primary-btn flex-grow" type="button" @click="handleUpdateCategory">Simpan</button>
-              <button class="secondary-btn" type="button" @click="cancelEditCategory">Batal</button>
+            <div class="flex gap-2 mt-1">
+              <button class="flex-grow px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm" type="button" @click="handleUpdateCategory">
+                Simpan
+              </button>
+              <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-text bg-surface border border-border hover:bg-surface-2 transition-all cursor-pointer" type="button" @click="cancelEditCategory">
+                Batal
+              </button>
             </div>
           </div>
         </div>
 
         <!-- Daftar Kategori Aktif -->
-        <div class="categories-list-container">
-          <h3>Daftar Kategori</h3>
+        <div class="border border-border rounded-xl p-4 bg-surface flex flex-col gap-3">
+          <h3 class="text-sm font-bold text-text border-b border-border pb-2">Daftar Kategori Terdaftar</h3>
           
-          <div class="category-columns">
-            <div class="category-col">
-              <h4>Pemasukan</h4>
-              <ul class="settings-category-list">
-                <li v-for="item in categories.filter(c => c.type === 'income')" :key="item.id" class="settings-category-item">
-                  <div class="category-item-info">
-                    <span class="category-item-icon">{{ item.icon || '📈' }}</span>
-                    <span class="category-item-dot" :style="{ background: item.color || '#16a34a' }"></span>
-                    <span class="category-item-name">{{ item.name }}</span>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-3">
+              <h4 class="text-xs font-bold text-muted border-b border-border/50 pb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-success"></span> Pemasukan
+              </h4>
+              <ul class="flex flex-col gap-2">
+                <li v-for="item in categories.filter(c => c.type === 'income')" :key="item.id" class="flex justify-between items-center gap-2 p-2 bg-surface-2 border border-border rounded-xl hover:bg-surface-2/65 transition-all">
+                  <div class="flex items-center gap-2 text-xs font-semibold text-text">
+                    <span class="text-sm shrink-0">{{ item.icon || '📈' }}</span>
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs" :style="{ background: item.color || '#16a34a' }"></span>
+                    <span class="truncate max-w-[120px]">{{ item.name }}</span>
                   </div>
-                  <div class="category-item-actions">
-                    <button class="small-edit-btn" type="button" @click="startEditCategory(item)">✏️</button>
-                    <button class="small-delete-btn" type="button" @click="deleteCategory(item.id)">🗑️</button>
+                  <div class="flex items-center gap-1">
+                    <button class="p-1 text-xs hover:bg-primary-soft hover:text-primary transition-all rounded-lg cursor-pointer border-none" type="button" @click="startEditCategory(item)">✏️</button>
+                    <button class="p-1 text-xs hover:bg-danger-soft hover:text-danger-text transition-all rounded-lg cursor-pointer border-none" type="button" @click="deleteCategory(item.id)">🗑️</button>
                   </div>
                 </li>
               </ul>
             </div>
 
-            <div class="category-col">
-              <h4>Pengeluaran</h4>
-              <ul class="settings-category-list">
-                <li v-for="item in categories.filter(c => c.type === 'expense')" :key="item.id" class="settings-category-item">
-                  <div class="category-item-info">
-                    <span class="category-item-icon">{{ item.icon || '💸' }}</span>
-                    <span class="category-item-dot" :style="{ background: item.color || '#ef4444' }"></span>
-                    <span class="category-item-name">{{ item.name }}</span>
+            <div class="flex flex-col gap-3">
+              <h4 class="text-xs font-bold text-muted border-b border-border/50 pb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-danger"></span> Pengeluaran
+              </h4>
+              <ul class="flex flex-col gap-2">
+                <li v-for="item in categories.filter(c => c.type === 'expense')" :key="item.id" class="flex justify-between items-center gap-2 p-2 bg-surface-2 border border-border rounded-xl hover:bg-surface-2/65 transition-all">
+                  <div class="flex items-center gap-2 text-xs font-semibold text-text">
+                    <span class="text-sm shrink-0">{{ item.icon || '💸' }}</span>
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs" :style="{ background: item.color || '#ef4444' }"></span>
+                    <span class="truncate max-w-[120px]">{{ item.name }}</span>
                   </div>
-                  <div class="category-item-actions">
-                    <button class="small-edit-btn" type="button" @click="startEditCategory(item)">✏️</button>
-                    <button class="small-delete-btn" type="button" @click="deleteCategory(item.id)">🗑️</button>
+                  <div class="flex items-center gap-1">
+                    <button class="p-1 text-xs hover:bg-primary-soft hover:text-primary transition-all rounded-lg cursor-pointer border-none" type="button" @click="startEditCategory(item)">✏️</button>
+                    <button class="p-1 text-xs hover:bg-danger-soft hover:text-danger-text transition-all rounded-lg cursor-pointer border-none" type="button" @click="deleteCategory(item.id)">🗑️</button>
                   </div>
                 </li>
               </ul>
@@ -362,73 +427,63 @@ const cancelEditCategory = () => {
       </div>
     </section>
 
-    <section class="card">
-      <h2>Backup & Restore Data</h2>
-      <p class="subtle">Ekspor seluruh data transaksi, anggaran, aset, target tabungan, dan utang piutang ke file JSON atau pulihkan data dari file JSON sebelumnya.</p>
-      <div class="backup-actions">
-        <button class="primary-btn" type="button" @click="exportBackup">Ekspor Data (.json)</button>
-        <label class="file-import-label">
+    <!-- Keamanan PIN -->
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Keamanan PIN Aplikasi</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Proteksi privasi data Anda dengan 4-digit PIN saat pertama kali aplikasi dibuka.</p>
+      
+      <div class="flex flex-col gap-4 mt-1 max-w-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-muted uppercase tracking-wider">Status PIN Pengunci</span>
+          <button 
+            class="px-4 py-2 rounded-full text-xs font-bold transition-all border-none cursor-pointer"
+            :class="isPinEnabled ? 'bg-danger-soft text-danger-text hover:bg-danger/25' : 'bg-primary-soft text-primary hover:bg-primary/25'"
+            type="button"
+            @click="togglePinState"
+          >
+            {{ isPinEnabled ? 'Matikan PIN' : 'Aktifkan PIN' }}
+          </button>
+        </div>
+
+        <div v-if="isPinEnabled || isSettingNewPin" class="flex flex-col gap-3 p-4 bg-surface-2 border border-border rounded-xl">
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            {{ isPinEnabled ? 'Ubah PIN Baru (4 Digit)' : 'Atur PIN Baru (4 Digit)' }}
+            <input 
+              v-model="newPin" 
+              type="password" 
+              pattern="[0-9]*" 
+              inputmode="numeric" 
+              maxlength="4" 
+              placeholder="Masukkan 4 angka" 
+              class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface text-text text-sm font-semibold focus:outline-none transition-all"
+            />
+          </label>
+          <button 
+            class="px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-sm border-none mt-1 self-start"
+            type="button"
+            @click="saveNewPin"
+          >
+            Simpan PIN
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Backup & Restore -->
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Backup & Restore Data</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Simpan salinan data transaksi Anda ke format JSON, atau pulihkan data dari berkas pencadangan lama.</p>
+      
+      <div class="flex flex-wrap gap-3.5 mt-1">
+        <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-md hover:shadow-primary/20 border-none" type="button" @click="exportBackup">
+          Ekspor Data (.json)
+        </button>
+        
+        <label class="inline-flex items-center justify-center border border-border rounded-full px-5 py-3 bg-surface-2 text-text text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-border transition-all">
           <span>Impor Data (.json)</span>
-          <input type="file" accept=".json" @change="handleFileImport" class="file-input" />
+          <input type="file" accept=".json" @change="handleFileImport" class="hidden" />
         </label>
       </div>
     </section>
   </div>
 </template>
-
-<style scoped>
-.page { display: flex; flex-direction: column; gap: 1rem; }
-.hero { background: linear-gradient(135deg, var(--sidebar-bg), var(--hero-accent)); color: white; border-radius: 24px; padding: 1.3rem 1.4rem; box-shadow: var(--shadow); }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.24em; font-size: 0.75rem; opacity: 0.8; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1rem; box-shadow: var(--shadow); }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.9rem; margin: 1rem 0; align-items: start; }
-.field { display: flex; flex-direction: column; gap: 0.35rem; position: relative; }
-.picker-trigger { display: flex; align-items: center; gap: 0.7rem; justify-content: space-between; border: 1px solid var(--border); border-radius: 14px; padding: 0.8rem 0.9rem; background: var(--surface-2); color: var(--text); cursor: pointer; }
-.picker-dot { width: 1.35rem; height: 1.35rem; border-radius: 999px; border: 2px solid rgba(255,255,255,0.7); box-shadow: 0 0 0 1px var(--border); flex: 0 0 auto; }
-.alpha-badge { color: var(--muted); font-size: 0.85rem; }
-.picker-popover { margin-top: 0.5rem; border: 1px solid var(--border); border-radius: 16px; padding: 0.9rem; background: var(--surface); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 0.8rem; }
-.picker-field { display: flex; flex-direction: column; gap: 0.35rem; }
-.picker-field input[type='color'] { padding: 0.35rem; min-height: 3rem; }
-.swatch-row { display: flex; flex-wrap: wrap; gap: 0.55rem; }
-.swatch-btn { width: 2rem; height: 2rem; border-radius: 999px; border: 2px solid rgba(255,255,255,0.75); box-shadow: 0 0 0 1px var(--border); cursor: pointer; }
-.preview-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.9rem; margin-bottom: 1rem; }
-.preview-card { border: 1px solid var(--border); border-radius: 16px; padding: 1rem; background: var(--surface-2); display: flex; flex-direction: column; gap: 0.7rem; }
-.preview-button { border: none; border-radius: 999px; padding: 0.75rem 1rem; width: fit-content; }
-.preview-field { border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 0.9rem; background: var(--surface); color: var(--muted); }
-.status { color: var(--success); margin-top: 0.6rem; }
-.subtle { color: var(--muted); margin-top: 0.1rem; }
-.backup-actions { display: flex; gap: 0.9rem; flex-wrap: wrap; margin-top: 1rem; }
-.file-import-label { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 999px; padding: 0.72rem 1rem; background: var(--surface-2); color: var(--text); cursor: pointer; transition: transform 0.2s ease, background-color 0.25s ease; }
-.file-import-label:hover { transform: translateY(-1px); background: var(--border); }
-.file-input { display: none; }
-
-/* Category Manager Styles */
-.category-manager { display: grid; grid-template-columns: 260px 1fr; gap: 1.2rem; margin-top: 1rem; }
-.category-editor-card { border: 1px solid var(--border); border-radius: 16px; padding: 1rem; background: var(--surface-2); height: fit-content; }
-.category-editor-card h3, .categories-list-container h3 { margin-top: 0; margin-bottom: 0.8rem; font-size: 1.1rem; }
-.form-grid-small { display: flex; flex-direction: column; gap: 0.8rem; }
-.form-grid-small label span { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
-.color-picker-input { padding: 0.2rem; min-height: 2.5rem; border-radius: 10px; cursor: pointer; }
-.full-width { width: 100%; }
-.button-group-row { display: flex; gap: 0.5rem; }
-.flex-grow { flex-grow: 1; }
-.secondary-btn { border: 1px solid var(--border); border-radius: 999px; padding: 0.72rem 1rem; background: var(--surface-2); color: var(--text); cursor: pointer; transition: transform 0.2s ease, background-color 0.25s ease; }
-.secondary-btn:hover { transform: translateY(-1px); background: var(--border); }
-.categories-list-container { border: 1px solid var(--border); border-radius: 16px; padding: 1rem; background: var(--surface); }
-.category-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
-.category-col h4 { margin-top: 0; margin-bottom: 0.6rem; font-size: 0.95rem; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
-.settings-category-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-.settings-category-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.6rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; }
-.category-item-info { display: flex; align-items: center; gap: 0.5rem; }
-.category-item-icon { font-size: 1.1rem; }
-.category-item-dot { width: 10px; height: 10px; border-radius: 999px; flex-shrink: 0; }
-.category-item-name { font-size: 0.95rem; font-weight: 500; }
-.category-item-actions { display: flex; gap: 0.3rem; }
-.small-edit-btn, .small-delete-btn { border: none; background: transparent; cursor: pointer; padding: 0.2rem; font-size: 0.9rem; border-radius: 6px; transition: background-color 0.2s ease; }
-.small-edit-btn:hover { background: rgba(37, 99, 235, 0.1); }
-.small-delete-btn:hover { background: var(--danger-soft); }
-@media (max-width: 900px) {
-  .category-manager { grid-template-columns: 1fr; }
-  .category-columns { grid-template-columns: 1fr; }
-}
-</style>

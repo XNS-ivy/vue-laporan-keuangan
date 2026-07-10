@@ -7,46 +7,15 @@ defineProps<{
 </script>
 
 <template>
-  <article class="card stat-card" :class="tone">
-    <span>{{ label }}</span>
-    <strong>{{ value }}</strong>
+  <article
+    class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+    :class="{
+      'border-l-4 border-l-success': tone === 'positive',
+      'border-l-4 border-l-danger': tone === 'negative',
+      'border-l-4 border-l-primary': tone === 'neutral'
+    }"
+  >
+    <span class="text-xs font-semibold text-muted uppercase tracking-wider">{{ label }}</span>
+    <strong class="text-2xl font-bold tracking-tight text-text mt-1">{{ value }}</strong>
   </article>
 </template>
-
-<style scoped>
-.card {
-  background: var(--surface);
-  border-radius: 18px;
-  padding: 1rem;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-}
-
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.stat-card span {
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.stat-card strong {
-  font-size: 1.2rem;
-  color: var(--text);
-}
-
-.positive {
-  border-left: 4px solid var(--success);
-}
-
-.negative {
-  border-left: 4px solid var(--danger);
-}
-
-.neutral {
-  border-left: 4px solid var(--primary);
-}
-</style>

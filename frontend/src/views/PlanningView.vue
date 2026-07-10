@@ -53,10 +53,10 @@ onBeforeUnmount(() => {
   window.removeEventListener('theme-preference-changed', updateThemeStatus)
 })
 
-const gridColor = computed(() => isDark.value ? '#334155' : '#e2e8f0')
+const gridColor = computed(() => isDark.value ? 'rgba(255,255,255,0.06)' : '#e2e8f0')
 const textColor = computed(() => isDark.value ? '#94a3b8' : '#64748b')
 const tooltipBgColor = computed(() => isDark.value ? '#111827' : '#ffffff')
-const tooltipBorderColor = computed(() => isDark.value ? '#334155' : '#e2e8f0')
+const tooltipBorderColor = computed(() => isDark.value ? 'rgba(255,255,255,0.08)' : '#e2e8f0')
 const tooltipTextColor = computed(() => isDark.value ? '#f8fafc' : '#0f172a')
 
 const simChartOptions = computed(() => ({
@@ -66,7 +66,7 @@ const simChartOptions = computed(() => ({
       position: 'bottom' as const,
       labels: {
         color: textColor.value,
-        font: { family: 'Segoe UI, system-ui, sans-serif', size: 12 }
+        font: { family: 'Inter, system-ui, sans-serif', size: 11, weight: 'bold' }
       }
     },
     tooltip: {
@@ -83,11 +83,11 @@ const simChartOptions = computed(() => ({
   scales: {
     x: {
       grid: { color: gridColor.value, drawTicks: false },
-      ticks: { color: textColor.value, font: { family: 'Segoe UI, system-ui, sans-serif' } }
+      ticks: { color: textColor.value, font: { family: 'Inter, system-ui, sans-serif', size: 10 } }
     },
     y: {
       grid: { color: gridColor.value, drawTicks: false },
-      ticks: { color: textColor.value, font: { family: 'Segoe UI, system-ui, sans-serif' } }
+      ticks: { color: textColor.value, font: { family: 'Inter, system-ui, sans-serif', size: 10 } }
     }
   }
 }))
@@ -134,7 +134,7 @@ const calculateSimulation = () => {
           label: 'Proyeksi Saldo (Rp)',
           data: yearlyBalances,
           borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.15)',
+          backgroundColor: 'rgba(16, 185, 129, 0.12)',
           fill: true,
           tension: 0.3,
         }
@@ -142,133 +142,205 @@ const calculateSimulation = () => {
     }
   }
 }
+
+// 50/30/20 Smart Budgeting State
+const smartIncome = ref<number | ''>('')
+const smartNeeds = computed(() => smartIncome.value ? Math.round(Number(smartIncome.value) * 0.5) : 0)
+const smartWants = computed(() => smartIncome.value ? Math.round(Number(smartIncome.value) * 0.3) : 0)
+const smartSavings = computed(() => smartIncome.value ? Math.round(Number(smartIncome.value) * 0.2) : 0)
+
+const applySmartBudget = () => {
+  if (!smartIncome.value || smartIncome.value <= 0) return
+  addBudget({ category: 'Kebutuhan (50%)', amount: smartNeeds.value, month: month.value })
+  addBudget({ category: 'Keinginan (30%)', amount: smartWants.value, month: month.value })
+  addBudget({ category: 'Tabungan (20%)', amount: smartSavings.value, month: month.value })
+  smartIncome.value = ''
+}
 </script>
 
 <template>
-  <div class="page">
-    <header class="page-header">
+  <div class="flex flex-col gap-6">
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
       <div>
-        <p class="eyebrow">Planning</p>
-        <h1>Atur batas pengeluaran bulanan</h1>
-        <p class="subtle">Budget sekarang dilengkapi alert otomatis dan konteks perbandingan bulan ke bulan.</p>
+        <p class="uppercase tracking-widest text-[10px] text-muted font-bold">Planning</p>
+        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">Atur batas pengeluaran bulanan</h1>
+        <p class="text-xs text-muted leading-relaxed font-semibold">Budget sekarang dilengkapi alert otomatis & konteks perbandingan bulan ke bulan.</p>
       </div>
-      <input v-model="month" type="month" />
+      <input v-model="month" type="month" class="border border-border rounded-xl px-4 py-2 bg-surface text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all w-full sm:w-auto" />
     </header>
 
-    <section v-if="budgetAlerts.length" class="card alert-card">
-      <h2>Alert Bulan Ini</h2>
-      <div class="alert-list">
-        <div v-for="item in budgetAlerts" :key="item.id" class="alert-item" :class="item.level">
-          <strong>{{ item.category }}</strong>
-          <span>{{ item.message }}</span>
+    <section v-if="budgetAlerts.length" class="bg-surface border-l-4 border-l-danger border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-3">
+      <h2 class="text-base font-bold text-text tracking-tight">Alert Bulan Ini</h2>
+      <div class="flex flex-wrap gap-2.5">
+        <div v-for="item in budgetAlerts" :key="item.id" class="flex flex-col gap-0.5 px-4 py-2.5 rounded-xl bg-surface-2 border text-xs" :class="item.level === 'danger' ? 'border-danger/30 text-danger-text' : 'border-amber-500/30 text-amber-600'">
+          <strong class="font-bold uppercase tracking-wider">{{ item.category }}</strong>
+          <span class="font-medium opacity-90">{{ item.message }}</span>
         </div>
       </div>
     </section>
 
-    <div class="content-grid">
-      <section class="card">
-        <h2>Buat Anggaran</h2>
-        <div class="form-grid">
-          <label>
+    <!-- Alokasi Anggaran Cerdas (50/30/20) -->
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Alokasi Anggaran Cerdas (50/30/20)</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Masukkan estimasi pemasukan bulanan untuk melihat pembagian alokasi anggaran cerdas otomatis.</p>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6 mt-1">
+        <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-3 text-xs">
+          <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+            Estimasi Pemasukan (Rp)
+            <input v-model.number="smartIncome" type="number" min="0" placeholder="5000000" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
+          </label>
+          <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm" type="button" @click="applySmartBudget">
+            Terapkan Anggaran
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs font-semibold uppercase tracking-wider text-muted">
+          <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs border-l-4 border-l-primary">
+            <span>50% Kebutuhan (Needs)</span>
+            <strong class="text-sm font-bold text-text mt-0.5">Rp {{ smartNeeds.toLocaleString('id-ID') }}</strong>
+            <span class="text-[10px] text-muted font-normal mt-1 leading-tight">Makanan, tagihan, transportasi wajib, dll.</span>
+          </div>
+          <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs border-l-4 border-l-amber-500">
+            <span>30% Keinginan (Wants)</span>
+            <strong class="text-sm font-bold text-text mt-0.5">Rp {{ smartWants.toLocaleString('id-ID') }}</strong>
+            <span class="text-[10px] text-muted font-normal mt-1 leading-tight">Hiburan, belanja barang hobi, langganan, dll.</span>
+          </div>
+          <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs border-l-4 border-l-success">
+            <span>20% Tabungan (Savings)</span>
+            <strong class="text-sm font-bold text-text mt-0.5">Rp {{ smartSavings.toLocaleString('id-ID') }}</strong>
+            <span class="text-[10px] text-muted font-normal mt-1 leading-tight">Tabungan darurat, investasi, pelunasan utang, dll.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Buat Anggaran</h2>
+        <div class="grid gap-4 grid-cols-1 sm:grid-cols-2">
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             Kategori
-            <input v-model="form.category" list="expense-categories" placeholder="Contoh: Belanja" />
+            <input v-model="form.category" list="expense-categories" placeholder="Contoh: Belanja" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
             <datalist id="expense-categories">
               <option v-for="item in expenseCategories" :key="item.id" :value="item.name"></option>
             </datalist>
           </label>
-          <label>
-            Nominal
-            <input v-model="form.amount" type="number" min="0" placeholder="500000" />
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            Nominal Limit (Rp)
+            <input v-model="form.amount" type="number" min="0" placeholder="500000" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
           </label>
-          <label>
-            Bulan
-            <input v-model="form.month" type="month" />
+          <label class="sm:col-span-2 flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            Bulan Target
+            <input v-model="form.month" type="month" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all" />
           </label>
         </div>
-        <button class="primary-btn" @click="submitBudget">Simpan Anggaran</button>
-        <div class="chip-list">
-          <span v-for="item in expenseCategories" :key="item.id" class="chip">{{ item.name }}</span>
+        <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-lg hover:shadow-primary/20 border-none mt-2 self-start" @click="submitBudget">
+          Simpan Anggaran
+        </button>
+        <div class="flex flex-wrap gap-1.5 mt-2">
+          <span v-for="item in expenseCategories" :key="item.id" class="px-3 py-1.5 rounded-full text-xs font-semibold text-primary bg-primary-soft">
+            {{ item.name }}
+          </span>
         </div>
       </section>
 
-      <section class="card">
-        <h2>Ringkasan Anggaran</h2>
-        <div v-for="item in budgetItems" :key="item.id" class="budget-item">
-          <div>
-            <strong>{{ item.category }}</strong>
-            <p>Target {{ item.amount.toLocaleString('id-ID') }} • Terpakai {{ item.used.toLocaleString('id-ID') }}</p>
+      <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+        <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Ringkasan Anggaran</h2>
+        <div class="flex flex-col gap-4 pr-1">
+          <div v-for="item in budgetItems" :key="item.id" class="flex justify-between items-center gap-4 pb-3.5 border-b border-border last:border-0 last:pb-0">
+            <div>
+              <strong class="text-sm font-bold text-text">{{ item.category }}</strong>
+              <p class="text-xs text-muted font-semibold mt-0.5">Target Rp {{ item.amount.toLocaleString('id-ID') }} • Terpakai Rp {{ item.used.toLocaleString('id-ID') }}</p>
+            </div>
+            <div class="flex flex-col gap-2 min-w-[150px] shrink-0 items-end">
+              <div class="flex items-center gap-2">
+                <span :class="item.remaining >= 0 ? 'text-success' : 'text-danger'" class="text-xs font-bold">
+                  Sisa Rp {{ item.remaining.toLocaleString('id-ID') }}
+                </span>
+                <button class="text-xs text-danger-text hover:text-danger hover:scale-105 active:scale-95 transition-all cursor-pointer border-none bg-transparent" @click="deleteBudget(item.id)">Hapus</button>
+              </div>
+              <div class="w-full h-2 bg-surface-2 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-primary to-success transition-all duration-300" :style="{ width: `${item.progress}%` }"></div>
+              </div>
+            </div>
           </div>
-          <div class="right">
-            <span :class="item.remaining >= 0 ? 'good' : 'warn'">Sisa {{ item.remaining.toLocaleString('id-ID') }}</span>
-            <div class="bar"><span :style="{ width: `${item.progress}%` }"></span></div>
-            <button class="ghost-btn" @click="deleteBudget(item.id)">Hapus</button>
-          </div>
+          <p v-if="!budgetItems.length" class="text-center py-8 text-xs text-muted font-semibold">Belum ada anggaran bulanan.</p>
         </div>
       </section>
     </div>
 
-    <section class="card">
-      <h2>Perbandingan Bulan Berjalan</h2>
-      <div class="comparison-grid">
-        <div class="comparison-item">
+    <!-- Perbandingan Bulan Berjalan -->
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Perbandingan Bulan Berjalan</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold uppercase tracking-wider text-muted">
+        <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs">
           <span>Pemasukan</span>
-          <strong>{{ monthlyComparison.incomeChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.incomeChange.toLocaleString('id-ID') }}</strong>
+          <strong :class="monthlyComparison.incomeChange >= 0 ? 'text-success' : 'text-danger'" class="text-base font-bold mt-1">
+            {{ monthlyComparison.incomeChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.incomeChange.toLocaleString('id-ID') }}
+          </strong>
         </div>
-        <div class="comparison-item">
+        <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs">
           <span>Pengeluaran</span>
-          <strong>{{ monthlyComparison.expenseChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.expenseChange.toLocaleString('id-ID') }}</strong>
+          <strong :class="monthlyComparison.expenseChange >= 0 ? 'text-danger' : 'text-success'" class="text-base font-bold mt-1">
+            {{ monthlyComparison.expenseChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.expenseChange.toLocaleString('id-ID') }}
+          </strong>
         </div>
-        <div class="comparison-item">
+        <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs">
           <span>Net</span>
-          <strong>{{ monthlyComparison.netChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.netChange.toLocaleString('id-ID') }}</strong>
+          <strong :class="monthlyComparison.netChange >= 0 ? 'text-success' : 'text-danger'" class="text-base font-bold mt-1">
+            {{ monthlyComparison.netChange >= 0 ? '+' : '' }}Rp {{ monthlyComparison.netChange.toLocaleString('id-ID') }}
+          </strong>
         </div>
       </div>
-      <p class="subtle">Budget aktif bulan ini: {{ currentMonthBudgetSummary.length }} kategori.</p>
+      <p class="text-xs text-muted font-medium mt-1">Budget aktif bulan ini: <strong class="text-text font-bold">{{ currentMonthBudgetSummary.length }} kategori</strong>.</p>
     </section>
 
     <!-- Simulator Finansial -->
-    <section class="card simulator-card">
-      <h2>Simulasi Pertumbuhan Keuangan (Compound Interest)</h2>
-      <p class="subtle">Rencanakan masa depan Anda dengan melihat proyeksi pertumbuhan tabungan atau investasi majemuk dari waktu ke waktu.</p>
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Compound Interest Simulator</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Simulasikan pertumbuhan tabungan atau investasi majemuk dari waktu ke waktu berdasarkan tingkat bunga majemuk.</p>
       
-      <div class="simulator-layout">
-        <div class="simulator-form">
-          <label>
-            <span>Setoran Awal (Rp)</span>
-            <input v-model.number="simInitial" type="number" min="0" placeholder="1000000" />
+      <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 mt-1">
+        <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-3.5 text-xs">
+          <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+            Setoran Awal (Rp)
+            <input v-model.number="simInitial" type="number" min="0" placeholder="1000000" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
           </label>
-          <label>
-            <span>Setoran Bulanan (Rp)</span>
-            <input v-model.number="simMonthly" type="number" min="0" placeholder="500000" />
+          <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+            Setoran Bulanan (Rp)
+            <input v-model.number="simMonthly" type="number" min="0" placeholder="500000" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
           </label>
-          <label>
-            <span>Durasi Waktu (Tahun)</span>
-            <input v-model.number="simYears" type="number" min="1" max="50" placeholder="10" />
+          <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+            Durasi Waktu (Tahun)
+            <input v-model.number="simYears" type="number" min="1" max="50" placeholder="10" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
           </label>
-          <label>
-            <span>Suku Bunga Tahunan (%)</span>
-            <input v-model.number="simRate" type="number" min="0" max="100" placeholder="6" />
+          <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+            Suku Bunga Tahunan (%)
+            <input v-model.number="simRate" type="number" min="0" max="100" placeholder="6" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
           </label>
-          <button class="primary-btn" type="button" @click="calculateSimulation">Mulai Simulasi</button>
+          <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm mt-1" type="button" @click="calculateSimulation">
+            Mulai Simulasi
+          </button>
         </div>
         
-        <div v-if="simResults" class="simulator-results">
-          <div class="results-summary">
-            <div class="result-tile">
+        <div v-if="simResults" class="flex flex-col gap-5">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs font-semibold uppercase tracking-wider text-muted">
+            <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs">
               <span>Total Dana Pokok</span>
-              <strong>Rp {{ simResults.totalPrincipal.toLocaleString('id-ID') }}</strong>
+              <strong class="text-sm font-bold text-text mt-0.5">Rp {{ simResults.totalPrincipal.toLocaleString('id-ID') }}</strong>
             </div>
-            <div class="result-tile">
-              <span>Total Bunga Akumulasi</span>
-              <strong class="good">Rp {{ simResults.totalInterest.toLocaleString('id-ID') }}</strong>
+            <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs">
+              <span>Bunga Akumulasi</span>
+              <strong class="text-sm font-bold text-success mt-0.5">Rp {{ simResults.totalInterest.toLocaleString('id-ID') }}</strong>
             </div>
-            <div class="result-tile">
-              <span>Hasil Akhir Estimasi</span>
-              <strong class="primary-text">Rp {{ simResults.totalEndBalance.toLocaleString('id-ID') }}</strong>
+            <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs">
+              <span>Estimasi Akhir</span>
+              <strong class="text-sm font-bold text-primary mt-0.5">Rp {{ simResults.totalEndBalance.toLocaleString('id-ID') }}</strong>
             </div>
           </div>
           
-          <div class="simulator-chart-wrapper">
+          <div class="border border-border rounded-2xl overflow-hidden bg-surface shadow-xs">
             <FinanceChart type="line" title="Proyeksi Pertumbuhan Saldo" :data="simResults.chartData" :options="simChartOptions" />
           </div>
         </div>
@@ -276,52 +348,3 @@ const calculateSimulation = () => {
     </section>
   </div>
 </template>
-
-<style scoped>
-.page { display: flex; flex-direction: column; gap: 1rem; }
-.hero { background: linear-gradient(135deg, var(--sidebar-bg), var(--hero-accent)); color: white; border-radius: 24px; padding: 1.3rem 1.4rem; box-shadow: var(--shadow); }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; opacity: 0.8; }
-.page-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; color: var(--muted); }
-.subtle { color: var(--muted); }
-.content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1rem; box-shadow: var(--shadow); }
-.form-grid { display: grid; gap: 0.8rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 0.8rem; }
-label { display: flex; flex-direction: column; gap: 0.35rem; color: var(--text); }
-.chip-list { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.8rem; }
-.chip { border-radius: 999px; padding: 0.4rem 0.7rem; font-size: 0.85rem; }
-.budget-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
-.right { display: flex; flex-direction: column; gap: 0.4rem; min-width: 140px; }
-.bar { width: 100%; height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-.bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); }
-.good { color: var(--success); font-weight: 600; }
-.warn { color: var(--danger); font-weight: 600; }
-.alert-card { border-color: color-mix(in srgb, var(--danger) 20%, var(--border)); }
-.alert-list { display: flex; flex-wrap: wrap; gap: 0.7rem; }
-.alert-item { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.8rem 0.9rem; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border); }
-.alert-item.warning { border-color: #f59e0b; }
-.alert-item.danger { border-color: var(--danger); }
-.comparison-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem; }
-.comparison-item { border: 1px solid var(--border); border-radius: 14px; padding: 0.85rem; background: var(--surface-2); display: flex; flex-direction: column; gap: 0.35rem; }
-
-/* Simulator styling */
-.simulator-card { margin-top: 1rem; }
-.simulator-layout { display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; margin-top: 1rem; align-items: start; }
-.simulator-form { display: flex; flex-direction: column; gap: 0.85rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; padding: 1rem; }
-.simulator-form label span { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
-.simulator-results { display: flex; flex-direction: column; gap: 1.2rem; }
-.results-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem; }
-.result-tile { border: 1px solid var(--border); border-radius: 14px; padding: 0.9rem; background: var(--surface-2); display: flex; flex-direction: column; gap: 0.35rem; }
-.result-tile span { font-size: 0.85rem; color: var(--muted); }
-.result-tile strong { font-size: 1.15rem; }
-.primary-text { color: var(--primary); }
-.simulator-chart-wrapper { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-
-@media (max-width: 900px) { 
-  .content-grid { grid-template-columns: 1fr; } 
-  .page-header { flex-direction: column; align-items: flex-start; } 
-  .form-grid { grid-template-columns: 1fr; } 
-  .budget-item { flex-direction: column; align-items: flex-start; } 
-  .simulator-layout { grid-template-columns: 1fr; }
-}
-</style>

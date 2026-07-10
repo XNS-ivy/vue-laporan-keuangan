@@ -1,17 +1,78 @@
 import { computed, onMounted, ref, watch } from 'vue'
+import * as XLSX from 'xlsx'
 import { useUi } from './useUi'
 
 export type TransactionType = 'income' | 'expense'
-export type Transaction = { id: number; type: TransactionType; amount: number; category: string; note: string; date: string }
-export type CategoryItem = { id: number; name: string; type: TransactionType; color?: string; icon?: string }
-export type BudgetItem = { id: number; category: string; amount: number; month: string }
-export type AssetItem = { id: number; name: string; amount: number; type: 'cash' | 'bank' | 'investment'; date: string }
-export type SavingsGoal = { id: number; name: string; targetAmount: number; currentAmount: number; monthlyContribution: number; targetDate: string }
-export type RecurringTransaction = { id: number; title: string; type: TransactionType; category: string; amount: number; note: string; dayOfMonth: number; lastAppliedMonth: string }
-export type DebtItem = { id: number; name: string; counterpart: string; amount: number; dueDate: string; kind: 'debt' | 'receivable'; status: 'open' | 'paid' }
 
-type LegacySavingsGoal = { targetAmount: number; monthlyContribution: number }
-type FinanceData = {
+export interface Transaction {
+  id: number
+  type: TransactionType
+  amount: number
+  category: string
+  subCategory?: string
+  note: string
+  date: string
+}
+
+export interface CategoryItem {
+  id: number
+  name: string
+  type: TransactionType
+  color?: string
+  icon?: string
+}
+
+export interface BudgetItem {
+  id: number
+  category: string
+  amount: number
+  month: string
+}
+
+export interface AssetItem {
+  id: number
+  name: string
+  amount: number
+  type: 'cash' | 'bank' | 'investment'
+  date: string
+}
+
+export interface SavingsGoal {
+  id: number
+  name: string
+  targetAmount: number
+  currentAmount: number
+  monthlyContribution: number
+  targetDate: string
+}
+
+export interface RecurringTransaction {
+  id: number
+  title: string
+  type: TransactionType
+  category: string
+  amount: number
+  note: string
+  dayOfMonth: number
+  lastAppliedMonth: string
+}
+
+export interface DebtItem {
+  id: number
+  name: string
+  counterpart: string
+  amount: number
+  dueDate: string
+  kind: 'debt' | 'receivable'
+  status: 'open' | 'paid'
+}
+
+interface LegacySavingsGoal {
+  targetAmount: number
+  monthlyContribution: number
+}
+
+interface FinanceData {
   transactions: Transaction[]
   categories: CategoryItem[]
   budgets: BudgetItem[]
@@ -287,6 +348,7 @@ export function useFinance() {
       type: payload.type,
       amount,
       category: categoryName,
+      subCategory: payload.subCategory,
       note: payload.note.trim(),
       date: payload.date,
     }
@@ -468,6 +530,38 @@ export function useFinance() {
     </body></html>
   `
 
+  const downloadExcelReport = () => {
+    const data = filteredTransactions.value.map((item) => ({
+      Tanggal: item.date,
+      Jenis: item.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
+      Kategori: item.category,
+      'Sub-Kategori': item.subCategory || '-',
+      Nominal: item.amount,
+      Catatan: item.note || '-'
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(data)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transaksi')
+
+    const max_len = data.reduce((acc, row) => {
+      acc.Tanggal = Math.max(acc.Tanggal, String(row.Tanggal).length)
+      acc.Jenis = Math.max(acc.Jenis, String(row.Jenis).length)
+      acc.Kategori = Math.max(acc.Kategori, String(row.Kategori).length)
+      acc['Sub-Kategori'] = Math.max(acc['Sub-Kategori'], String(row['Sub-Kategori']).length)
+      acc.Nominal = Math.max(acc.Nominal, String(row.Nominal).length)
+      acc.Catatan = Math.max(acc.Catatan, String(row.Catatan).length)
+      return acc
+    }, { Tanggal: 10, Jenis: 12, Kategori: 12, 'Sub-Kategori': 14, Nominal: 12, Catatan: 15 })
+
+    worksheet['!cols'] = Object.keys(max_len).map((key) => ({
+      wch: max_len[key as keyof typeof max_len] + 3
+    }))
+
+    XLSX.writeFile(workbook, `laporan-keuangan-${currentMonth()}.xlsx`)
+    pushToast('Laporan Excel (.xlsx) berhasil diunduh', 'success')
+  }
+
   const downloadCsvReport = () => {
     const csv = exportTransactionsCsv()
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -580,6 +674,7 @@ export function useFinance() {
     getBudgetSummary,
     exportTransactionsCsv,
     downloadCsvReport,
+    downloadExcelReport,
     downloadPdfReport,
     exportSummaryText,
   }
