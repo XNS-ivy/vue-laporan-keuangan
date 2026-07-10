@@ -12,8 +12,8 @@ const canExport = computed(() => filteredTransactions.value.length > 0)
       <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
       <div class="z-10 grow max-w-2xl">
         <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Reports</p>
-        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Ekspor laporan & analisis cepat</h1>
-        <p class="text-sm text-white/80 leading-relaxed mt-2">Unduh laporan dalam format CSV, Excel, atau PDF. Data laporan otomatis tersinkronisasi mengikuti filter rentang tanggal global.</p>
+        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Unduh Laporan & Analisis Uangmu</h1>
+        <p class="text-sm text-white/80 leading-relaxed mt-2">Unduh laporanmu dalam format CSV, Excel, atau PDF. Data yang diunduh otomatis mengikuti rentang tanggal filter aktif.</p>
       </div>
     </header>
 

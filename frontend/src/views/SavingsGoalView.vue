@@ -58,12 +58,12 @@ const handleDeposit = () => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <header class="bg-gradient-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom relative overflow-hidden">
+    <header class="bg-linear-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom relative overflow-hidden">
       <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
-      <div class="z-10 flex-grow max-w-2xl">
+      <div class="z-10 grow max-w-2xl">
         <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Target Tabungan</p>
-        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Kelola lebih dari satu goal tabungan</h1>
-        <p class="text-sm text-white/80 leading-relaxed mt-2">Dukung rencana keuangan masa depan Anda dengan membuat berbagai target tabungan spesifik seperti dana darurat, liburan, investasi, atau gadget baru.</p>
+        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Wujudkan Celengan & Target Nabungmu</h1>
+        <p class="text-sm text-white/80 leading-relaxed mt-2">Biar impianmu cepat terwujud, yuk buat target tabungan yang spesifik seperti dana darurat, liburan, investasi, atau beli gadget impianmu.</p>
       </div>
     </header>
 
@@ -103,7 +103,7 @@ const handleDeposit = () => {
           <span class="text-sm font-bold text-success">{{ savingsGoalProgress }}%</span>
         </div>
         <div class="w-full h-2.5 bg-surface-2 rounded-full overflow-hidden">
-          <div class="h-full bg-gradient-to-r from-primary to-success transition-all duration-500" :style="{ width: `${savingsGoalProgress}%` }"></div>
+          <div class="h-full bg-linear-to-r from-primary to-success transition-all duration-500" :style="{ width: `${savingsGoalProgress}%` }"></div>
         </div>
         <ul class="flex flex-col gap-3 pr-1 text-sm mt-1">
           <li class="flex justify-between items-center text-muted font-medium pb-2 border-b border-border/40">
@@ -116,7 +116,7 @@ const handleDeposit = () => {
           </li>
           <li class="flex justify-between items-center text-muted font-medium pb-2 border-b border-border/40">
             <span>Sisa Nominal:</span>
-            <strong class="text-text font-bold text-danger">Rp {{ remaining.toLocaleString('id-ID') }}</strong>
+            <strong class="font-bold text-danger">Rp {{ remaining.toLocaleString('id-ID') }}</strong>
           </li>
           <li class="flex justify-between items-center text-muted font-medium pb-2 border-b border-border/40">
             <span>Setoran Bulanan Total:</span>
@@ -124,7 +124,7 @@ const handleDeposit = () => {
           </li>
           <li class="flex justify-between items-center text-muted font-medium">
             <span>Estimasi Tercapai:</span>
-            <strong class="text-text font-bold text-primary">{{ monthsToGoal === null ? 'Belum bisa dihitung' : `${monthsToGoal} bulan` }}</strong>
+            <strong class="font-bold text-primary">{{ monthsToGoal === null ? 'Belum bisa dihitung' : `${monthsToGoal} bulan` }}</strong>
           </li>
         </ul>
       </article>

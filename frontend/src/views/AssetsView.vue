@@ -154,7 +154,7 @@ const assetGrowthChartData = computed(() => ({
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
       <div>
         <p class="uppercase tracking-widest text-[10px] text-muted font-bold">Aset</p>
-        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">Pantau nilai & pertumbuhan aset Anda</h1>
+        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">Pantau Nilai & Perkembangan Asetmu</h1>
       </div>
       <div class="px-4.5 py-2.5 rounded-full text-sm font-bold text-success bg-emerald-600/10 border border-emerald-600/10 shrink-0">
         Total: Rp {{ totalAssets.toLocaleString('id-ID') }}
@@ -230,7 +230,7 @@ const assetGrowthChartData = computed(() => ({
         
         <h3 class="text-xs font-bold text-muted uppercase tracking-wider border-t border-border pt-4 mt-2 mb-1 flex items-center justify-between">
           <span>Daftar Rincian (Klik untuk Edit/Penyusutan)</span>
-          <span class="text-[10px] text-primary lowercase normal-case italic font-semibold">interactive mode *</span>
+          <span class="text-[10px] text-primary lowercase italic font-semibold">interactive mode *</span>
         </h3>
         
         <div class="max-h-96 overflow-y-auto pr-1">

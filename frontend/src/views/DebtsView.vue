@@ -91,7 +91,7 @@ const saveDebtChanges = () => {
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
       <div>
         <p class="uppercase tracking-widest text-[10px] text-muted font-bold">Utang & Piutang</p>
-        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">Kelola kewajiban & tagihan pribadi</h1>
+        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">Lacak Utang, Piutang, & Tagihanmu</h1>
       </div>
       <div class="flex flex-wrap gap-2 shrink-0">
         <span class="px-4 py-2 rounded-full text-xs font-bold text-danger-text bg-danger-soft border border-danger/10 shadow-xs">
@@ -182,7 +182,7 @@ const saveDebtChanges = () => {
           <span class="text-xs text-muted font-semibold italic">Ubah detail dengan klik item</span>
         </h2>
         
-        <div class="max-h-[500px] overflow-y-auto pr-1 flex flex-col gap-3">
+        <div class="max-h-125 overflow-y-auto pr-1 flex flex-col gap-3">
           <article 
             v-for="item in filteredDebts" 
             :key="item.id" 

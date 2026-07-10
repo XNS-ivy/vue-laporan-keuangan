@@ -202,7 +202,7 @@ onBeforeUnmount(() => {
             MyFinanceFlow
           </h2>
         </div>
-        <p class="text-xs text-white/70 leading-relaxed mt-1">Pantau uang Anda dengan lebih tenang dan terarah.</p>
+        <p class="text-xs text-white/70 leading-relaxed mt-1">Pantau uangmu dengan lebih tenang dan terarah.</p>
       </div>
 
       <!-- Navigation Links -->

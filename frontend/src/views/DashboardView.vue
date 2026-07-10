@@ -260,8 +260,8 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
       <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
       <div class="z-10 grow max-w-2xl">
         <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Dashboard</p>
-        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Analisis keuangan yang cerdas & terarah</h1>
-        <p class="text-sm text-white/80 leading-relaxed mt-2">Ringkasan dilengkapi perbandingan bulanan, insight otomatis, budget alert, goal tabungan, dan status utang/piutang untuk mendukung keputusan finansial Anda.</p>
+        <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Yuk, Lacak & Atur Keuanganmu!</h1>
+        <p class="text-sm text-white/80 leading-relaxed mt-2">Pantau perbandingan bulanan, wawasan otomatis, batas anggaran, target tabungan, dan status utang-piutang biar keputusan finansialmu makin matang.</p>
       </div>
       <div class="flex flex-wrap gap-2.5 shrink-0 z-10">
         <RouterLink to="/reports" class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white border border-white/20 bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-center">

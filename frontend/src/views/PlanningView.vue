@@ -163,8 +163,8 @@ const applySmartBudget = () => {
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
       <div>
         <p class="uppercase tracking-widest text-[10px] text-muted font-bold">Planning</p>
-        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">Atur batas pengeluaran bulanan</h1>
-        <p class="text-xs text-muted leading-relaxed font-semibold">Budget sekarang dilengkapi alert otomatis & konteks perbandingan bulan ke bulan.</p>
+        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">Atur Batas Belanja & Anggaran Bulananmu</h1>
+        <p class="text-xs text-muted leading-relaxed font-semibold">Anggaran belanja dilengkapi dengan peringatan otomatis dan perbandingan dari bulan ke bulan.</p>
       </div>
       <input v-model="month" type="month" class="border border-border rounded-xl px-4 py-2 bg-surface text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all w-full sm:w-auto" />
     </header>
@@ -253,7 +253,7 @@ const applySmartBudget = () => {
               <strong class="text-sm font-bold text-text">{{ item.category }}</strong>
               <p class="text-xs text-muted font-semibold mt-0.5">Target Rp {{ item.amount.toLocaleString('id-ID') }} • Terpakai Rp {{ item.used.toLocaleString('id-ID') }}</p>
             </div>
-            <div class="flex flex-col gap-2 min-w-[150px] shrink-0 items-end">
+            <div class="flex flex-col gap-2 min-w-37.5 shrink-0 items-end">
               <div class="flex items-center gap-2">
                 <span :class="item.remaining >= 0 ? 'text-success' : 'text-danger'" class="text-xs font-bold">
                   Sisa Rp {{ item.remaining.toLocaleString('id-ID') }}
@@ -261,7 +261,7 @@ const applySmartBudget = () => {
                 <button class="text-xs text-danger-text hover:text-danger hover:scale-105 active:scale-95 transition-all cursor-pointer border-none bg-transparent" @click="deleteBudget(item.id)">Hapus</button>
               </div>
               <div class="w-full h-2 bg-surface-2 rounded-full overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-primary to-success transition-all duration-300" :style="{ width: `${item.progress}%` }"></div>
+                <div class="h-full bg-linear-to-r from-primary to-success transition-all duration-300" :style="{ width: `${item.progress}%` }"></div>
               </div>
             </div>
           </div>

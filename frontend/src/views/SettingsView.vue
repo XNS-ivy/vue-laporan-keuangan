@@ -218,8 +218,8 @@ onMounted(() => {
   <div class="flex flex-col gap-6">
     <header class="bg-linear-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom">
       <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Settings</p>
-      <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Preferensi Pengguna</h1>
-      <p class="text-sm text-white/80 leading-relaxed mt-2">Kustomisasi tema warna, kelola daftar kategori keuangan, atau lakukan pencadangan data Anda.</p>
+      <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Pengaturan & Tampilan Aplikasi</h1>
+      <p class="text-sm text-white/80 leading-relaxed mt-2">Ganti tema warna, kelola kategori keuangan, atau cadangkan datamu dengan mudah.</p>
     </header>
 
     <!-- Tema Section -->

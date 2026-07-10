@@ -96,8 +96,8 @@ export const loadData = () => {
   const saved = localStorage.getItem(storageKey) || localStorage.getItem('finance-app-data-v2')
   if (!saved) {
     categories.value = defaultCategories
-    savingsGoals.value = [defaultGoal()]
-    recurringTransactions.value = defaultRecurring
+    savingsGoals.value = []
+    recurringTransactions.value = []
     return
   }
 
@@ -111,12 +111,12 @@ export const loadData = () => {
       id: 'id' in item && typeof item.id === 'number' ? item.id : Date.now() + index,
     }))
     debts.value = parsed.debts || []
-    recurringTransactions.value = parsed.recurringTransactions?.length ? parsed.recurringTransactions : defaultRecurring
-    savingsGoals.value = parsed.savingsGoals?.length ? parsed.savingsGoals : [normalizeLegacyGoal(parsed.savingsGoal)]
+    recurringTransactions.value = parsed.recurringTransactions || []
+    savingsGoals.value = parsed.savingsGoals || (parsed.savingsGoal ? [normalizeLegacyGoal(parsed.savingsGoal)] : [])
   } catch {
     categories.value = defaultCategories
-    savingsGoals.value = [defaultGoal()]
-    recurringTransactions.value = defaultRecurring
+    savingsGoals.value = []
+    recurringTransactions.value = []
   }
 }
 

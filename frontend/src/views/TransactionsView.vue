@@ -102,7 +102,7 @@ const submitRecurring = () => {
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
       <div>
         <p class="uppercase tracking-widest text-[10px] text-muted font-bold">Transaksi</p>
-        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">Catat uang masuk, keluar, & transaksi rutin</h1>
+        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">Catat Transaksi & Pengeluaran Rutinmu</h1>
       </div>
       <select v-model="filter" class="border border-border rounded-xl px-4 py-2 bg-surface text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all w-full sm:w-auto">
         <option value="all">Semua Jenis</option>
