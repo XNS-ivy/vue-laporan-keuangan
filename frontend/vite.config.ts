@@ -21,6 +21,7 @@ export default defineConfig({
     port: 3020
   },
   preview: {
-    port: 3020
+    port: 3020,
+    allowedHosts: ['myfinanceflow.my.id', 'www.myfinanceflow.my.id']
   }
 })
