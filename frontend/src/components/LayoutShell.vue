@@ -69,7 +69,7 @@ onBeforeUnmount(() => {
 
     <!-- Sidebar -->
     <aside
-      class="fixed lg:static inset-y-0 left-0 w-70 p-5 bg-linear-to-b from-sidebar-bg to-sidebar-accent text-sidebar-text flex flex-col gap-6 shadow-2xl lg:shadow-none z-30 transition-transform duration-300 ease-in-out"
+      class="fixed lg:static inset-y-0 left-0 w-70 h-screen max-h-screen p-5 bg-linear-to-b from-sidebar-bg to-sidebar-accent text-sidebar-text flex flex-col gap-6 shadow-2xl lg:shadow-none z-30 transition-transform duration-300 ease-in-out"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
     >
       <!-- Close Sidebar Button (Mobile) -->
@@ -101,7 +101,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Navigation Links -->
-      <nav class="flex flex-col gap-1.5 overflow-y-auto pr-1 grow">
+      <nav class="flex flex-col gap-1.5 overflow-y-auto pr-1 grow min-h-0">
         <RouterLink to="/" class="nav-link group" @click="closeSidebar">
           <svg class="w-5 h-5 opacity-80 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="9" rx="1" />
