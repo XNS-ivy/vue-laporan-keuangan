@@ -1,6 +1,5 @@
 // TSConfig for modules that run in Node.js environment via either transpilation or type-stripping.
 {
-  "extends": "@tsconfig/node24/tsconfig.json",
   "include": [
     "vite.config.*",
     "vitest.config.*",
@@ -18,6 +17,10 @@
 
     // Include Node.js types and avoid accidentally including other `@types/*` packages.
     "types": ["node"],
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
 
     // Disable emitting output during `vue-tsc --build`, which is used for type-checking only.
     "noEmit": true,
