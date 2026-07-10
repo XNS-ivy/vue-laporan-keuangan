@@ -21,7 +21,9 @@ import {
   normalizeLegacyGoal,
   ensureCategory,
   loadData,
-  saveData
+  saveData,
+  storageKey,
+  defaultCategories
 } from './useFinanceState'
 
 // Re-export types so we don't break existing UI imports that reference useFinance.ts for type information.
@@ -404,6 +406,20 @@ export function useFinance() {
   const deleteBudget = (id: number) => { budgets.value = budgets.value.filter((item) => item.id !== id) }
   const deleteAsset = (id: number) => { assets.value = assets.value.filter((item) => item.id !== id) }
   const deleteDebt = (id: number) => { debts.value = debts.value.filter((item) => item.id !== id) }
+
+  const resetAllData = () => {
+    localStorage.removeItem(storageKey)
+    localStorage.removeItem('finance-app-data-v2')
+    transactions.value = []
+    categories.value = [...defaultCategories]
+    budgets.value = []
+    assets.value = []
+    savingsGoals.value = []
+    recurringTransactions.value = []
+    debts.value = []
+    saveData()
+    pushToast('Semua data berhasil dibersihkan', 'info')
+  }
 
   const filteredTransactions = computed(() => transactions.value.filter((item) => isWithinGlobalDate(item.date)))
   const incomeTransactions = computed(() => filteredTransactions.value.filter((item) => item.type === 'income'))
@@ -791,5 +807,6 @@ export function useFinance() {
     downloadExcelReport,
     downloadPdfReport,
     exportSummaryText,
+    resetAllData,
   }
 }

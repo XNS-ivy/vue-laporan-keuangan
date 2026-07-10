@@ -37,7 +37,14 @@ const {
   addCategory,
   deleteCategory,
   updateCategory,
+  resetAllData,
 } = useFinance()
+
+const handleResetAllData = () => {
+  if (window.confirm('Apakah kamu yakin ingin menghapus semua data transaksi, aset, target tabungan, dan anggaran? Tindakan ini tidak dapat dibatalkan.')) {
+    resetAllData()
+  }
+}
 
 const quickSwatches = ['#2563eb', '#0f766e', '#ea580c', '#dc2626', '#4f46e5', '#0f172a', '#f59e0b', '#14b8a6']
 
@@ -538,10 +545,14 @@ onMounted(() => {
           Ekspor Data (.json)
         </button>
         
-        <label class="inline-flex items-center justify-center border border-border rounded-full px-5 py-3 bg-surface-2 text-text text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-border transition-all">
+        <label class="inline-flex items-center justify-center border border-border rounded-full px-5 py-3 bg-surface-2 text-text text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-border transition-all mr-auto">
           <span>Impor Data (.json)</span>
           <input type="file" accept=".json" @change="handleFileImport" class="hidden" />
         </label>
+
+        <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-md border-none" type="button" @click="handleResetAllData">
+          Reset Semua Data (Mulai Baru)
+        </button>
       </div>
     </section>
   </div>
