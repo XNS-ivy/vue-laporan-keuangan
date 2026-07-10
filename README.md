@@ -111,3 +111,28 @@ bun run build
 npm run build
 ```
 Hasil kompilasi file statis siap sebar (deploy) akan berada di dalam folder `dist`.
+
+---
+
+## 🍀 Deployment dengan PM2 (Production)
+
+Aplikasi ini dilengkapi dengan berkas konfigurasi [ecosystem.config.cjs](file:///d:/Programming/bun/vue-laporan-keuangan/ecosystem.config.cjs) untuk deployment menggunakan **PM2** dan **Bun**.
+
+### Langkah-langkah Deployment:
+
+1. **Lakukan Build Produksi**:
+   ```bash
+   cd frontend
+   bun run build
+   cd ..
+   ```
+2. **Jalankan Aplikasi dengan PM2**:
+   ```bash
+   pm2 start ecosystem.config.cjs
+   ```
+3. **Mengelola Proses Aplikasi**:
+   *   Melihat status proses: `pm2 status`
+   *   Memantau log aktivitas: `pm2 logs`
+   *   Menghentikan proses: `pm2 stop vue-laporan-keuangan`
+   *   Melakukan restart: `pm2 restart vue-laporan-keuangan`
+
