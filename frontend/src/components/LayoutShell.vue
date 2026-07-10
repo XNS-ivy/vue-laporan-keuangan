@@ -16,6 +16,7 @@ const route = useRoute()
 const mainElement = ref<HTMLElement | null>(null)
 const showScrollTop = ref(false)
 const showFloatingMenu = ref(false)
+const dateFilterExpanded = ref(false)
 
 // Quick transaction form states
 const showQuickTxModal = ref(false)
@@ -49,6 +50,7 @@ watch(() => route.path, () => {
     mainElement.value.scrollTop = 0
   }
   showFloatingMenu.value = false
+  dateFilterExpanded.value = false
 })
 
 const syncViewport = () => {
@@ -266,37 +268,68 @@ onBeforeUnmount(() => {
       </nav>
 
       <!-- Date Filter Panel -->
-      <section class="mt-auto border border-white/10 rounded-2xl p-4 bg-white/5 flex flex-col gap-3 backdrop-blur-xs">
-        <div class="flex items-center justify-between">
-          <strong class="text-xs font-semibold text-white">Filter Tanggal</strong>
-          <button
-            v-if="hasDateFilter"
-            class="border-none rounded-full px-2.5 py-1 bg-white/10 hover:bg-white/20 active:bg-white/35 text-[10px] text-white cursor-pointer font-medium transition-colors"
-            type="button"
-            @click="resetGlobalDateFilter"
-          >
-            Reset
-          </button>
+      <div class="mt-auto relative select-none">
+        <!-- Toggle Trigger Button -->
+        <button
+          class="w-full border border-white/10 rounded-2xl p-4 bg-white/5 hover:bg-white/10 active:bg-white/15 text-white flex items-center justify-between cursor-pointer transition-all"
+          type="button"
+          @click="dateFilterExpanded = !dateFilterExpanded"
+        >
+          <div class="flex items-center gap-2">
+            <svg 
+              class="w-4 h-4 text-white/80 transition-transform duration-200" 
+              :class="{ 'rotate-180': dateFilterExpanded }" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              stroke-width="2.5"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            <strong class="text-xs font-semibold">Filter Tanggal</strong>
+            <span v-if="hasDateFilter" class="text-[9px] bg-primary/30 text-white border border-white/10 rounded-sm px-1.5 py-0.5 font-bold uppercase tracking-wider scale-90">
+              Aktif
+            </span>
+          </div>
+          <span class="text-[10px] text-white/50">{{ dateFilterExpanded ? 'Tutup' : 'Buka' }}</span>
+        </button>
+
+        <!-- Dropdown Menu (Floats upward over navigation) -->
+        <div
+          v-if="dateFilterExpanded"
+          class="absolute bottom-full left-0 right-0 mb-2 border border-white/15 rounded-2xl p-4 bg-slate-900/95 shadow-2xl flex flex-col gap-3.5 backdrop-blur-md z-40 animate-in fade-in slide-in-from-bottom-2 duration-200"
+        >
+          <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
+            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider">Rentang Waktu</span>
+            <button
+              v-if="hasDateFilter"
+              class="border-none rounded-full px-2.5 py-1 bg-white/10 hover:bg-white/20 active:bg-white/35 text-[10px] text-white cursor-pointer font-medium transition-colors"
+              type="button"
+              @click="resetGlobalDateFilter"
+            >
+              Reset
+            </button>
+          </div>
+          <label class="flex flex-col gap-1 text-[11px] text-white/60">
+            <span class="font-bold uppercase tracking-wider">Dari</span>
+            <input
+              :value="globalDateFilter.start"
+              type="date"
+              class="bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 w-full transition-all"
+              @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })"
+            />
+          </label>
+          <label class="flex flex-col gap-1 text-[11px] text-white/60">
+            <span class="font-bold uppercase tracking-wider">Sampai</span>
+            <input
+              :value="globalDateFilter.end"
+              type="date"
+              class="bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 w-full transition-all"
+              @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })"
+            />
+          </label>
         </div>
-        <label class="flex flex-col gap-1 text-[11px] text-white/60">
-          <span class="font-bold uppercase tracking-wider">Dari</span>
-          <input
-            :value="globalDateFilter.start"
-            type="date"
-            class="bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 w-full transition-all"
-            @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })"
-          />
-        </label>
-        <label class="flex flex-col gap-1 text-[11px] text-white/60">
-          <span class="font-bold uppercase tracking-wider">Sampai</span>
-          <input
-            :value="globalDateFilter.end"
-            type="date"
-            class="bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 w-full transition-all"
-            @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })"
-          />
-        </label>
-      </section>
+      </div>
     </aside>
 
     <!-- Content Area -->
