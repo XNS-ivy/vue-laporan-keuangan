@@ -59,3 +59,37 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Handle notification click to focus or open the app
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close(); // Close the notification banner
+
+  // Get the target URL from the notification data, fallback to application origin
+  const urlToOpen = (event.notification.data && event.notification.data.url) || self.location.origin;
+
+  event.waitUntil(
+    self.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    }).then((windowClients) => {
+      // Check if there is already a window/tab open for the app
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          // Bring the existing window into focus
+          return client.focus().then((focusedClient) => {
+            // Navigate to the target page if it differs from current URL
+            if (focusedClient.url !== urlToOpen) {
+              return focusedClient.navigate(urlToOpen);
+            }
+            return focusedClient;
+          });
+        }
+      }
+      // If no window is open, open a new one
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});

@@ -59,6 +59,10 @@ export function useNotifications() {
       icon: '/logo.png',
       badge: '/logo.png',
       vibrate: [200, 100, 200],
+      data: {
+        url: window.location.origin,
+        ...(options.data || {})
+      },
       ...options
     }
 
@@ -74,7 +78,15 @@ export function useNotifications() {
     }
 
     // Fallback to standard window Notification
-    new Notification(title, defaultOptions)
+    try {
+      const notification = new Notification(title, defaultOptions)
+      notification.onclick = () => {
+        window.focus()
+        notification.close()
+      }
+    } catch (err) {
+      console.error('Failed to create standard Notification:', err)
+    }
   }
 
   const triggerImmediateTestNotification = () => {
