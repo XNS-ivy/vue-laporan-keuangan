@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onBeforeUnmount } from 'vue'
 
 const props = defineProps<{
   correctPin: string
@@ -13,8 +13,32 @@ const emit = defineEmits<{
 const pin = ref('')
 const error = ref(false)
 const errorMessage = ref('')
+const failedAttempts = ref(0)
+const lockoutCountdown = ref(0)
+let timerId: any = null
+
+const startLockout = () => {
+  lockoutCountdown.value = 30
+  errorMessage.value = `Terlalu banyak percobaan salah. Keypad dikunci selama ${lockoutCountdown.value} detik.`
+  
+  if (timerId) clearInterval(timerId)
+  
+  timerId = setInterval(() => {
+    lockoutCountdown.value--
+    if (lockoutCountdown.value <= 0) {
+      clearInterval(timerId)
+      timerId = null
+      failedAttempts.value = 0
+      errorMessage.value = ''
+      error.value = false
+    } else {
+      errorMessage.value = `Terlalu banyak percobaan salah. Keypad dikunci selama ${lockoutCountdown.value} detik.`
+    }
+  }, 1000)
+}
 
 const handleNumber = (num: number) => {
+  if (lockoutCountdown.value > 0) return
   if (pin.value.length >= 4) return
   error.value = false
   errorMessage.value = ''
@@ -24,14 +48,23 @@ const handleNumber = (num: number) => {
     // Validate PIN
     setTimeout(() => {
       if (pin.value === props.correctPin) {
+        failedAttempts.value = 0
         emit('unlocked')
       } else {
         error.value = true
-        errorMessage.value = 'PIN salah. Coba lagi.'
-        pin.value = ''
+        failedAttempts.value++
+        
         // Trigger small vibration if supported
         if (navigator.vibrate) {
           navigator.vibrate(150)
+        }
+
+        if (failedAttempts.value >= 5) {
+          pin.value = ''
+          startLockout()
+        } else {
+          errorMessage.value = `PIN salah. Sisa percobaan: ${5 - failedAttempts.value}`
+          pin.value = ''
         }
       }
     }, 200)
@@ -39,16 +72,22 @@ const handleNumber = (num: number) => {
 }
 
 const handleBackspace = () => {
+  if (lockoutCountdown.value > 0) return
   if (pin.value.length > 0) {
     pin.value = pin.value.slice(0, -1)
   }
 }
 
 const handleClear = () => {
+  if (lockoutCountdown.value > 0) return
   pin.value = ''
   error.value = false
   errorMessage.value = ''
 }
+
+onBeforeUnmount(() => {
+  if (timerId) clearInterval(timerId)
+})
 </script>
 
 <template>
@@ -77,19 +116,23 @@ const handleClear = () => {
       </div>
 
       <!-- Error message -->
-      <div class="h-5 text-center">
-        <p v-if="errorMessage" class="text-xs font-bold text-red-500 tracking-wide animate-pulse">
+      <div class="h-10 text-center flex items-center justify-center mb-2">
+        <p v-if="errorMessage" class="text-xs font-bold text-red-500 tracking-wide animate-pulse leading-relaxed">
           {{ errorMessage }}
         </p>
       </div>
 
       <!-- Keypad -->
-      <div class="grid grid-cols-3 gap-4.5 w-full mt-6">
+      <div 
+        class="grid grid-cols-3 gap-4.5 w-full mt-4 transition-all duration-300"
+        :class="{ 'opacity-40 pointer-events-none': lockoutCountdown > 0 }"
+      >
         <button 
           v-for="num in [1, 2, 3, 4, 5, 6, 7, 8, 9]" 
           :key="num"
           type="button"
-          class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800/80 text-xl font-bold flex items-center justify-center hover:bg-slate-800 active:scale-90 active:bg-blue-600 transition-all cursor-pointer shadow-xs self-center justify-self-center"
+          :disabled="lockoutCountdown > 0"
+          class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800/80 text-xl font-bold flex items-center justify-center hover:bg-slate-800 active:scale-90 active:bg-blue-600 transition-all cursor-pointer shadow-xs self-center justify-self-center disabled:cursor-not-allowed"
           @click="handleNumber(num)"
         >
           {{ num }}
@@ -97,7 +140,8 @@ const handleClear = () => {
 
         <button 
           type="button"
-          class="w-16 h-16 rounded-full text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center hover:bg-slate-900 active:scale-95 transition-all cursor-pointer border-none self-center justify-self-center"
+          :disabled="lockoutCountdown > 0"
+          class="w-16 h-16 rounded-full text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center hover:bg-slate-900 active:scale-95 transition-all cursor-pointer border-none self-center justify-self-center disabled:cursor-not-allowed"
           @click="handleClear"
         >
           CLEAR
@@ -105,7 +149,8 @@ const handleClear = () => {
 
         <button 
           type="button"
-          class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800/80 text-xl font-bold flex items-center justify-center hover:bg-slate-800 active:scale-90 active:bg-blue-600 transition-all cursor-pointer shadow-xs self-center justify-self-center"
+          :disabled="lockoutCountdown > 0"
+          class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800/80 text-xl font-bold flex items-center justify-center hover:bg-slate-800 active:scale-90 active:bg-blue-600 transition-all cursor-pointer shadow-xs self-center justify-self-center disabled:cursor-not-allowed"
           @click="handleNumber(0)"
         >
           0
@@ -113,7 +158,8 @@ const handleClear = () => {
 
         <button 
           type="button"
-          class="w-16 h-16 rounded-full text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center hover:bg-slate-900 active:scale-95 transition-all cursor-pointer border-none self-center justify-self-center"
+          :disabled="lockoutCountdown > 0"
+          class="w-16 h-16 rounded-full text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center hover:bg-slate-900 active:scale-95 transition-all cursor-pointer border-none self-center justify-self-center disabled:cursor-not-allowed"
           @click="handleBackspace"
         >
           ⌫

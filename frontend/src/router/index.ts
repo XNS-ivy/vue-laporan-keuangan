@@ -9,6 +9,7 @@ import DebtsView from '../views/DebtsView.vue'
 import ReportsView from '../views/ReportsView.vue'
 import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
 import TermsOfServiceView from '../views/TermsOfServiceView.vue'
+import NotFoundView from '../views/NotFoundView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -23,6 +24,7 @@ const router = createRouter({
     { path: '/settings', name: 'settings', component: SettingsView },
     { path: '/privacy', name: 'privacy', component: PrivacyPolicyView },
     { path: '/terms', name: 'terms', component: TermsOfServiceView },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView },
   ],
 })
 

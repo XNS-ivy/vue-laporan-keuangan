@@ -69,4 +69,9 @@ onMounted(() => {
 
 ## 💡 Fitur Keamanan Tambahan
 * **Sesi Sementara**: Karena status kunci sesi disimpan di `sessionStorage`, aplikasi akan secara otomatis mengunci kembali halaman jika tab ditutup lalu dibuka kembali, atau ketika browser di-restart.
+* **Proteksi Brute-Force Keypad**: Untuk mencegah penyerang menebak PIN secara cepat (brute-force), komponen `SecurityLock.vue` membatasi jumlah percobaan input PIN yang salah. Jika pengguna salah memasukkan PIN sebanyak 5 kali berturut-turut, keypad virtual akan dikunci secara otomatis dengan waktu hitung mundur 30 detik. Selama masa penguncian ini, seluruh input dibekukan (`pointer-events-none`).
+* **Kebijakan Keamanan Klien (Security Headers)**: Berkas `index.html` dilengkapi dengan tag meta kebijakan keamanan demi melindungi data keuangan lokal pengguna:
+  * **Content-Security-Policy (CSP)**: Membatasi pemuatan skrip, style, koneksi API, dan media hanya dari asal yang terpercaya (`'self'`), serta memblokir eksekusi skrip eksternal yang tidak sah.
+  * **Referrer-Policy**: Diatur ke `no-referrer` untuk menghindari kebocoran alamat URI internal ketika pengguna mengklik tautan eksternal.
+  * **Permissions-Policy**: Menonaktifkan izin akses sensor perangkat keras yang sensitif (seperti `camera`, `microphone`, dan `geolocation`) karena tidak digunakan oleh aplikasi.
 * **Hapus Semua Data**: Jika pengguna lupa PIN mereka, opsi pemulihan satu-satunya adalah melakukan "Clear Data" pada pengaturan browser yang akan menghapus data keuangan sekaligus PIN tersebut secara total (perlindungan privasi mutlak).

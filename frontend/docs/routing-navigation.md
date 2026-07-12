@@ -22,6 +22,7 @@ Semua rute didaftarkan di dalam berkas [router/index.ts](file:///home/m-riski/Pr
 | `/settings` | `settings` | `SettingsView.vue` | Pengaturan PIN keamanan, manajemen kategori transaksi, dan preferensi tema. |
 | `/privacy` | `privacy` | `PrivacyPolicyView.vue` | Halaman Kebijakan Privasi terkait keamanan penyimpanan data lokal peramban. |
 | `/terms` | `terms` | `TermsOfServiceView.vue` | Halaman Ketentuan Layanan penggunaan aplikasi MyFinanceFlow secara mandiri. |
+| `/:pathMatch(.*)*` | `not-found` | `NotFoundView.vue` | Halaman kesalahan 404 jika alamat rute yang dimasukkan tidak terdaftar. |
 
 ---
 

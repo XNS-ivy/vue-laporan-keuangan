@@ -101,6 +101,8 @@ Untuk mendukung konsep *offline-first* dan meningkatkan performa pemuatan aplika
   * Ketika aplikasi meminta berkas statis (seperti berkas HTML, JavaScript, CSS, gambar), Service Worker akan langsung menyajikan versi cache yang tersedia (jika ada) untuk performa instan.
   * Di latar belakang, Service Worker akan melakukan fetch ke jaringan untuk mengambil berkas terbaru dan memperbarui cache secara senyap.
   * Menyediakan fallback halaman navigasi (`/index.html`) jika pengguna bernavigasi saat offline penuh.
-* **Notifikasi Lokal**: Digunakan oleh Composable `useNotifications.ts` untuk menampilkan push notification pengingat harian/mingguan/bulanan jika izin notifikasi diberikan oleh pengguna.
+* **Notifikasi Lokal & PWA Interaktif**: 
+  * Digunakan oleh Composable `useNotifications.ts` untuk menampilkan push notification pengingat harian/mingguan/bulanan jika izin diberikan.
+  * Service Worker mendengarkan event `notificationclick`. Saat pengguna mengetuk notifikasi, banner notifikasi akan segera ditutup, dan Service Worker memfokuskan tab aplikasi yang sudah terbuka (atau membuka tab baru jika belum terbuka) serta mengarahkannya kembali ke halaman utama aplikasi secara otomatis.
 * **Dukungan Progressive Web App (PWA)**: Bekerja bersama `manifest.webmanifest` untuk memungkinkan instalasi aplikasi langsung di homescreen perangkat Android/iOS atau desktop.
 
