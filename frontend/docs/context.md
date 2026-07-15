@@ -26,6 +26,7 @@ Selamat datang di dokumentasi proyek **Finance Flow** (Laporan Keuangan). Dokume
 * **Routing**: Vue Router
 * **Visualisasi Data**: Chart.js / Vue-Chartjs (grafik keuangan, tren, dan candlestick saldo)
 * **Utilitas**: XLSX (untuk fitur ekspor data transaksi ke Excel)
+* **Ikonografi**: Inline SVG (Feather/Lucide-style icons) — tanpa dependensi library icon eksternal
 
 ---
 
@@ -60,6 +61,7 @@ frontend/
 │   │   ├── useFinance.ts  # Layer Presentation & CRUD API Keuangan
 │   │   ├── useFinanceState.ts # Layer Core State (refs) & LocalStorage
 │   │   ├── useNotifications.ts # Reminder & notifikasi toast
+│   │   ├── usePwaInstall.ts # PWA install prompt & banner management
 │   │   ├── useTheme.ts    # Manajemen tema (Light, Dark, Midnight)
 │   │   └── useUi.ts       # State global UI (filter tanggal, toast)
 │   ├── router/            # Konfigurasi rute halaman (index.ts)
@@ -88,6 +90,7 @@ Aplikasi dirancang dengan arsitektur **Offline-First**. Berkas `public/sw.js` be
 2. Performa pemuatan halaman sangat cepat karena aset diambil langsung dari cache lokal browser.
 3. Notifikasi pengingat lokal dapat dikirimkan secara terjadwal melalui registrasi Service Worker (`registration.showNotification`).
 4. Aplikasi dapat diinstal langsung di perangkat mobile/desktop sebagai Progressive Web App (PWA) berkat integrasi dengan `manifest.webmanifest`.
+5. Aset kritis (`/`, `/index.html`, `/manifest.webmanifest`) di-pre-cache saat install untuk menjamin ketersediaan offline sejak pertama kali Service Worker aktif.
 
 ---
 

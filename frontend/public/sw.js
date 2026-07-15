@@ -1,6 +1,17 @@
-const CACHE_NAME = 'finance-flow-cache-v1';
+const CACHE_NAME = 'finance-flow-cache-v2';
+
+const PRECACHE_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.webmanifest',
+];
 
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(PRECACHE_ASSETS);
+    })
+  );
   self.skipWaiting();
 });
 
@@ -31,7 +42,7 @@ self.addEventListener('fetch', (event) => {
       if (cachedResponse) {
         // Stale-while-revalidate: return cached instantly, update in background
         fetch(event.request).then((networkResponse) => {
-          if (networkResponse.status === 200) {
+          if (networkResponse && networkResponse.status === 200) {
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, networkResponse);
             });
@@ -41,10 +52,11 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+        if (!networkResponse || networkResponse.status !== 200) {
           return networkResponse;
         }
 
+        // Cache both basic and opaque responses from same origin
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseToCache);
@@ -52,6 +64,7 @@ self.addEventListener('fetch', (event) => {
 
         return networkResponse;
       }).catch(() => {
+        // Offline navigation fallback
         if (event.request.mode === 'navigate') {
           return caches.match('/index.html');
         }

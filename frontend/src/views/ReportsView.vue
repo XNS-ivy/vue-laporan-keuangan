@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useFinance } from '../composables/useFinance'
+import { useUi } from '../composables/useUi'
 
 const { automatedInsights, budgetAlerts, downloadCsvReport, downloadExcelReport, downloadPdfReport, exportSummaryText, filteredTransactions, monthlyComparison } = useFinance()
 const canExport = computed(() => filteredTransactions.value.length > 0)
+const { globalDateFilter, hasDateFilter, resetGlobalDateFilter, setGlobalDateFilter } = useUi()
 </script>
 
 <template>
@@ -14,6 +16,31 @@ const canExport = computed(() => filteredTransactions.value.length > 0)
         <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Reports</p>
         <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Unduh Laporan & Analisis Uangmu</h1>
         <p class="text-sm text-white/80 leading-relaxed mt-2">Unduh laporanmu dalam format CSV, Excel, atau PDF. Data yang diunduh otomatis mengikuti rentang tanggal filter aktif.</p>
+      </div>
+      <div class="flex items-center gap-2 bg-white/10 border border-white/15 rounded-xl px-3 py-1.5 shrink-0 z-10">
+        <svg class="w-3.5 h-3.5 text-white/70 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+        <input
+          :value="globalDateFilter.start"
+          type="date"
+          class="bg-transparent text-white text-xs font-semibold border-none focus:outline-none w-28"
+          @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })"
+        />
+        <span class="text-white/40 text-xs">–</span>
+        <input
+          :value="globalDateFilter.end"
+          type="date"
+          class="bg-transparent text-white text-xs font-semibold border-none focus:outline-none w-28"
+          @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })"
+        />
+        <button
+          v-if="hasDateFilter"
+          class="text-white/60 hover:text-white border-none bg-transparent cursor-pointer p-0.5 transition-colors"
+          type="button"
+          @click="resetGlobalDateFilter"
+          aria-label="Reset filter"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        </button>
       </div>
     </header>
 

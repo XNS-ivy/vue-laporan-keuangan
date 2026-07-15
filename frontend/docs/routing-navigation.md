@@ -44,8 +44,12 @@ Layout utama aplikasi diatur oleh `LayoutShell.vue`. Komponen ini bertindak seba
      ```
 
 2. **Filter Tanggal Global (Global Date Filter)**:
-   * Terletak pada bar bagian atas (topbar). Pengguna dapat menetapkan rentang tanggal "Mulai" dan "Selesai" secara global.
-   * Filter ini disimpan secara terpusat di `useUi.ts` dan digunakan oleh composable `useFinance.ts` untuk memfilter data transaksi yang ditampilkan di dashboard, halaman transaksi, dan halaman laporan secara instan.
+   * Filter tanggal global tidak lagi berada di sidebar. Sebaliknya, filter ini ditampilkan **inline di dalam halaman-halaman yang relevan**:
+     * **DashboardView**: Terintegrasi pada header hero section.
+     * **TransactionsView**: Terintegrasi dalam panel filter bersama pencarian dan filter nominal.
+     * **ReportsView**: Terintegrasi pada header halaman laporan.
+   * Filter ini tetap disimpan secara terpusat di `useUi.ts` dan digunakan oleh composable `useFinance.ts` untuk memfilter data transaksi secara instan.
+   * Halaman **Planning** tidak menggunakan filter tanggal global karena sudah memiliki filter `month` sendiri yang tepat untuk konteks anggaran bulanan.
 
 3. **Sistem Notifikasi Toast**:
    * Menyediakan wadah (*toast container*) di sudut kanan bawah layar untuk menampilkan pesan umpan balik sukses, peringatan, atau galat dari sistem secara elegan dengan animasi transisi.

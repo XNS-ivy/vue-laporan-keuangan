@@ -429,13 +429,17 @@ onMounted(() => {
               <ul class="flex flex-col gap-2">
                 <li v-for="item in categories.filter(c => c.type === 'income')" :key="item.id" class="flex justify-between items-center gap-2 p-2 bg-surface-2 border border-border rounded-xl hover:bg-surface-2/65 transition-all">
                   <div class="flex items-center gap-2 text-xs font-semibold text-text">
-                    <span class="text-sm shrink-0">{{ item.icon || '📈' }}</span>
+                    <span class="text-sm shrink-0">{{ item.icon || '' }}</span>
                     <span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs" :style="{ background: item.color || '#16a34a' }"></span>
                     <span class="truncate max-w-30">{{ item.name }}</span>
                   </div>
                   <div class="flex items-center gap-1">
-                    <button class="p-1 text-xs hover:bg-primary-soft hover:text-primary transition-all rounded-lg cursor-pointer border-none" type="button" @click="startEditCategory(item)">✏️</button>
-                    <button class="p-1 text-xs hover:bg-danger-soft hover:text-danger-text transition-all rounded-lg cursor-pointer border-none" type="button" @click="deleteCategory(item.id)">🗑️</button>
+                    <button class="p-1 text-xs hover:bg-primary-soft hover:text-primary transition-all rounded-lg cursor-pointer border-none bg-transparent flex items-center" type="button" @click="startEditCategory(item)">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                    </button>
+                    <button class="p-1 text-xs hover:bg-danger-soft hover:text-danger-text transition-all rounded-lg cursor-pointer border-none bg-transparent flex items-center" type="button" @click="deleteCategory(item.id)">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                    </button>
                   </div>
                 </li>
               </ul>
@@ -448,13 +452,17 @@ onMounted(() => {
               <ul class="flex flex-col gap-2">
                 <li v-for="item in categories.filter(c => c.type === 'expense')" :key="item.id" class="flex justify-between items-center gap-2 p-2 bg-surface-2 border border-border rounded-xl hover:bg-surface-2/65 transition-all">
                   <div class="flex items-center gap-2 text-xs font-semibold text-text">
-                    <span class="text-sm shrink-0">{{ item.icon || '💸' }}</span>
+                    <span class="text-sm shrink-0">{{ item.icon || '' }}</span>
                     <span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs" :style="{ background: item.color || '#ef4444' }"></span>
                     <span class="truncate max-w-30">{{ item.name }}</span>
                   </div>
                   <div class="flex items-center gap-1">
-                    <button class="p-1 text-xs hover:bg-primary-soft hover:text-primary transition-all rounded-lg cursor-pointer border-none" type="button" @click="startEditCategory(item)">✏️</button>
-                    <button class="p-1 text-xs hover:bg-danger-soft hover:text-danger-text transition-all rounded-lg cursor-pointer border-none" type="button" @click="deleteCategory(item.id)">🗑️</button>
+                    <button class="p-1 text-xs hover:bg-primary-soft hover:text-primary transition-all rounded-lg cursor-pointer border-none bg-transparent flex items-center" type="button" @click="startEditCategory(item)">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                    </button>
+                    <button class="p-1 text-xs hover:bg-danger-soft hover:text-danger-text transition-all rounded-lg cursor-pointer border-none bg-transparent flex items-center" type="button" @click="deleteCategory(item.id)">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                    </button>
                   </div>
                 </li>
               </ul>
@@ -527,7 +535,10 @@ onMounted(() => {
           >
             Izinkan Notifikasi
           </button>
-          <span v-else class="text-xs font-bold text-success">✔️ Aktif</span>
+          <span v-else class="text-xs font-bold text-success flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            Aktif
+          </span>
         </div>
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -546,11 +557,12 @@ onMounted(() => {
           </label>
 
           <button
-            class="px-4 py-3 rounded-xl text-xs font-bold bg-surface-2 border border-border hover:bg-border text-text transition-all cursor-pointer sm:self-end shrink-0"
+            class="px-4 py-3 rounded-xl text-xs font-bold bg-surface-2 border border-border hover:bg-border text-text transition-all cursor-pointer sm:self-end shrink-0 flex items-center gap-1.5"
             type="button"
             @click="triggerImmediateTestNotification"
           >
-            🔔 Uji Coba Notifikasi
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+            Uji Coba Notifikasi
           </button>
         </div>
       </div>

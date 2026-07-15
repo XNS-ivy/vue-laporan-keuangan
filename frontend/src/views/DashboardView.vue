@@ -7,6 +7,7 @@ import BalanceCandlestickChart from '../components/BalanceCandlestickChart.vue'
 import TransactionForm from '../components/TransactionForm.vue'
 import { useFinance } from '../composables/useFinance'
 import { getThemeSettings } from '../composables/useTheme'
+import { useUi } from '../composables/useUi'
 
 const {
   filteredTransactions: transactions,
@@ -36,6 +37,8 @@ const {
   addTransaction,
   addCategory,
 } = useFinance()
+
+const { globalDateFilter, hasDateFilter, resetGlobalDateFilter, setGlobalDateFilter } = useUi()
 
 const isDark = ref(false)
 
@@ -264,6 +267,31 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
         <p class="text-sm text-white/80 leading-relaxed mt-2">Pantau perbandingan bulanan, wawasan otomatis, batas anggaran, target tabungan, dan status utang-piutang biar keputusan finansialmu makin matang.</p>
       </div>
       <div class="flex flex-wrap gap-2.5 shrink-0 z-10">
+        <div class="flex items-center gap-2 bg-white/10 border border-white/15 rounded-xl px-3 py-1.5">
+          <svg class="w-3.5 h-3.5 text-white/70 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+          <input
+            :value="globalDateFilter.start"
+            type="date"
+            class="bg-transparent text-white text-xs font-semibold border-none focus:outline-none w-28"
+            @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })"
+          />
+          <span class="text-white/40 text-xs">–</span>
+          <input
+            :value="globalDateFilter.end"
+            type="date"
+            class="bg-transparent text-white text-xs font-semibold border-none focus:outline-none w-28"
+            @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })"
+          />
+          <button
+            v-if="hasDateFilter"
+            class="text-white/60 hover:text-white border-none bg-transparent cursor-pointer p-0.5 transition-colors"
+            type="button"
+            @click="resetGlobalDateFilter"
+            aria-label="Reset filter"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          </button>
+        </div>
         <RouterLink to="/reports" class="px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white border border-white/20 bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-center">
           Export Laporan
         </RouterLink>
@@ -323,15 +351,17 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
         <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
           <div class="flex items-center justify-between border-b border-border pb-3">
             <h3 class="text-base font-bold text-text tracking-tight flex items-center gap-1.5">
-              <span>🔮 Smart Forecast</span>
+              <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+              <span>Smart Forecast</span>
             </h3>
             <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-primary-soft text-primary uppercase tracking-wider">
               Prediksi AI
             </span>
           </div>
 
-          <div v-if="!nextMonthForecast.hasEnoughData" class="text-xs text-muted leading-relaxed py-4 font-semibold text-center">
-            ⚠️ Butuh minimal 2 bulan histori transaksi untuk melakukan estimasi prediksi pengeluaran bulan depan.
+          <div v-if="!nextMonthForecast.hasEnoughData" class="text-xs text-muted leading-relaxed py-4 font-semibold text-center flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+            Butuh minimal 2 bulan histori transaksi untuk melakukan estimasi prediksi pengeluaran bulan depan.
           </div>
 
           <div v-else class="flex flex-col gap-3.5">

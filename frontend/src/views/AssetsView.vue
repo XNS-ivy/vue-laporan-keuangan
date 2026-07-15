@@ -127,9 +127,9 @@ const deleteAdjustment = (adjId: number) => {
 
 const formatAssetType = (type: string) => {
   switch (type) {
-    case 'cash': return 'Tunai 💵'
-    case 'bank': return 'Bank 🏦'
-    case 'investment': return 'Investasi 📈'
+    case 'cash': return 'Tunai'
+    case 'bank': return 'Bank'
+    case 'investment': return 'Investasi'
     default: return type
   }
 }
@@ -169,7 +169,7 @@ const assetGrowthChartData = computed(() => ({
           placeholder="Cari nama aset..." 
           class="w-full border border-border rounded-xl pl-9.5 pr-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60"
         />
-        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted select-none text-sm">🔍</span>
+        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
       </div>
       
       <div class="flex items-center gap-3 w-full sm:w-auto">
@@ -246,7 +246,8 @@ const assetGrowthChartData = computed(() => ({
                 <p class="text-xs text-muted font-semibold mt-0.5">{{ formatAssetType(item.type) }} • {{ item.date }}</p>
                 <div v-if="item.adjustments && item.adjustments.length" class="flex gap-1.5 mt-1.5">
                   <span class="text-[9px] px-1.5 py-0.5 rounded-sm bg-blue-500/10 text-blue-500 font-bold flex items-center gap-0.5">
-                    ⚙️ {{ item.adjustments.length }} Penyesuaian
+                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.26.61.27 1.3.07 1.93" /></svg>
+                    {{ item.adjustments.length }} Penyesuaian
                   </span>
                 </div>
               </div>
@@ -254,11 +255,11 @@ const assetGrowthChartData = computed(() => ({
               <div class="flex items-center gap-3 shrink-0" @click.stop>
                 <span class="text-sm font-extrabold text-text">Rp {{ item.amount.toLocaleString('id-ID') }}</span>
                 <button 
-                  class="px-2.5 py-2.5 rounded-xl text-xs font-bold text-danger-text bg-danger-soft hover:scale-105 active:scale-95 transition-all cursor-pointer border-none" 
+                  class="px-2.5 py-2.5 rounded-xl text-xs font-bold text-danger-text bg-danger-soft hover:scale-105 active:scale-95 transition-all cursor-pointer border-none flex items-center" 
                   @click="deleteAsset(item.id)"
                   title="Hapus aset"
                 >
-                  🗑️
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                 </button>
               </div>
             </li>
@@ -300,7 +301,8 @@ const assetGrowthChartData = computed(() => ({
           <!-- Column Left: Edit Detail (Span 5) -->
           <div class="md:col-span-5 flex flex-col gap-4 border-b md:border-b-0 md:border-r border-border pb-6 md:pb-0 md:pr-6">
             <h4 class="text-sm font-bold text-text uppercase tracking-tight flex items-center gap-1.5">
-              <span>✏️</span> Edit Informasi Aset
+              <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+              Edit Informasi Aset
             </h4>
             
             <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
@@ -348,15 +350,16 @@ const assetGrowthChartData = computed(() => ({
             <!-- Form Adjustment -->
             <div class="flex flex-col gap-3.5 bg-slate-500/5 border border-border rounded-2xl p-4.5">
               <h4 class="text-sm font-bold text-text uppercase tracking-tight flex items-center gap-1.5">
-                <span>🔄</span> Catat Penyesuaian Nilai (Apresiasi / Penyusutan)
+                <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>
+                Catat Penyesuaian Nilai (Apresiasi / Penyusutan)
               </h4>
               
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-1.5">
                 <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
                   Jenis Penyesuaian
                   <select v-model="adjustmentForm.type" class="w-full border border-border rounded-xl px-3 py-2 bg-surface-2 text-text text-xs font-semibold focus:outline-none transition-all">
-                    <option value="depreciation">Penyusutan (Menyusut 📉)</option>
-                    <option value="appreciation">Apresiasi (Mengembang 📈)</option>
+                    <option value="depreciation">Penyusutan (Menyusut)</option>
+                    <option value="appreciation">Apresiasi (Mengembang)</option>
                   </select>
                 </label>
                 
@@ -405,7 +408,8 @@ const assetGrowthChartData = computed(() => ({
                 >
                   <div class="flex items-start gap-2.5">
                     <span class="text-base select-none mt-0.5">
-                      {{ adj.type === 'appreciation' ? '📈' : '📉' }}
+                      <svg v-if="adj.type === 'appreciation'" class="w-4 h-4 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
+                      <svg v-else class="w-4 h-4 text-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6" /><polyline points="17 18 23 18 23 12" /></svg>
                     </span>
                     <div>
                       <p class="font-bold text-text leading-snug">

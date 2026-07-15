@@ -82,12 +82,13 @@ Pusat kontrol aplikasi di halaman `SettingsView.vue`:
 ---
 
 ## ⚡ 9. Utilitas Cepat & Tombol Melayang (Floating Apps & Utilities)
-Menyediakan akses cepat ke beberapa fitur penting melalui tombol melayang di pojok kanan bawah:
-* **Tombol Petir `⚡` (Floating Apps)**: 
+Menyediakan akses cepat ke beberapa fitur penting melalui tombol melayang di pojok kanan bawah. Seluruh ikon pada UI chrome menggunakan **inline SVG** (style Feather/Lucide icons) untuk konsistensi visual.
+* **Tombol Petir (Floating Apps)**: 
   * Membuka menu popover pintasan cepat.
   * **Tambah Transaksi Pintas**: Membuka formulir modal cepat untuk merekam pengeluaran/pemasukan baru secara langsung tanpa keluar dari halaman aktif.
   * **Ganti Tema Cepat**: Pintasan kilat untuk mengganti tema (siklus Light -> Dark -> Midnight) langsung dalam satu ketukan.
   * **Ekspor Backup**: Memicu proses pembentukan berkas cadangan data keuangan JSON dan mengunduhnya ke perangkat lokal.
+  * **Instal Aplikasi**: Opsi untuk memasang aplikasi ke perangkat (muncul jika browser mendukung PWA install).
 * **Tombol Scroll to Top**:
   * Otomatis mendeteksi aktivitas scroll kontainer utama. Muncul tepat di atas tombol utilitas melayang ketika kontainer digulir melebihi `200px`.
   * Memungkinkan pengguna untuk kembali ke atas halaman secara instan dengan efek gulir yang mulus.
@@ -97,12 +98,22 @@ Menyediakan akses cepat ke beberapa fitur penting melalui tombol melayang di poj
 ## 🌐 10. Service Worker & Akses Offline (Offline-First)
 Untuk mendukung konsep *offline-first* dan meningkatkan performa pemuatan aplikasi, **MyFinanceFlow** mengintegrasikan Service Worker:
 * **Service Worker (`sw.js`)**: Terdaftar di berkas `index.html` dan berlokasi di direktori `public/sw.js`.
+* **Pre-Caching Aset Kritis**: Pada event `install`, Service Worker melakukan pre-cache aset kritis (`/`, `/index.html`, `/manifest.webmanifest`) untuk menjamin ketersediaan offline sejak pertama kali aktif.
 * **Strategi Caching (Stale-While-Revalidate)**:
   * Ketika aplikasi meminta berkas statis (seperti berkas HTML, JavaScript, CSS, gambar), Service Worker akan langsung menyajikan versi cache yang tersedia (jika ada) untuk performa instan.
   * Di latar belakang, Service Worker akan melakukan fetch ke jaringan untuk mengambil berkas terbaru dan memperbarui cache secara senyap.
   * Menyediakan fallback halaman navigasi (`/index.html`) jika pengguna bernavigasi saat offline penuh.
+* **Versi Cache**: Saat ini menggunakan `finance-flow-cache-v2`. Cache lama otomatis dihapus saat Service Worker baru diaktifkan.
 * **Notifikasi Lokal & PWA Interaktif**: 
   * Digunakan oleh Composable `useNotifications.ts` untuk menampilkan push notification pengingat harian/mingguan/bulanan jika izin diberikan.
   * Service Worker mendengarkan event `notificationclick`. Saat pengguna mengetuk notifikasi, banner notifikasi akan segera ditutup, dan Service Worker memfokuskan tab aplikasi yang sudah terbuka (atau membuka tab baru jika belum terbuka) serta mengarahkannya kembali ke halaman utama aplikasi secara otomatis.
 * **Dukungan Progressive Web App (PWA)**: Bekerja bersama `manifest.webmanifest` untuk memungkinkan instalasi aplikasi langsung di homescreen perangkat Android/iOS atau desktop.
 
+---
+
+## 📲 11. PWA Install Prompt & Banner
+Aplikasi menyediakan **UI prompt instalasi** yang terintegrasi agar pengguna dapat memasang aplikasi dengan mudah:
+* **Composable `usePwaInstall.ts`**: Menangkap event `beforeinstallprompt` dari browser dan menyimpan deferred prompt untuk digunakan nanti. State reaktif singleton (`canInstall`, `isInstalled`, `dismissed`) dibagikan ke seluruh komponen.
+* **Install Banner (Sidebar)**: Banner muncul di bagian bawah sidebar navigasi ketika browser mendukung instalasi PWA. Dilengkapi tombol "Pasang Sekarang" dan tombol dismiss. Banner tidak muncul kembali jika sudah di-dismiss di sesi tersebut (`sessionStorage`).
+* **Floating Apps Menu**: Opsi "Instal Aplikasi" juga tersedia di menu utilitas cepat (floating apps) bagi pengguna yang melewatkan banner sidebar.
+* **Auto-Detection**: Sistem otomatis mendeteksi apakah aplikasi sudah berjalan dalam mode standalone (sudah terinstal) dan menyembunyikan prompt jika demikian.

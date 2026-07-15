@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import TransactionForm from '../components/TransactionForm.vue'
 import { useFinance, type Transaction } from '../composables/useFinance'
+import { useUi } from '../composables/useUi'
 
 const {
   filteredTransactions: transactions,
@@ -16,6 +17,8 @@ const {
   deleteTransaction,
   updateTransaction,
 } = useFinance()
+
+const { globalDateFilter, hasDateFilter, resetGlobalDateFilter, setGlobalDateFilter } = useUi()
 
 const filter = ref<'all' | 'income' | 'expense'>('all')
 const searchQuery = ref('')
@@ -130,6 +133,34 @@ const submitRecurring = () => {
             <input v-model.number="minAmount" placeholder="Nominal Min (Rp)" type="number" min="0" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
             <input v-model.number="maxAmount" placeholder="Nominal Max (Rp)" type="number" min="0" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
           </div>
+          <div class="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
+            <label class="flex flex-col gap-1 text-[10px] font-bold text-muted uppercase tracking-wider">
+              Dari Tanggal
+              <input
+                :value="globalDateFilter.start"
+                type="date"
+                class="w-full border border-border rounded-xl px-3 py-2 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:outline-none transition-all"
+                @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })"
+              />
+            </label>
+            <label class="flex flex-col gap-1 text-[10px] font-bold text-muted uppercase tracking-wider">
+              Sampai Tanggal
+              <input
+                :value="globalDateFilter.end"
+                type="date"
+                class="w-full border border-border rounded-xl px-3 py-2 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:outline-none transition-all"
+                @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })"
+              />
+            </label>
+            <button
+              v-if="hasDateFilter"
+              class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-danger-text bg-danger-soft hover:opacity-90 transition-all cursor-pointer border-none"
+              type="button"
+              @click="resetGlobalDateFilter"
+            >
+              Reset
+            </button>
+          </div>
         </div>
 
         <ul class="flex flex-col gap-3 pr-1">
@@ -148,8 +179,12 @@ const submitRecurring = () => {
                 {{ item.type === 'income' ? '+' : '-' }} Rp {{ item.amount.toLocaleString('id-ID') }}
               </span>
               <div class="flex items-center gap-1.5">
-                <button class="px-3 py-1.5 rounded-full text-xs font-bold text-primary bg-primary-soft hover:bg-primary-muted transition-all cursor-pointer border-none" type="button" @click="editingTransaction = item">✏️</button>
-                <button class="px-3 py-1.5 rounded-full text-xs font-bold text-danger-text bg-danger-soft hover:opacity-90 transition-all cursor-pointer border-none" type="button" @click="deleteTransaction(item.id)">🗑️</button>
+                <button class="px-3 py-1.5 rounded-full text-xs font-bold text-primary bg-primary-soft hover:bg-primary-muted transition-all cursor-pointer border-none flex items-center gap-1" type="button" @click="editingTransaction = item">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                </button>
+                <button class="px-3 py-1.5 rounded-full text-xs font-bold text-danger-text bg-danger-soft hover:opacity-90 transition-all cursor-pointer border-none flex items-center gap-1" type="button" @click="deleteTransaction(item.id)">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                </button>
               </div>
             </div>
           </li>
@@ -212,7 +247,9 @@ const submitRecurring = () => {
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
               <button class="px-3.5 py-1.5 rounded-full text-xs font-bold text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm" type="button" @click="applyRecurringTransaction(item.id)">Terapkan</button>
-              <button class="px-3 py-1.5 rounded-full text-xs font-bold text-danger-text bg-danger-soft hover:opacity-90 transition-all cursor-pointer border-none" type="button" @click="deleteRecurringTransaction(item.id)">🗑️</button>
+              <button class="px-3 py-1.5 rounded-full text-xs font-bold text-danger-text bg-danger-soft hover:opacity-90 transition-all cursor-pointer border-none flex items-center gap-1" type="button" @click="deleteRecurringTransaction(item.id)">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                </button>
             </div>
           </article>
           <p v-if="!recurringTransactions.length" class="text-center py-8 text-xs text-muted font-semibold">Belum ada transaksi rutin.</p>

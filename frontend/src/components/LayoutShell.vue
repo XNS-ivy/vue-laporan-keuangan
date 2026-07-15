@@ -4,19 +4,20 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { applyThemeSettings, getThemeSettings, type ThemeSettings, themePresets, type ThemeMode } from '../composables/useTheme'
 import { useUi } from '../composables/useUi'
 import { useFinance } from '../composables/useFinance'
+import { usePwaInstall } from '../composables/usePwaInstall'
 
 const theme = ref<ThemeSettings>(getThemeSettings())
 const sidebarOpen = ref(false)
 const isDesktop = ref(false)
-const { globalDateFilter, hasDateFilter, resetGlobalDateFilter, setGlobalDateFilter, toasts, removeToast } = useUi()
+const { toasts, removeToast } = useUi()
 const { exportJsonData, addTransaction, categories } = useFinance()
+const { canInstall, isInstalled, dismissed, promptInstall, dismissBanner } = usePwaInstall()
 const route = useRoute()
 
 // Scroll tracking and Floating apps states
 const mainElement = ref<HTMLElement | null>(null)
 const showScrollTop = ref(false)
 const showFloatingMenu = ref(false)
-const dateFilterExpanded = ref(false)
 
 // Quick transaction form states
 const showQuickTxModal = ref(false)
@@ -50,7 +51,6 @@ watch(() => route.path, () => {
     mainElement.value.scrollTop = 0
   }
   showFloatingMenu.value = false
-  dateFilterExpanded.value = false
 })
 
 const syncViewport = () => {
@@ -319,69 +319,43 @@ onBeforeUnmount(() => {
           <span>Settings</span>
         </RouterLink>
 
-        <!-- Date Filter Panel inside nav (raised and expands inline) -->
-        <div class="relative select-none mt-2 shrink-0">
-          <button
-            class="w-full border border-white/10 rounded-xl py-2 px-3.5 bg-white/5 hover:bg-white/10 active:bg-white/15 text-white flex items-center justify-between cursor-pointer transition-all"
-            type="button"
-            @click="dateFilterExpanded = !dateFilterExpanded"
-          >
-            <div class="flex items-center gap-2">
-              <svg 
-                class="w-3.5 h-3.5 text-white/80 transition-transform duration-200" 
-                :class="{ 'rotate-180': dateFilterExpanded }" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                stroke-width="2.5"
-              >
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-              <strong class="text-xs font-semibold">Filter Tanggal</strong>
-              <span v-if="hasDateFilter" class="text-[9px] bg-primary/30 text-white border border-white/10 rounded-sm px-1.5 py-0.5 font-bold uppercase tracking-wider scale-90">
-                Aktif
-              </span>
-            </div>
-            <span class="text-[10px] text-white/50">{{ dateFilterExpanded ? 'Tutup' : 'Buka' }}</span>
-          </button>
-
-          <!-- Inline Dropdown Menu (No floating absolute popup) -->
-          <div
-            v-if="dateFilterExpanded"
-            class="mt-2 border border-white/15 rounded-xl p-3 bg-slate-900/40 flex flex-col gap-3 transition-all animate-in fade-in duration-200"
-          >
-            <div class="flex items-center justify-between border-b border-white/10 pb-2">
-              <span class="text-[9px] font-bold text-white/60 uppercase tracking-wider">Rentang Waktu</span>
-              <button
-                v-if="hasDateFilter"
-                class="border-none rounded-full px-2 py-0.5 bg-white/10 hover:bg-white/20 active:bg-white/35 text-[9px] text-white cursor-pointer font-semibold transition-colors"
-                type="button"
-                @click="resetGlobalDateFilter"
-              >
-                Reset
-              </button>
-            </div>
-            <label class="flex flex-col gap-1 text-[10px] text-white/60">
-              <span class="font-bold uppercase tracking-wider">Dari</span>
-              <input
-                :value="globalDateFilter.start"
-                type="date"
-                class="bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white border border-white/10 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 w-full transition-all"
-                @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })"
-              />
-            </label>
-            <label class="flex flex-col gap-1 text-[10px] text-white/60">
-              <span class="font-bold uppercase tracking-wider">Sampai</span>
-              <input
-                :value="globalDateFilter.end"
-                type="date"
-                class="bg-white/10 hover:bg-white/15 focus:bg-white/20 text-white border border-white/10 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 w-full transition-all"
-                @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })"
-              />
-            </label>
-          </div>
-        </div>
       </nav>
+
+      <!-- PWA Install Banner (Sidebar bottom) -->
+      <div
+        v-if="canInstall && !dismissed && !isInstalled"
+        class="mt-auto shrink-0 border border-white/15 rounded-xl p-3.5 bg-white/5 flex flex-col gap-2.5 animate-in fade-in duration-300"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span class="text-xs font-bold text-white">Instal Aplikasi</span>
+          </div>
+          <button
+            class="border-none bg-transparent text-white/40 hover:text-white/80 text-xs cursor-pointer p-0.5 transition-colors"
+            type="button"
+            @click.stop="dismissBanner"
+            aria-label="Tutup banner"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <p class="text-[10px] text-white/60 leading-snug">Pasang di perangkatmu untuk akses cepat & offline.</p>
+        <button
+          class="w-full border border-white/20 rounded-lg py-2 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all"
+          type="button"
+          @click="promptInstall"
+        >
+          Pasang Sekarang
+        </button>
+      </div>
     </aside>
 
     <!-- Content Area -->
@@ -446,19 +420,30 @@ onBeforeUnmount(() => {
           class="w-full text-left px-2 py-2 rounded-xl text-xs font-bold text-text hover:bg-slate-500/10 cursor-pointer flex items-center gap-2.5 border-none bg-transparent"
           @click="showQuickTxModal = true"
         >
-          <span class="text-sm">📝</span> Tambah Transaksi
+          <svg class="w-4 h-4 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+          Tambah Transaksi
         </button>
         <button 
           class="w-full text-left px-2 py-2 rounded-xl text-xs font-bold text-text hover:bg-slate-500/10 cursor-pointer flex items-center gap-2.5 border-none bg-transparent"
           @click="cycleTheme"
         >
-          <span class="text-sm">🎨</span> Ganti Tema Cepat
+          <svg class="w-4 h-4 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></svg>
+          Ganti Tema Cepat
         </button>
         <button 
           class="w-full text-left px-2 py-2 rounded-xl text-xs font-bold text-text hover:bg-slate-500/10 cursor-pointer flex items-center gap-2.5 border-none bg-transparent"
           @click="downloadBackup"
         >
-          <span class="text-sm">📥</span> Ekspor Backup
+          <svg class="w-4 h-4 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+          Ekspor Backup
+        </button>
+        <button
+          v-if="canInstall && !isInstalled"
+          class="w-full text-left px-2 py-2 rounded-xl text-xs font-bold text-text hover:bg-slate-500/10 cursor-pointer flex items-center gap-2.5 border-none bg-transparent"
+          @click="promptInstall"
+        >
+          <svg class="w-4 h-4 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12" y2="18.01" /></svg>
+          Instal Aplikasi
         </button>
       </div>
 
@@ -470,8 +455,8 @@ onBeforeUnmount(() => {
         @click="showFloatingMenu = !showFloatingMenu"
         aria-label="Utilitas Cepat"
       >
-        <span v-if="!showFloatingMenu" class="text-base select-none">⚡</span>
-        <span v-else class="text-xs font-extrabold select-none">✕</span>
+        <svg v-if="!showFloatingMenu" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
+        <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
       </button>
     </div>
 
@@ -501,8 +486,8 @@ onBeforeUnmount(() => {
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             Jenis Transaksi
             <select v-model="quickTxForm.type" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none transition-all">
-              <option value="expense">Pengeluaran 💸</option>
-              <option value="income">Pemasukan 💰</option>
+              <option value="expense">Pengeluaran</option>
+              <option value="income">Pemasukan</option>
             </select>
           </label>
 

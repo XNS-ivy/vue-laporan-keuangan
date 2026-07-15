@@ -111,7 +111,7 @@ const saveDebtChanges = () => {
           placeholder="Cari berdasarkan judul atau nama orang..." 
           class="w-full border border-border rounded-xl pl-9.5 pr-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60"
         />
-        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted select-none text-sm">🔍</span>
+        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
       </div>
       
       <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
@@ -122,8 +122,8 @@ const saveDebtChanges = () => {
             class="w-full sm:w-32 border border-border rounded-xl px-3 py-2 bg-surface-2 text-text text-xs font-semibold focus:outline-none transition-all"
           >
             <option value="all">Semua Tipe</option>
-            <option value="debt">Utang 💸</option>
-            <option value="receivable">Piutang 💰</option>
+            <option value="debt">Utang</option>
+            <option value="receivable">Piutang</option>
           </select>
         </div>
 
@@ -134,8 +134,8 @@ const saveDebtChanges = () => {
             class="w-full sm:w-36 border border-border rounded-xl px-3 py-2 bg-surface-2 text-text text-xs font-semibold focus:outline-none transition-all"
           >
             <option value="all">Semua Status</option>
-            <option value="open">Belum Lunas ⏳</option>
-            <option value="paid">Lunas ✅</option>
+            <option value="open">Belum Lunas</option>
+            <option value="paid">Lunas</option>
           </select>
         </div>
       </div>
@@ -153,8 +153,8 @@ const saveDebtChanges = () => {
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             Jenis Catatan
             <select v-model="form.kind" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
-              <option value="debt">Utang (Saya berutang ke orang lain) 💸</option>
-              <option value="receivable">Piutang (Orang lain berutang ke saya) 💰</option>
+              <option value="debt">Utang (Saya berutang ke orang lain)</option>
+              <option value="receivable">Piutang (Orang lain berutang ke saya)</option>
             </select>
           </label>
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
@@ -192,7 +192,8 @@ const saveDebtChanges = () => {
             <div>
               <div class="flex items-center gap-2">
                 <span class="text-base">
-                  {{ item.kind === 'debt' ? '💸' : '💰' }}
+                  <svg v-if="item.kind === 'debt'" class="w-4 h-4 text-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+                  <svg v-else class="w-4 h-4 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
                 </span>
                 <strong class="text-sm font-bold text-text group-hover:text-primary transition-colors">
                   {{ item.name }}
@@ -217,7 +218,7 @@ const saveDebtChanges = () => {
                 class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider border select-none" 
                 :class="item.status === 'open' ? 'bg-amber-500/10 text-amber-500 border-amber-500/10' : 'bg-emerald-600/10 text-success border-success/10'"
               >
-                {{ item.status === 'open' ? '⏳ Belum lunas' : '✅ Lunas' }}
+                {{ item.status === 'open' ? 'Belum lunas' : 'Lunas' }}
               </span>
               
               <button 
@@ -230,11 +231,11 @@ const saveDebtChanges = () => {
               </button>
               
               <button 
-                class="px-2.5 py-2.5 rounded-xl text-xs font-bold text-danger-text bg-danger-soft hover:scale-105 active:scale-95 transition-all cursor-pointer border-none" 
+                class="px-2.5 py-2.5 rounded-xl text-xs font-bold text-danger-text bg-danger-soft hover:scale-105 active:scale-95 transition-all cursor-pointer border-none flex items-center" 
                 type="button" 
                 @click="deleteDebt(item.id)"
               >
-                🗑️
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
               </button>
             </div>
           </article>
@@ -300,8 +301,8 @@ const saveDebtChanges = () => {
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             Status Pelunasan
             <select v-model="editForm.status" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none transition-all">
-              <option value="open">⏳ Belum Lunas</option>
-              <option value="paid">✅ Lunas</option>
+              <option value="open">Belum Lunas</option>
+              <option value="paid">Lunas</option>
             </select>
           </label>
 
