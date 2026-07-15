@@ -9,12 +9,14 @@ import DebtsView from '../views/DebtsView.vue'
 import ReportsView from '../views/ReportsView.vue'
 import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
 import TermsOfServiceView from '../views/TermsOfServiceView.vue'
+import WelcomeView from '../views/WelcomeView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'dashboard', component: DashboardView },
+    { path: '/welcome', name: 'welcome', component: WelcomeView },
     { path: '/transactions', name: 'transactions', component: TransactionsView },
     { path: '/planning', name: 'planning', component: PlanningView },
     { path: '/savings-goal', name: 'savings-goal', component: SavingsGoalView },
@@ -26,6 +28,19 @@ const router = createRouter({
     { path: '/terms', name: 'terms', component: TermsOfServiceView },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView },
   ],
+})
+
+router.beforeEach((to, from, next) => {
+  const introduced = localStorage.getItem('finance_flow_introduced') === 'true'
+  const isPublicPage = to.name === 'welcome' || to.name === 'privacy' || to.name === 'terms'
+  
+  if (!introduced && !isPublicPage) {
+    next({ name: 'welcome' })
+  } else if (introduced && to.name === 'welcome') {
+    next({ name: 'dashboard' })
+  } else {
+    next()
+  }
 })
 
 export default router

@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import LayoutShell from './components/LayoutShell.vue'
 import SecurityLock from './components/SecurityLock.vue'
 import { useNotifications } from './composables/useNotifications'
 
+const route = useRoute()
 const storedPin = ref<string | null>(null)
 const isLocked = ref(false)
 const { checkAndTriggerReminder } = useNotifications()
+
+const isWelcomePage = computed(() => route.name === 'welcome')
 
 const checkPin = () => {
   const pin = localStorage.getItem('finance_flow_pin')
@@ -39,10 +43,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <SecurityLock 
-    v-if="isLocked && storedPin" 
-    :correct-pin="storedPin" 
-    @unlocked="handleUnlock" 
-  />
-  <LayoutShell v-else />
+  <RouterView v-if="isWelcomePage" />
+  <template v-else>
+    <SecurityLock 
+      v-if="isLocked && storedPin" 
+      :correct-pin="storedPin" 
+      @unlocked="handleUnlock" 
+    />
+    <LayoutShell v-else />
+  </template>
 </template>

@@ -13,6 +13,7 @@ Semua rute didaftarkan di dalam berkas [router/index.ts](file:///home/m-riski/Pr
 | Path | Nama Rute | Komponen Halaman (View) | Deskripsi |
 | :--- | :--- | :--- | :--- |
 | `/` | `dashboard` | `DashboardView.vue` | Ikhtisar keuangan, bagan ringkasan, pencapaian target, dan wawasan otomatis. |
+| `/welcome` | `welcome` | `WelcomeView.vue` | Halaman onboarding / perkenalan interaktif santai bagi pengguna baru. |
 | `/transactions` | `transactions` | `TransactionsView.vue` | Daftar riwayat transaksi lengkap dengan pencarian, filter, dan ekspor Excel. |
 | `/planning` | `planning` | `PlanningView.vue` | Modul penyusunan anggaran bulanan dan daftar transaksi berulang. |
 | `/savings-goal` | `savings-goal` | `SavingsGoalView.vue` | Target tabungan masa depan dan kalkulator waktu pencapaian target. |

@@ -75,7 +75,8 @@ frontend/
 │   │   ├── SavingsGoalView.vue
 │   │   ├── SettingsView.vue
 │   │   ├── TermsOfServiceView.vue
-│   │   └── TransactionsView.vue
+│   │   ├── TransactionsView.vue
+│   │   └── WelcomeView.vue
 │   ├── App.vue            # Komponen root (pintu masuk aplikasi & PIN lock)
 │   └── main.ts            # Entrypoint TypeScript
 ├── bun.lock
