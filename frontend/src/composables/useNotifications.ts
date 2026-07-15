@@ -10,13 +10,52 @@ const reminderInterval = ref<ReminderInterval>('off')
 const lastRemindedDate = ref<string>('')
 const notificationPermission = ref<NotificationPermission>('default')
 
+// Simple IndexedDB helper for sharing state with Service Worker
+function openDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      reject(new Error('IndexedDB not supported'))
+      return
+    }
+    const request = indexedDB.open('finance-flow-db', 1)
+    request.onupgradeneeded = () => {
+      const db = request.result
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings')
+      }
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+async function writeDbSetting(key: string, value: any) {
+  try {
+    const db = await openDB()
+    return new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('settings', 'readwrite')
+      const store = tx.objectStore('settings')
+      store.put(value, key)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch (err) {
+    console.warn('Failed to write setting to IndexedDB:', err)
+  }
+}
+
 export function useNotifications() {
   const { pushToast } = useUi()
 
-  const loadSettings = () => {
+  const loadSettings = async () => {
     if (typeof window === 'undefined') return
     reminderInterval.value = (localStorage.getItem(INTERVAL_KEY) as ReminderInterval) || 'off'
     lastRemindedDate.value = localStorage.getItem(LAST_REMINDE_KEY) || ''
+    
+    // Sync to IndexedDB for Service Worker accessibility
+    await writeDbSetting(INTERVAL_KEY, reminderInterval.value)
+    await writeDbSetting(LAST_REMINDE_KEY, lastRemindedDate.value)
+
     if ('Notification' in window) {
       notificationPermission.value = Notification.permission
     }
@@ -33,6 +72,10 @@ export function useNotifications() {
       notificationPermission.value = permission
       if (permission === 'granted') {
         pushToast('Izin notifikasi diberikan', 'success')
+        // Automatically register periodic sync if reminders are active
+        if (reminderInterval.value !== 'off') {
+          configurePeriodicSync(reminderInterval.value)
+        }
         return true
       } else {
         pushToast('Izin notifikasi ditolak', 'warning')
@@ -44,10 +87,33 @@ export function useNotifications() {
     }
   }
 
-  const setReminderInterval = (interval: ReminderInterval) => {
+  const configurePeriodicSync = async (interval: ReminderInterval) => {
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready
+        if ('periodicSync' in registration) {
+          const pSync = (registration as any).periodicSync
+          if (interval !== 'off' && Notification.permission === 'granted') {
+            await pSync.register('daily-reminder', {
+              minInterval: 24 * 60 * 60 * 1000 // check daily
+            })
+          } else {
+            await pSync.unregister('daily-reminder')
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to configure periodicSync:', err)
+      }
+    }
+  }
+
+  const setReminderInterval = async (interval: ReminderInterval) => {
     if (typeof window === 'undefined') return
     reminderInterval.value = interval
     localStorage.setItem(INTERVAL_KEY, interval)
+    await writeDbSetting(INTERVAL_KEY, interval)
+    await configurePeriodicSync(interval)
+
     pushToast(`Pengingat diatur ke: ${interval === 'off' ? 'Nonaktif' : interval === 'daily' ? 'Harian' : interval === 'weekly' ? 'Mingguan' : 'Bulanan'}`, 'success')
   }
 
@@ -66,7 +132,6 @@ export function useNotifications() {
       ...options
     }
 
-    // Try sending through Service Worker first (PWA style)
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.ready
@@ -77,7 +142,6 @@ export function useNotifications() {
       }
     }
 
-    // Fallback to standard window Notification
     try {
       const notification = new Notification(title, defaultOptions)
       notification.onclick = () => {
@@ -105,22 +169,20 @@ export function useNotifications() {
     if (reminderInterval.value === 'off') return
     if (Notification.permission !== 'granted') return
 
-    const today = new Date().toISOString().slice(0, 10) // "YYYY-MM-DD"
+    const today = new Date().toISOString().slice(0, 10)
     
-    // If we have already reminded today, skip
     if (lastRemindedDate.value === today) return
 
-    // If there is no previous reminder date, initialize and send first reminder
     if (!lastRemindedDate.value) {
       lastRemindedDate.value = today
       localStorage.setItem(LAST_REMINDE_KEY, today)
+      writeDbSetting(LAST_REMINDE_KEY, today)
       sendNotification('Selamat Datang di Pengingat MyFinanceFlow 🔔', {
         body: 'Pengingat pencatatan laporan keuangan Anda telah aktif. Yuk catat pengeluaran/pemasukan Anda sekarang!'
       })
       return
     }
 
-    // Check if we should remind based on interval
     let shouldRemind = false
     const timeDiff = new Date(today).getTime() - new Date(lastRemindedDate.value).getTime()
     const diffInDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24))
@@ -136,6 +198,7 @@ export function useNotifications() {
     if (shouldRemind) {
       lastRemindedDate.value = today
       localStorage.setItem(LAST_REMINDE_KEY, today)
+      writeDbSetting(LAST_REMINDE_KEY, today)
       sendNotification('Waktunya Catat Keuangan Anda! 📊', {
         body: `Sudah waktunya mencatat mutasi pengeluaran dan pemasukan Anda. Jaga pengeluaran tetap terkontrol!`,
         tag: 'finance-reminder'

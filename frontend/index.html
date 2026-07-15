@@ -5,8 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="/logo.svg">
     <link rel="apple-touch-icon" href="/logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#2563eb">
+    <link id="manifest-link" rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+    <script>
+      (function() {
+        try {
+          const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (isDark) {
+            document.getElementById('manifest-link').setAttribute('href', '/manifest-dark.webmanifest');
+          }
+        } catch (e) {
+          console.error('Failed to set theme manifest:', e);
+        }
+      })();
+    </script>
     <!-- Security Headers / Policies -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://avatars.githubusercontent.com; connect-src 'self';">
     <meta name="referrer" content="no-referrer">

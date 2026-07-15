@@ -1,9 +1,10 @@
-const CACHE_NAME = 'finance-flow-cache-v2';
+const CACHE_NAME = 'finance-flow-cache-v3';
 
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
+  '/manifest-dark.webmanifest',
 ];
 
 self.addEventListener('install', (event) => {
@@ -106,3 +107,107 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
+// IndexedDB setup & helper for Service Worker background access
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('finance-flow-db', 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings');
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function getDbSetting(key) {
+  return openDB().then((db) => {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('settings', 'readonly');
+      const store = tx.objectStore('settings');
+      const request = store.get(key);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }).catch((err) => {
+    console.warn('SW: Failed to read from IndexedDB:', err);
+    return null;
+  });
+}
+
+function writeDbSetting(key, value) {
+  return openDB().then((db) => {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('settings', 'readwrite');
+      const store = tx.objectStore('settings');
+      store.put(value, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }).catch((err) => {
+    console.warn('SW: Failed to write to IndexedDB:', err);
+  });
+}
+
+// Background Reminder verification
+function checkAndTriggerBackgroundReminder() {
+  if (self.registration.showNotification === undefined) return Promise.resolve();
+
+  return Promise.all([
+    getDbSetting('finance_reminder_interval'),
+    getDbSetting('finance_last_reminded_date')
+  ]).then(([interval, lastReminded]) => {
+    if (!interval || interval === 'off') return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    if (lastReminded === today) return;
+
+    if (!lastReminded) {
+      return writeDbSetting('finance_last_reminded_date', today).then(() => {
+        return self.registration.showNotification('Selamat Datang di Pengingat MyFinanceFlow 🔔', {
+          body: 'Pengingat pencatatan laporan keuangan Anda telah aktif. Yuk catat pengeluaran/pemasukan Anda sekarang!',
+          icon: '/logo.png',
+          badge: '/logo.png',
+          vibrate: [200, 100, 200],
+          data: { url: self.location.origin }
+        });
+      });
+    }
+
+    const timeDiff = new Date(today).getTime() - new Date(lastReminded).getTime();
+    const diffInDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    let shouldRemind = false;
+
+    if (interval === 'daily' && diffInDays >= 1) {
+      shouldRemind = true;
+    } else if (interval === 'weekly' && diffInDays >= 7) {
+      shouldRemind = true;
+    } else if (interval === 'monthly' && diffInDays >= 30) {
+      shouldRemind = true;
+    }
+
+    if (shouldRemind) {
+      return writeDbSetting('finance_last_reminded_date', today).then(() => {
+        return self.registration.showNotification('Waktunya Catat Keuangan Anda! 📊', {
+          body: 'Sudah waktunya mencatat mutasi pengeluaran dan pemasukan Anda. Jaga pengeluaran tetap terkontrol!',
+          tag: 'finance-reminder',
+          icon: '/logo.png',
+          badge: '/logo.png',
+          vibrate: [200, 100, 200],
+          data: { url: self.location.origin }
+        });
+      });
+    }
+  });
+}
+
+// Listen to Periodic Sync for offline background reminders
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'daily-reminder') {
+    event.waitUntil(checkAndTriggerBackgroundReminder());
+  }
+});
+
