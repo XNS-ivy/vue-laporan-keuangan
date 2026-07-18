@@ -21,7 +21,15 @@
 *   📈 **Laporan Lanjutan & Grafik Candlestick**: 
     Analisis visual mutakhir menggunakan Chart.js yang mencakup distribusi pengeluaran serta grafik **Balance Candlestick** untuk melihat rentang saldo tertinggi, terendah, pembukaan, dan penutupan harian.
 *   ⚙️ **Kustomisasi Kategori & Dynamic Theme Engine**: 
-    Buat kategori kustom dengan warna dan emoji unik. Personalisasikan tampilan aplikasi dengan 6 preset tema premium: *Ocean Light, Forest Light, Sunset Light, Midnight Blue, Graphite Dark,* dan *Ruby Dark*.
+    Buat kategori kustom dengan warna dan **ikon SVG modern** (bebas emoji). Personalisasikan tampilan aplikasi dengan 6 preset tema premium: *Ocean Light, Forest Light, Sunset Light, Midnight Blue, Graphite Dark,* dan *Ruby Dark*.
+*   🌐 **Welcome Onboarding Wizard (Language & Currency Setup)**:
+    Setup preferensi bahasa (ID, EN, JA, ES), mata uang utama (IDR, USD, EUR, SGD, JPY, GBP), tema, dan Security PIN saat pertama kali menggunakan aplikasi dengan visual indicator progress bar yang mulus.
+*   🔢 **Logika Kelipatan Nominal Dinamis (Nominal Stepping)**:
+    Logika input numerik cerdas di mana ArrowUp/ArrowDown mengubah angka pada digit signifikan kedua (misalnya `1.000` menjadi `1.100`, atau `1.000.000` menjadi `1.100.000`).
+*   ⚡ **Mode Tampilan (Simple vs. Advance)**:
+    Menyediakan antarmuka minimalis dan bersih untuk seluruh modul utama di Mode Sederhana tanpa menyembunyikannya dari navigasi, sehingga menyederhanakan grafik/kalkulator rumit agar ramah pengguna awam (*normies*).
+*   🔎 **Skala Ukuran Konten (Content Scaling & Accessibility)**:
+    Mendukung preferensi skala ukuran konten (Normal, Besar, Ekstra Besar) untuk memperbesar ukuran teks dan tombol secara global dan responsif, sangat mempermudah pengoperasian bagi kalangan orang tua.
 *   🔒 **Keamanan Kunci PIN**: 
     Amankan privasi data keuangan Anda dari akses tidak sah dengan 4-digit sandi PIN yang divalidasi melalui virtual keypad beranimasi lengkap dengan feedback getar (vibration API).
 *   🌐 **Service Worker & Akses Offline (Offline-First)**:

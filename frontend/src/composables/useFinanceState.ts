@@ -15,12 +15,12 @@ import type {
 export const storageKey = 'finance-app-data-v3'
 
 export const defaultCategories: CategoryItem[] = [
-  { id: 1, name: 'Gaji', type: 'income', color: '#16a34a', icon: '💰' },
-  { id: 2, name: 'Freelance', type: 'income', color: '#0d9488', icon: '💻' },
-  { id: 3, name: 'Makan', type: 'expense', color: '#f59e0b', icon: '🍔' },
-  { id: 4, name: 'Transport', type: 'expense', color: '#3b82f6', icon: '🚗' },
-  { id: 5, name: 'Tagihan', type: 'expense', color: '#ef4444', icon: '🔌' },
-  { id: 6, name: 'Belanja', type: 'expense', color: '#ec4899', icon: '🛍️' },
+  { id: 1, name: 'Gaji', type: 'income', color: '#16a34a', icon: 'salary' },
+  { id: 2, name: 'Freelance', type: 'income', color: '#0d9488', icon: 'freelance' },
+  { id: 3, name: 'Makan', type: 'expense', color: '#f59e0b', icon: 'burger' },
+  { id: 4, name: 'Transport', type: 'expense', color: '#3b82f6', icon: 'car' },
+  { id: 5, name: 'Tagihan', type: 'expense', color: '#ef4444', icon: 'electricity' },
+  { id: 6, name: 'Belanja', type: 'expense', color: '#ec4899', icon: 'shopping' },
 ]
 
 export const categoryPalette = ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#ef4444', '#10b981', '#f97316']
@@ -87,7 +87,7 @@ export const ensureCategory = (name: string, type: TransactionType, color?: stri
     name: categoryName,
     type,
     color: color || randomColor,
-    icon: icon || (type === 'income' ? '📈' : '💸'),
+    icon: icon || (type === 'income' ? 'investment' : 'tag'),
   })
   return true
 }

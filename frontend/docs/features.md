@@ -72,7 +72,14 @@ Halaman `ReportsView.vue` menyediakan analisis mendalam bagi pengguna yang menyu
 ## ⚙️ 8. Pengaturan & Kustomisasi Tema (Settings)
 Pusat kontrol aplikasi di halaman `SettingsView.vue`:
 * **Pengaturan PIN**: Mengaktifkan, mengganti, atau menonaktifkan kode pengunci 4-digit.
-* **Manajemen Kategori Kustom**: Pengguna bebas membuat kategori pemasukan/pengeluaran baru, memilih warna representatif melalui palet warna, dan menyematkan ikon emoji unik.
+* **Manajemen Kategori Kustom**: Pengguna bebas membuat kategori pemasukan/pengeluaran baru, memilih warna representatif melalui palet warna, dan memilih ikon menggunakan **Sistem SVG Bebas Emoji** dengan grid box interaktif. Dilengkapi juga dengan grup contoh ikon (seperti Transport: kereta, pesawat, kapal).
+* **Preferensi Pengguna**: Mengatur Mata Uang Utama, Bahasa Preferensi (multi-bahasa reaktif), Mode Tampilan (Sederhana vs. Lengkap), serta **Ukuran Konten (Teks & Tombol)** secara langsung.
+* **Skala Konten Global (Accessibility)**: Menyediakan pilihan skala ukuran konten (*Normal, Besar, Ekstra Besar*) yang memanipulasi font-size root elemen `<html>`. Karena layout menggunakan satuan `rem`, seluruh ukuran card, tombol, teks, margin, dan padding akan membesar secara harmonis demi kemudahan membaca dan menekan elemen di perangkat mobile (sangat ramah lansia).
+* **Penyederhanaan Layout Mode Sederhana**: Saat Mode Sederhana diaktifkan:
+  * **Planning**: Menyembunyikan simulator bunga majemuk, rekomendasi alokasi 50/30/20, dan menyajikan input pagu belanja bulanan yang berjarak renggang.
+  * **Savings Goal**: Menyembunyikan baris rincian "Setoran Bulanan Total" dan "Estimasi Bulan Tercapai".
+  * **Assets**: Menyembunyikan bar pencarian dan select-box tipe filter, serta menyembunyikan form penyesuaian apresiasi/depresiasi beserta log riwayat di modal detail aset.
+  * **Debts**: Menyembunyikan baris filter/pencarian utang piutang.
 * **Dynamic Theme Engine**:
   * Didukung oleh Composable `useTheme.ts` dan Tailwind CSS v4.
   * Menyediakan 6 preset tema bawaan: **Ocean Light**, **Forest Light**, **Sunset Light**, **Midnight Blue**, **Graphite Dark**, dan **Ruby Dark**.
@@ -117,3 +124,19 @@ Aplikasi menyediakan **UI prompt instalasi** yang terintegrasi agar pengguna dap
 * **Install Banner (Sidebar)**: Banner muncul di bagian bawah sidebar navigasi ketika browser mendukung instalasi PWA. Dilengkapi tombol "Pasang Sekarang" dan tombol dismiss. Banner tidak muncul kembali jika sudah di-dismiss di sesi tersebut (`sessionStorage`).
 * **Floating Apps Menu**: Opsi "Instal Aplikasi" juga tersedia di menu utilitas cepat (floating apps) bagi pengguna yang melewatkan banner sidebar.
 * **Auto-Detection**: Sistem otomatis mendeteksi apakah aplikasi sudah berjalan dalam mode standalone (sudah terinstal) dan menyembunyikan prompt jika demikian.
+
+---
+
+## 🚀 12. Onboarding Wizard & Welcome Page Setup (WelcomeView)
+Halaman penyambutan (`WelcomeView.vue`) menyajikan setup langkah demi langkah (onboarding) saat pengguna pertama kali membuka aplikasi:
+* **Pengaturan Awal Preferensi**: Pengguna memilih bahasa (Bahasa Indonesia, English, 日本語, Español) dan mata uang yang langsung diterapkan secara real-time.
+* **Personalisasi Tema**: Pilihan tema dasar (Terang, Gelap, Midnight) dapat dicoba secara instan sebelum disimpan.
+* **Proteksi PIN Keamanan**: Opsi untuk menetapkan 4-digit PIN keamanan guna melindungi privasi data.
+* **Saldo Awal & Progress Smooth**: Input saldo awal dengan dukungan stepper dinamis dan bar progress langkah yang bersih dan profesional.
+
+---
+
+## 🔢 13. Logika Kelipatan Nominal Dinamis (Dynamic Nominal Stepping)
+Fitur kenyamanan input nominal yang terintegrasi pada seluruh kolom nominal numerik di aplikasi:
+* **Deteksi Orde Nilai**: Secara otomatis mendeteksi orde magnitude dari nominal yang sedang dimasukkan (misalnya ratusan, ribuan, jutaan).
+* **Langkah Dinamis (Arrow Keys & Stepper)**: Menekan tombol ArrowUp / ArrowDown pada keyboard atau tombol spinner input akan menaikkan atau menurunkan nilai sebesar satu digit di belakang angka depan terbesarnya (contoh: `1.000` naik menjadi `1.100`, `1.000.000` naik menjadi `1.100.000`).

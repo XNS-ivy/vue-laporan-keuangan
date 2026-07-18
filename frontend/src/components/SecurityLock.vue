@@ -93,9 +93,8 @@ onBeforeUnmount(() => {
 <template>
   <div class="fixed inset-0 z-9999 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl text-white select-none">
     <div class="flex flex-col items-center max-w-xs w-full px-6 text-center transition-all duration-300">
-      <!-- Icon / Logo Lock -->
-      <div class="w-16 h-16 bg-blue-600/10 border border-blue-500/20 rounded-full flex items-center justify-center text-2xl text-blue-500 shadow-lg shadow-blue-500/5 mb-6">
-        🔒
+      <div class="w-16 h-16 bg-blue-600/10 border border-blue-500/20 rounded-full flex items-center justify-center text-blue-500 shadow-lg shadow-blue-500/5 mb-6">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
       </div>
 
       <h1 class="text-lg font-extrabold tracking-tight text-white">{{ title || 'MyFinanceFlow Terkunci' }}</h1>

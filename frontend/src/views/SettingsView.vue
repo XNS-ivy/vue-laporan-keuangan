@@ -15,6 +15,8 @@ import {
 import { useUi } from '../composables/useUi'
 import { useFinance } from '../composables/useFinance'
 import { useNotifications } from '../composables/useNotifications'
+import { currency, appMode, language, contentScale, t, categoryIcons, categoryExampleGroups } from '../composables/useUserSettings'
+import IconPickerPopup from '../components/IconPickerPopup.vue'
 
 const {
   reminderInterval,
@@ -41,7 +43,13 @@ const {
 } = useFinance()
 
 const handleResetAllData = () => {
-  if (window.confirm('Apakah kamu yakin ingin menghapus semua data transaksi, aset, target tabungan, dan anggaran? Tindakan ini tidak dapat dibatalkan.')) {
+  const confirmMsg = t({
+    id: 'Apakah kamu yakin ingin menghapus semua data transaksi, aset, target tabungan, dan anggaran? Tindakan ini tidak dapat dibatalkan.',
+    en: 'Are you sure you want to delete all transaction, asset, savings goal, and budget data? This action cannot be undone.',
+    ja: 'すべての取引、資産、貯蓄目標、および予算データを削除してもよろしいですか？この操作は取り消せません。',
+    es: '¿Está seguro de que desea eliminar todos los datos de transacciones, activos, metas de ahorro y presupuestos? Esta acción no se puede deshacer.'
+  })
+  if (window.confirm(confirmMsg)) {
     resetAllData()
   }
 }
@@ -75,8 +83,18 @@ const savePreferences = () => {
   saveThemeSettings(normalized)
   applyThemeSettings(normalized)
   dispatchThemeChange(normalized)
-  savedMessage.value = `Tema disimpan: ${labelForTheme(normalized.mode)} dengan aksen ${normalized.primary.toUpperCase()}`
-  pushToast('Preferensi tema berhasil disimpan', 'success')
+  savedMessage.value = t({
+    id: `Tema disimpan: ${labelForTheme(normalized.mode)} dengan aksen ${normalized.primary.toUpperCase()}`,
+    en: `Theme saved: ${labelForTheme(normalized.mode)} with accent ${normalized.primary.toUpperCase()}`,
+    ja: `テーマが保存されました: ${labelForTheme(normalized.mode)}、アクセント ${normalized.primary.toUpperCase()}`,
+    es: `Tema guardado: ${labelForTheme(normalized.mode)} con acento ${normalized.primary.toUpperCase()}`
+  })
+  pushToast(t({
+    id: 'Preferensi tema berhasil disimpan',
+    en: 'Theme preferences successfully saved',
+    ja: 'テーマ設定が正常に保存されました',
+    es: 'Preferencias de tema guardadas con éxito'
+  }), 'success')
 }
 
 const useSystemTheme = () => {
@@ -93,8 +111,18 @@ const useSystemTheme = () => {
   applyThemeSettings(systemTheme)
   dispatchThemeChange(systemTheme)
   window.dispatchEvent(new Event('theme-reset-to-system'))
-  savedMessage.value = 'Tema disinkronkan ke setelan sistem (Auto)'
-  pushToast('Tema berhasil disinkronkan dengan sistem', 'success')
+  savedMessage.value = t({
+    id: 'Tema disinkronkan ke setelan sistem (Auto)',
+    en: 'Theme synced with system settings (Auto)',
+    ja: 'テーマがシステム設定と同期されました（自動）',
+    es: 'Tema sincronizado con la configuración del sistema (Auto)'
+  })
+  pushToast(t({
+    id: 'Tema berhasil disinkronkan dengan sistem',
+    en: 'Theme successfully synced with the system',
+    ja: 'テーマがシステムと正常に同期されました',
+    es: 'Tema sincronizado con éxito con el sistema'
+  }), 'success')
 }
 
 const applyPreset = () => {
@@ -152,17 +180,15 @@ const categoryForm = ref({
   name: '',
   type: 'expense' as 'income' | 'expense',
   color: '#3b82f6',
-  icon: '🍟',
+  icon: 'burger',
 })
 
 const editingCategoryId = ref<number | null>(null)
 const editingCategoryForm = ref({
   name: '',
   color: '#3b82f6',
-  icon: '🍟',
+  icon: 'burger',
 })
-
-const quickEmojis = ['🍔', '☕', '🚗', '🛍️', '🔌', '🏠', '🎬', '🩺', '📚', '💰', '💻', '📈', '🎁', '✈️', '🏋️', '🧸']
 
 const handleAddCategory = () => {
   const name = categoryForm.value.name.trim()
@@ -178,7 +204,7 @@ const startEditCategory = (item: any) => {
   editingCategoryForm.value = {
     name: item.name,
     color: item.color || '#3b82f6',
-    icon: item.icon || '🍔',
+    icon: item.icon || 'burger',
   }
 }
 
@@ -191,10 +217,47 @@ const handleUpdateCategory = () => {
   })
   editingCategoryId.value = null
 }
-
 const cancelEditCategory = () => {
   editingCategoryId.value = null
 }
+
+// Popup Icon Picker state
+const showIconPicker = ref(false)
+const isEditingIconPicker = ref(false)
+const iconSearchQuery = ref('')
+
+const openIconPicker = (isEdit: boolean) => {
+  isEditingIconPicker.value = isEdit
+  iconSearchQuery.value = ''
+  showIconPicker.value = true
+}
+
+const selectCategoryIcon = (key: string) => {
+  if (isEditingIconPicker.value) {
+    editingCategoryForm.value.icon = key
+  } else {
+    categoryForm.value.icon = key
+  }
+  showIconPicker.value = false
+}
+
+const filteredIconGroups = computed(() => {
+  const query = iconSearchQuery.value.trim().toLowerCase()
+  if (!query) return categoryExampleGroups
+  
+  return categoryExampleGroups.map(group => {
+    const matchedIcons = group.icons.filter(icon => {
+      const matchKey = icon.key.toLowerCase().includes(query)
+      const matchLabel = icon.label.toLowerCase().includes(query)
+      const matchTrans = Object.values(icon.labelTranslations || {}).some(val => val.toLowerCase().includes(query))
+      return matchKey || matchLabel || matchTrans
+    })
+    return {
+      ...group,
+      icons: matchedIcons
+    }
+  }).filter(group => group.icons.length > 0)
+})
 
 const isPinEnabled = ref(false)
 const isSettingNewPin = ref(false)
@@ -213,25 +276,39 @@ const togglePinState = () => {
     isSettingNewPin.value = false
     newPin.value = ''
     window.dispatchEvent(new Event('pin-changed'))
-    pushToast('Kunci PIN dinonaktifkan', 'success')
+    pushToast(t({
+      id: 'Kunci PIN dinonaktifkan',
+      en: 'PIN lock disabled',
+      ja: 'PINロックが無効になりました',
+      es: 'Bloqueo de PIN desactivado'
+    }), 'success')
   } else {
     isSettingNewPin.value = true
   }
 }
 
 const saveNewPin = () => {
-  const pinVal = newPin.value.trim()
-  if (pinVal.length !== 4 || isNaN(Number(pinVal))) {
-    pushToast('PIN harus berupa 4 digit angka!', 'error')
+  const pin = newPin.value.replace(/\D/g, '')
+  if (pin.length !== 4) {
+    pushToast(t({
+      id: 'PIN harus 4 digit angka!',
+      en: 'PIN must be exactly 4 digit numbers!',
+      ja: 'PINは4桁の数字である必要があります！',
+      es: '¡El PIN debe ser exactamente de 4 dígitos!'
+    }), 'error')
     return
   }
-  localStorage.setItem('finance_flow_pin', pinVal)
-  sessionStorage.setItem('finance_flow_unlocked', 'true')
+  localStorage.setItem('finance_flow_pin', pin)
   isPinEnabled.value = true
   isSettingNewPin.value = false
   newPin.value = ''
   window.dispatchEvent(new Event('pin-changed'))
-  pushToast('PIN berhasil disimpan & diaktifkan', 'success')
+  pushToast(t({
+    id: 'PIN pengunci berhasil disimpan',
+    en: 'Lock PIN successfully saved',
+    ja: 'ロックPINが正常に保存されました',
+    es: 'PIN de bloqueo guardado con éxito'
+  }), 'success')
 }
 
 onMounted(() => {
@@ -241,20 +318,67 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <header class="bg-linear-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom">
-      <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Settings</p>
-      <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">Pengaturan & Tampilan Aplikasi</h1>
-      <p class="text-sm text-white/80 leading-relaxed mt-2">Ganti tema warna, kelola kategori keuangan, atau cadangkan datamu dengan mudah.</p>
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+      <div>
+        <p class="uppercase tracking-widest text-[10px] text-muted font-bold">{{ t({ id: 'Pengaturan', en: 'Settings', ja: '設定', es: 'Ajustes' }) }}</p>
+        <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">{{ t({ id: 'Kelola Seluruh Preferensi & Aplikasi', en: 'Manage All Preferences & Applications', ja: 'すべての設定とアプリケーションの管理', es: 'Gestionar Todas las Preferencias y Aplicación' }) }}</h1>
+      </div>
     </header>
+
+    <!-- Preferensi Pengguna Section -->
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">{{ t({ id: 'Preferensi Pengguna', en: 'User Preferences', ja: 'ユーザー設定', es: 'Preferencias de Usuario' }) }}</h2>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 my-2">
+        <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+          {{ t({ id: 'Mata Uang Utama', en: 'Primary Currency', ja: '主要通貨', es: 'Moneda Principal' }) }}
+          <select v-model="currency" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
+            <option value="IDR">IDR (Rp)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="SGD">SGD (S$)</option>
+            <option value="JPY">JPY (¥)</option>
+            <option value="GBP">GBP (£)</option>
+          </select>
+        </label>
+
+        <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+          {{ t({ id: 'Bahasa Preferensi', en: 'Language Preference', ja: '優先言語', es: 'Idioma de Preferencia' }) }}
+          <select v-model="language" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
+            <option value="id">Bahasa Indonesia</option>
+            <option value="en">English</option>
+            <option value="ja">日本語 (Japanese)</option>
+            <option value="es">Español (Spanish)</option>
+          </select>
+        </label>
+
+        <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+          {{ t({ id: 'Mode Tampilan', en: 'Display Mode', ja: '表示モード', es: 'Modo de Visualización' }) }}
+          <select v-model="appMode" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
+            <option value="simple">{{ t({ id: 'Mode Sederhana (Simple)', en: 'Simple Mode (Simple)', ja: 'シンプルモード', es: 'Modo Simple' }) }}</option>
+            <option value="advance">{{ t({ id: 'Mode Lengkap (Advance)', en: 'Advanced Mode (Advance)', ja: 'アドバンスモード', es: 'Modo Avanzado' }) }}</option>
+          </select>
+        </label>
+
+        <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+          {{ t({ id: 'Ukuran Teks & Tombol (Skala)', en: 'Text & Button Size (Scale)', ja: 'テキストとボタンのサイズ (倍率)', es: 'Tamaño de Texto y Botón (Escala)' }) }}
+          <select v-model="contentScale" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
+            <option value="normal">{{ t({ id: 'Normal (Standar)', en: 'Normal (Standard)', ja: '標準', es: 'Normal (Estándar)' }) }}</option>
+            <option value="large">{{ t({ id: 'Besar (Ramah Orang Tua)', en: 'Large (Elder-Friendly)', ja: '大きい (シニア向け)', es: 'Grande (Apto para Mayores)' }) }}</option>
+            <option value="xlarge">{{ t({ id: 'Ekstra Besar (Sangat Besar)', en: 'Extra Large (Very Large)', ja: '特大', es: 'Extra Grande (Muy Grande)' }) }}</option>
+          </select>
+        </label>
+      </div>
+    </section>
 
     <!-- Tema Section -->
     <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
-      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Kustomisasi Tampilan</h2>
-      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Pilih mode tampilan dasar, kustom warna aksen secara dinamis, atau pilih preset palette yang kami sediakan.</p>
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">{{ t({ id: 'Kustomisasi Tampilan', en: 'Appearance Customization', ja: '外観のカスタマイズ', es: 'Personalización de Apariencia' }) }}</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">{{ t({ id: 'Pilih mode tampilan dasar, kustom warna aksen secara dinamis, atau pilih preset palette yang kami sediakan.', en: 'Choose basic display mode, dynamically customize accent colors, or select from preset palettes.', ja: '基本表示モードを選択し、アクセントカラーを動的にカスタマイズするか、プリセットパレットから選択します。', es: 'Elija el modo de visualización básico, personalice dinámicamente los colores de acento o seleccione de paletas preestablecidas.' }) }}</p>
       
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 my-2">
         <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-          Mode Tema
+          {{ t({ id: 'Mode Tema', en: 'Theme Mode', ja: 'テーマモード', es: 'Modo de Tema' }) }}
           <select v-model="themeDraft.mode" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
             <option v-for="item in themeOptions" :key="item" :value="item">
               {{ labelForTheme(item) }}
@@ -263,15 +387,15 @@ onMounted(() => {
         </label>
         
         <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-          Background Konten
+          {{ t({ id: 'Background Konten', en: 'Content Background', ja: 'コンテンツの背景', es: 'Fondo de Contenido' }) }}
           <select v-model="themeDraft.surfaceMode" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
-            <option value="light">Terang</option>
-            <option value="dark">Gelap</option>
+            <option value="light">{{ t({ id: 'Terang', en: 'Light', ja: 'ライト', es: 'Claro' }) }}</option>
+            <option value="dark">{{ t({ id: 'Gelap', en: 'Dark', ja: 'ダーク', es: 'Oscuro' }) }}</option>
           </select>
         </label>
 
         <div class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider relative">
-          Warna Utama (Aksen)
+          {{ t({ id: 'Warna Utama (Aksen)', en: 'Primary Color (Accent)', ja: '主要色 (アクセント)', es: 'Color Primario (Acento)' }) }}
           <button class="flex items-center justify-between gap-3 border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold cursor-pointer w-full transition-all focus:outline-none focus:ring-2 focus:ring-primary-soft" type="button" @click="pickerOpen = !pickerOpen">
             <span class="flex items-center gap-2">
               <span class="w-5 h-5 rounded-full border-2 border-white shadow-sm shrink-0" :style="previewSwatchStyle"></span>
@@ -330,23 +454,23 @@ onMounted(() => {
             type="button"
             :style="{ background: toRgba(themeDraft.primary, themeDraft.primaryAlpha), color: previewContrast }"
           >
-            Simpan Preferensi
+            Menu
           </button>
         </div>
         <div class="border border-border rounded-xl p-4 bg-surface-2 flex flex-col gap-2.5">
-          <span class="text-[10px] font-bold text-muted uppercase tracking-wider">Preview Input Field</span>
+          <span class="text-[10px] font-bold text-muted uppercase tracking-wider">{{ t({ id: 'Preview Input Field', en: 'Input Field Preview', ja: '入力フィールドのプレビュー', es: 'Vista Previa del Campo de Entrada' }) }}</span>
           <div class="border border-border rounded-xl px-4 py-2.5 bg-surface text-muted text-xs font-semibold leading-relaxed">
-            Input akan otomatis menyesuaikan visual aksen warna aktif
+            {{ t({ id: 'Input akan otomatis menyesuaikan visual aksen warna aktif', en: 'Input will automatically adjust to active accent color', ja: '入力は自動的にアクティブなアクセントカラーに調整されます', es: 'La entrada se ajustará automáticamente al color de acento activo' }) }}
           </div>
         </div>
       </div>
 
       <div class="flex flex-col sm:flex-row sm:items-center gap-3.5 mt-2">
         <button class="px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-lg hover:shadow-primary/20 border-none" @click="savePreferences">
-          Terapkan & Simpan Preferensi
+          {{ t({ id: 'Terapkan & Simpan Preferensi', en: 'Apply & Save Preferences', ja: '適用して設定を保存', es: 'Aplicar y Guardar Preferencias' }) }}
         </button>
         <button class="px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-text bg-surface-2 border border-border hover:bg-border transition-all cursor-pointer" type="button" @click="useSystemTheme">
-          Gunakan Tema Sistem (Auto)
+          {{ t({ id: 'Gunakan Tema Sistem (Auto)', en: 'Use System Theme (Auto)', ja: 'システムテーマを使用（自動）', es: 'Usar Tema del Sistema (Auto)' }) }}
         </button>
         <p v-if="savedMessage" class="text-xs font-bold text-success">{{ savedMessage }}</p>
       </div>
@@ -354,64 +478,86 @@ onMounted(() => {
 
     <!-- Kelola Kategori Keuangan -->
     <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
-      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Kelola Kategori Keuangan</h2>
-      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Tambahkan emoji kustom dan warna untuk membedakan kategori transaksi pemasukan dan pengeluaran.</p>
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">{{ t({ id: 'Kelola Kategori Keuangan', en: 'Manage Financial Categories', ja: '財務カテゴリーの管理', es: 'Gestionar Categorías Financieras' }) }}</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">{{ t({ id: 'Tambahkan ikon kustom dan warna untuk membedakan kategori transaksi pemasukan dan pengeluaran.', en: 'Add custom icons and colors to differentiate income and expense categories.', ja: 'カスタムのアイコンと色を追加して、収入と支出のカテゴリーを区別します。', es: 'Agregue iconos y colores personalizados para diferenciar las categorías de ingresos y gastos.' }) }}</p>
       
-      <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 mt-1">
+      <div class="grid grid-cols-1 lg:grid-cols-[18.75rem_1fr] gap-6 mt-1">
         <!-- Form Editor Kategori -->
         <div class="border border-border rounded-xl p-4 bg-surface-2 flex flex-col gap-3 height-fit">
           <h3 class="text-sm font-bold text-text border-b border-border/60 pb-2">
-            {{ editingCategoryId ? 'Edit Kategori' : 'Tambah Kategori Baru' }}
+            {{ editingCategoryId ? t({ id: 'Edit Kategori', en: 'Edit Category', ja: 'カテゴリーの編集', es: 'Editar Categoría' }) : t({ id: 'Tambah Kategori Baru', en: 'Add New Category', ja: '新しいカテゴリーの追加', es: 'Agregar Nueva Categoría' }) }}
           </h3>
           
-          <div v-if="!editingCategoryId" class="flex flex-col gap-3 text-xs">
+          <div v-if="!editingCategoryId" class="flex flex-col gap-3.5 text-xs">
             <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
-              Nama Kategori
-              <input v-model="categoryForm.name" placeholder="Contoh: Belanja" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
+              {{ t({ id: 'Nama Kategori', en: 'Category Name', ja: 'カテゴリー名', es: 'Nombre de Categoría' }) }}
+              <input v-model="categoryForm.name" :placeholder="t({ id: 'Contoh: Belanja', en: 'e.g., Shopping', ja: '例: ショッピング', es: 'ej. Compras' })" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
             </label>
             <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
-              Jenis Kategori
+              {{ t({ id: 'Jenis Kategori', en: 'Category Type', ja: 'カテゴリータイプ', es: 'Tipo de Categoría' }) }}
               <select v-model="categoryForm.type" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none">
-                <option value="expense">Pengeluaran</option>
-                <option value="income">Pemasukan</option>
+                <option value="expense">{{ t({ id: 'Pengeluaran', en: 'Expense', ja: '支出', es: 'Gasto' }) }}</option>
+                <option value="income">{{ t({ id: 'Pemasukan', en: 'Income', ja: '収入', es: 'Ingreso' }) }}</option>
               </select>
             </label>
             <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
-              Warna Identitas
+              {{ t({ id: 'Warna Identitas', en: 'Color Identity', ja: '色彩識別', es: 'Identidad de Color' }) }}
               <input v-model="categoryForm.color" type="color" class="w-full h-10 p-0.5 bg-surface border border-border rounded-lg cursor-pointer" />
             </label>
+            
+            <!-- Popup Icon Picker Trigger (With Color Preview) -->
             <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
-              Simbol (Emoji)
-              <select v-model="categoryForm.icon" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none">
-                <option v-for="item in quickEmojis" :key="item" :value="item">{{ item }}</option>
-              </select>
+              {{ t({ id: 'Ikon Kategori', en: 'Category Icon', ja: 'カテゴリーアイコン', es: 'Icono de Categoría' }) }}
+              <div class="flex items-center gap-3">
+  <div class="w-11 h-11 rounded-xl border border-border flex items-center justify-center bg-surface text-text shadow-sm" :style="{ color: categoryForm.color }">
+    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" v-html="categoryIcons[categoryForm.icon || 'tag']"></svg>
+  </div>
+  <button type="button" @click="openIconPicker(false)" class="px-4 py-2.5 rounded-xl border border-border bg-surface hover:bg-border text-xs font-bold uppercase tracking-wider text-text transition-all cursor-pointer">
+    {{ t({ id: 'Pilih Ikon...', en: 'Choose Icon...', ja: 'アイコンを選択...', es: 'Elegir Icono...' }) }}
+  </button>
+</div>
+<!-- Icon Picker Popup Component -->
+<IconPickerPopup
+  :show="showIconPicker"
+  :groups="categoryExampleGroups"
+  @select="selectCategoryIcon"
+  @close="showIconPicker = false"
+/>
             </label>
+
             <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm mt-1" type="button" @click="handleAddCategory">
-              Tambah Kategori
+              {{ t({ id: 'Tambah Kategori', en: 'Add Category', ja: 'カテゴリーを追加', es: 'Agregar Categoría' }) }}
             </button>
           </div>
 
-          <div v-else class="flex flex-col gap-3 text-xs">
+          <div v-else class="flex flex-col gap-3.5 text-xs">
             <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
-              Nama Kategori
-              <input v-model="editingCategoryForm.name" placeholder="Contoh: Belanja" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
+              {{ t({ id: 'Nama Kategori', en: 'Category Name', ja: 'カテゴリー名', es: 'Nombre di Categoría' }) }}
+              <input v-model="editingCategoryForm.name" :placeholder="t({ id: 'Contoh: Belanja', en: 'e.g., Shopping', ja: '例: ショッピング', es: 'ej. Compras' })" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
             </label>
             <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
-              Warna Identitas
+              {{ t({ id: 'Warna Identitas', en: 'Color Identity', ja: '色彩識別', es: 'Identidad di Color' }) }}
               <input v-model="editingCategoryForm.color" type="color" class="w-full h-10 p-0.5 bg-surface border border-border rounded-lg cursor-pointer" />
             </label>
+            <!-- Popup Icon Picker Trigger for Editing -->
             <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
-              Simbol (Emoji)
-              <select v-model="editingCategoryForm.icon" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none">
-                <option v-for="item in quickEmojis" :key="item" :value="item">{{ item }}</option>
-              </select>
+              {{ t({ id: 'Ikon Kategori', en: 'Category Icon', ja: 'カテゴリーアイコン', es: 'Icono de Categoría' }) }}
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl border border-border flex items-center justify-center bg-surface text-text shadow-sm" :style="{ color: editingCategoryForm.color }">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" v-html="categoryIcons[editingCategoryForm.icon || 'tag']"></svg>
+                </div>
+                <button type="button" @click="openIconPicker(true)" class="px-4 py-2.5 rounded-xl border border-border bg-surface hover:bg-border text-xs font-bold uppercase tracking-wider text-text transition-all cursor-pointer">
+                  {{ t({ id: 'Pilih Ikon...', en: 'Choose Icon...', ja: 'アイコンを選択...', es: 'Elegir Icono...' }) }}
+                </button>
+              </div>
             </label>
+
             <div class="flex gap-2 mt-1">
               <button class="grow px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm" type="button" @click="handleUpdateCategory">
-                Simpan
+                {{ t({ id: 'Simpan', en: 'Save', ja: '保存', es: 'Guardar' }) }}
               </button>
               <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-text bg-surface border border-border hover:bg-surface-2 transition-all cursor-pointer" type="button" @click="cancelEditCategory">
-                Batal
+                {{ t({ id: 'Batal', en: 'Cancel', ja: 'キャンセル', es: 'Cancelar' }) }}
               </button>
             </div>
           </div>
@@ -419,18 +565,18 @@ onMounted(() => {
 
         <!-- Daftar Kategori Aktif -->
         <div class="border border-border rounded-xl p-4 bg-surface flex flex-col gap-3">
-          <h3 class="text-sm font-bold text-text border-b border-border pb-2">Daftar Kategori Terdaftar</h3>
+          <h3 class="text-sm font-bold text-text border-b border-border pb-2">{{ t({ id: 'Daftar Kategori Terdaftar', en: 'Registered Categories List', ja: '登録済みカテゴリーリスト', es: 'Lista de Categorías Registradas' }) }}</h3>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex flex-col gap-3">
               <h4 class="text-xs font-bold text-muted border-b border-border/50 pb-1.5 uppercase tracking-wider flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-success"></span> Pemasukan
+                <span class="w-1.5 h-1.5 rounded-full bg-success"></span> {{ t({ id: 'Pemasukan', en: 'Income', ja: '収入', es: 'Ingreso' }) }}
               </h4>
               <ul class="flex flex-col gap-2">
                 <li v-for="item in categories.filter(c => c.type === 'income')" :key="item.id" class="flex justify-between items-center gap-2 p-2 bg-surface-2 border border-border rounded-xl hover:bg-surface-2/65 transition-all">
                   <div class="flex items-center gap-2 text-xs font-semibold text-text">
-                    <span class="text-sm shrink-0">{{ item.icon || '' }}</span>
-                    <span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs" :style="{ background: item.color || '#16a34a' }"></span>
+                    <span class="text-sm shrink-0 flex items-center justify-center w-5 h-5 text-text" v-html="`<svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'>${categoryIcons[item.icon || 'tag'] || categoryIcons.tag}</svg>`"></span>
+                    <span class="w-2 h-2 rounded-full shrink-0 shadow-xs" :style="{ background: item.color || '#16a34a' }"></span>
                     <span class="truncate max-w-30">{{ item.name }}</span>
                   </div>
                   <div class="flex items-center gap-1">
@@ -447,12 +593,12 @@ onMounted(() => {
 
             <div class="flex flex-col gap-3">
               <h4 class="text-xs font-bold text-muted border-b border-border/50 pb-1.5 uppercase tracking-wider flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-danger"></span> Pengeluaran
+                <span class="w-1.5 h-1.5 rounded-full bg-danger"></span> {{ t({ id: 'Pengeluaran', en: 'Expense', ja: '支出', es: 'Gasto' }) }}
               </h4>
               <ul class="flex flex-col gap-2">
                 <li v-for="item in categories.filter(c => c.type === 'expense')" :key="item.id" class="flex justify-between items-center gap-2 p-2 bg-surface-2 border border-border rounded-xl hover:bg-surface-2/65 transition-all">
                   <div class="flex items-center gap-2 text-xs font-semibold text-text">
-                    <span class="text-sm shrink-0">{{ item.icon || '' }}</span>
+                    <span class="text-sm shrink-0 flex items-center justify-center w-5 h-5 text-text" v-html="`<svg class='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'>${categoryIcons[item.icon || 'tag'] || categoryIcons.tag}</svg>`"></span>
                     <span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs" :style="{ background: item.color || '#ef4444' }"></span>
                     <span class="truncate max-w-30">{{ item.name }}</span>
                   </div>
@@ -474,32 +620,32 @@ onMounted(() => {
 
     <!-- Keamanan PIN -->
     <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
-      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Keamanan PIN Aplikasi</h2>
-      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Proteksi privasi data Anda dengan 4-digit PIN saat pertama kali aplikasi dibuka.</p>
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">{{ t({ id: 'Keamanan PIN Aplikasi', en: 'Application PIN Security', ja: 'アプリケーションPINセキュリティ', es: 'Seguridad di PIN de la Aplicación' }) }}</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">{{ t({ id: 'Proteksi privasi data Anda dengan 4-digit PIN saat pertama kali aplikasi dibuka.', en: 'Protect your data privacy with a 4-digit PIN when the application first opens.', ja: 'アプリケーションを最初に開くときに4桁 of PINでデータのプライバシーを保護します。', es: 'Proteja la privacidad de sus datos con un PIN de 4 dígitos cuando abra la aplicación por primera vez.' }) }}</p>
       
       <div class="flex flex-col gap-4 mt-1 max-w-sm">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-muted uppercase tracking-wider">Status PIN Pengunci</span>
+          <span class="text-xs font-bold text-muted uppercase tracking-wider">{{ t({ id: 'Status PIN Pengunci', en: 'Lock PIN Status', ja: 'ロックPINステータス', es: 'Estado del PIN de Bloqueo' }) }}</span>
           <button 
             class="px-4 py-2 rounded-full text-xs font-bold transition-all border-none cursor-pointer"
             :class="isPinEnabled ? 'bg-danger-soft text-danger-text hover:bg-danger/25' : 'bg-primary-soft text-primary hover:bg-primary/25'"
             type="button"
             @click="togglePinState"
           >
-            {{ isPinEnabled ? 'Matikan PIN' : 'Aktifkan PIN' }}
+            {{ isPinEnabled ? t({ id: 'Matikan PIN', en: 'Disable PIN', ja: 'PINを無効にする', es: 'Desactivar PIN' }) : t({ id: 'Aktifkan PIN', en: 'Enable PIN', ja: 'PINを有効にする', es: 'Activar PIN' }) }}
           </button>
         </div>
 
         <div v-if="isPinEnabled || isSettingNewPin" class="flex flex-col gap-3 p-4 bg-surface-2 border border-border rounded-xl">
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-            {{ isPinEnabled ? 'Ubah PIN Baru (4 Digit)' : 'Atur PIN Baru (4 Digit)' }}
+            {{ isPinEnabled ? t({ id: 'Ubah PIN Baru (4 Digit)', en: 'Change New PIN (4 Digits)', ja: '新しいPINの変更 (4桁)', es: 'Cambiar PIN Nuevo (4 Dígitos)' }) : t({ id: 'Atur PIN Baru (4 Digit)', en: 'Set New PIN (4 Digits)', ja: '新しいPINの設定 (4桁)', es: 'Establecer PIN Nuevo (4 Dígitos)' }) }}
             <input 
               v-model="newPin" 
               type="password" 
               pattern="[0-9]*" 
               inputmode="numeric" 
               maxlength="4" 
-              placeholder="Masukkan 4 angka" 
+              :placeholder="t({ id: 'Masukkan 4 angka', en: 'Enter 4 numbers', ja: '4桁の数字を入力', es: 'Ingrese 4 números' })" 
               class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface text-text text-sm font-semibold focus:outline-none transition-all"
             />
           </label>
@@ -508,7 +654,7 @@ onMounted(() => {
             type="button"
             @click="saveNewPin"
           >
-            Simpan PIN
+            {{ t({ id: 'Simpan PIN', en: 'Save PIN', ja: 'PINを保存', es: 'Guardar PIN' }) }}
           </button>
         </div>
       </div>
@@ -516,15 +662,15 @@ onMounted(() => {
 
     <!-- Pengingat Catat Keuangan (Notifikasi) -->
     <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
-      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Pengingat Catat Keuangan (Push Notification)</h2>
-      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Jaga kedisiplinan mencatat keuangan Anda dengan menyalakan push notification pengingat berkala.</p>
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">{{ t({ id: 'Pengingat Catat Keuangan (Push Notification)', en: 'Financial Reminder (Push Notification)', ja: '財務リマインダー (プッシュ通知)', es: 'Recordatorio Financiero (Notificación Push)' }) }}</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">{{ t({ id: 'Jaga kedisiplinan mencatat keuangan Anda dengan menyalakan push notification pengingat berkala.', en: 'Maintain discipline in recording your finances by enabling periodic push notifications.', ja: '定期的なプッシュ通知を有効にして、財務記録の規律を維持します。', es: 'Mantenga la disciplina en el registro de sus finanzas activando notificaciones push periódicas.' }) }}</p>
 
       <div class="flex flex-col gap-4 mt-1 max-w-md">
         <div class="flex items-center justify-between border-b border-border/40 pb-3">
           <div class="flex flex-col gap-0.5">
-            <span class="text-xs font-bold text-muted uppercase tracking-wider">Izin Notifikasi Browser</span>
+            <span class="text-xs font-bold text-muted uppercase tracking-wider">{{ t({ id: 'Izin Notifikasi Browser', en: 'Browser Notification Permission', ja: 'ブラウザ通知権限', es: 'Permiso de Notificación del Navegador' }) }}</span>
             <span class="text-[10px] font-bold" :class="notificationPermission === 'granted' ? 'text-success' : notificationPermission === 'denied' ? 'text-danger' : 'text-amber-500'">
-              {{ notificationPermission === 'granted' ? 'Diizinkan (Aktif)' : notificationPermission === 'denied' ? 'Ditolak (Blokir)' : 'Meminta Persetujuan' }}
+              {{ notificationPermission === 'granted' ? t({ id: 'Diizinkan (Aktif)', en: 'Granted (Active)', ja: '許可（アクティブ）', es: 'Permitido (Activo)' }) : notificationPermission === 'denied' ? t({ id: 'Ditolak (Blokir)', en: 'Denied (Blocked)', ja: '拒否（ブロック）', es: 'Denegado (Bloqueado)' }) : t({ id: 'Meminta Persetujuan', en: 'Requesting Permission', ja: '権限を要求中', es: 'Solicitando Permiso' }) }}
             </span>
           </div>
           <button
@@ -533,26 +679,26 @@ onMounted(() => {
             type="button"
             @click="requestPermission"
           >
-            Izinkan Notifikasi
+            {{ t({ id: 'Izinkan Notifikasi', en: 'Allow Notifications', ja: '通知を許可', es: 'Permitir Notificaciones' }) }}
           </button>
           <span v-else class="text-xs font-bold text-success flex items-center gap-1">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-            Aktif
+            {{ t({ id: 'Aktif', en: 'Active', ja: '有効', es: 'Activo' }) }}
           </span>
         </div>
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider grow">
-            Frekuensi Pengingat
+            {{ t({ id: 'Frekuensi Pengingat', en: 'Reminder Frequency', ja: 'リマインダーの頻度', es: 'Frecuencia de Recordatorio' }) }}
             <select
               :value="reminderInterval"
               @change="setReminderInterval(($event.target as HTMLSelectElement).value as any)"
               class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all"
             >
-              <option value="off">Matikan Pengingat</option>
-              <option value="daily">Setiap Hari (Harian)</option>
-              <option value="weekly">Setiap Minggu (Mingguan)</option>
-              <option value="monthly">Setiap Bulan (Bulanan)</option>
+              <option value="off">{{ t({ id: 'Matikan Pengingat', en: 'Disable Reminders', ja: 'リマインダーを無効化', es: 'Desactivar Recordatorios' }) }}</option>
+              <option value="daily">{{ t({ id: 'Setiap Hari (Harian)', en: 'Daily', ja: '毎日 (日次)', es: 'Diario' }) }}</option>
+              <option value="weekly">{{ t({ id: 'Setiap Minggu (Mingguan)', en: 'Weekly', ja: '毎週 (週次)', es: 'Semanal' }) }}</option>
+              <option value="monthly">{{ t({ id: 'Setiap Bulan (Bulanan)', en: 'Monthly', ja: '毎月 (月次)', es: 'Mensual' }) }}</option>
             </select>
           </label>
 
@@ -562,7 +708,7 @@ onMounted(() => {
             @click="triggerImmediateTestNotification"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
-            Uji Coba Notifikasi
+            {{ t({ id: 'Uji Coba Notifikasi', en: 'Test Notification', ja: 'テスト通知', es: 'Probar Notificación' }) }}
           </button>
         </div>
       </div>
@@ -570,23 +716,76 @@ onMounted(() => {
 
     <!-- Backup & Restore -->
     <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
-      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">Backup & Restore Data</h2>
-      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">Simpan salinan data transaksi Anda ke format JSON, atau pulihkan data dari berkas pencadangan lama.</p>
+      <h2 class="text-base font-bold text-text tracking-tight border-b border-border pb-3">{{ t({ id: 'Backup & Restore Data', en: 'Data Backup & Restore', ja: 'データのバックアップと復元', es: 'Respaldo y Restauración de Datos' }) }}</h2>
+      <p class="text-xs text-muted leading-relaxed font-semibold -mt-2">{{ t({ id: 'Simpan salinan data transaksi Anda ke format JSON, atau pulihkan data dari berkas pencadangan lama.', en: 'Save a copy of your transaction data to JSON format, or restore data from an old backup file.', ja: '取引データのコピーをJSON形式で保存するか、古いバックアップファイルからデータを復元します。', es: 'Guarde una copia de los datos de sus transacciones en formato JSON o restaure los datos desde un archivo de respaldo antiguo.' }) }}</p>
       
       <div class="flex flex-wrap gap-3.5 mt-1">
         <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-md hover:shadow-primary/20 border-none" type="button" @click="exportBackup">
-          Ekspor Data (.json)
+          {{ t({ id: 'Ekspor Data (.json)', en: 'Export Data (.json)', ja: 'データのエクスポート (.json)', es: 'Exportar Datos (.json)' }) }}
         </button>
         
         <label class="inline-flex items-center justify-center border border-border rounded-full px-5 py-3 bg-surface-2 text-text text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-border transition-all mr-auto">
-          <span>Impor Data (.json)</span>
+          <span>{{ t({ id: 'Impor Data (.json)', en: 'Import Data (.json)', ja: 'データのインポート (.json)', es: 'Importar Datos (.json)' }) }}</span>
           <input type="file" accept=".json" @change="handleFileImport" class="hidden" />
         </label>
 
         <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-md border-none" type="button" @click="handleResetAllData">
-          Reset Semua Data (Mulai Baru)
+          {{ t({ id: 'Reset Semua Data (Mulai Baru)', en: 'Reset All Data (Start Fresh)', ja: 'すべてのデータをリセット (新規開始)', es: 'Restablecer Todos los Datos (Empezar de Nuevo)' }) }}
         </button>
       </div>
     </section>
+
+    <!-- Modal Icon Picker Popup -->
+    <div v-if="showIconPicker" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs select-none animate-in fade-in duration-200">
+      <div class="bg-surface border border-border rounded-3xl w-full max-w-md shadow-2xl p-5 lg:p-6 flex flex-col gap-4 max-h-[85vh] relative animate-in zoom-in-95 duration-200">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-border/60 pb-3">
+          <h3 class="text-sm font-bold text-text">
+            {{ t({ id: 'Pilih Ikon Kategori', en: 'Select Category Icon', ja: 'カテゴリーアイコンの選択', es: 'Seleccionar Icono de Categoría' }) }}
+          </h3>
+          <button @click="showIconPicker = false" class="w-8 h-8 rounded-full flex items-center justify-center bg-surface-2 hover:bg-border text-muted hover:text-text border-none cursor-pointer transition-all">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input
+            v-model="iconSearchQuery"
+            :placeholder="t({ id: 'Cari nama ikon / kategori...', en: 'Search icon / category name...', ja: 'アイコンやカテゴリーを検索...', es: 'Buscar icono / nombre de categoría...' })"
+            class="w-full pl-10 pr-4 py-2.5 border border-border rounded-xl bg-surface-2 text-text text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft focus:border-primary transition-all"
+            autofocus
+          />
+        </div>
+
+        <!-- Content Area -->
+        <div class="overflow-y-auto flex-1 pr-1 flex flex-col gap-4">
+          <div v-for="group in filteredIconGroups" :key="group.name" class="flex flex-col gap-1.5">
+            <span class="text-[9px] font-extrabold text-muted uppercase tracking-widest border-b border-border pb-1">
+              {{ t(group.nameTranslations as any) }}
+            </span>
+            <div class="grid grid-cols-6 gap-2 mt-1">
+              <button
+                v-for="icon in group.icons"
+                :key="icon.key"
+                type="button"
+                class="aspect-square rounded-xl border border-border flex items-center justify-center cursor-pointer transition-all hover:bg-primary-soft hover:text-primary"
+                :class="(isEditingIconPicker ? editingCategoryForm.icon : categoryForm.icon) === icon.key ? 'border-primary bg-primary-soft text-primary shadow-xs ring-2 ring-primary-soft' : 'bg-surface-2 text-text'"
+                @click="selectCategoryIcon(icon.key)"
+                :title="t(icon.labelTranslations as any)"
+              >
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" v-html="categoryIcons[icon.key]"></svg>
+              </button>
+            </div>
+          </div>
+          <!-- Empty State -->
+          <div v-if="filteredIconGroups.length === 0" class="flex flex-col items-center justify-center py-8 text-center">
+            <svg class="w-8 h-8 text-muted mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            <p class="text-xs font-bold text-muted">{{ t({ id: 'Ikon tidak ditemukan', en: 'No icons found', ja: 'アイコンが見つかりません', es: 'No se encontraron iconos' }) }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

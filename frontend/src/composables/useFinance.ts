@@ -1,6 +1,7 @@
 import { computed, onMounted, watch } from 'vue'
 import * as XLSX from 'xlsx'
 import { useUi } from './useUi'
+import { formatMoney } from './useUserSettings'
 import { 
   // State refs
   transactions,
@@ -262,7 +263,7 @@ export function useFinance() {
         date: currentDate()
       }, true)
     }
-    pushToast(`Berhasil menyetor Rp ${depositAmount.toLocaleString('id-ID')} ke ${goal.name}`, 'success')
+    pushToast(`Berhasil menyetor ${formatMoney(depositAmount)} ke ${goal.name}`, 'success')
     return true
   }
 
@@ -623,7 +624,7 @@ export function useFinance() {
     if (balance.value < 0) insights.push('Cashflow sedang negatif. Prioritaskan memangkas pengeluaran utama bulan ini.')
     if (firstAlert) insights.push(firstAlert.message)
     if (topExpense) insights.push(`Kategori ${topExpense[0]} menjadi pengeluaran terbesar saat ini.`)
-    if (monthlyComparison.value.expenseChange > 0 && monthlyComparison.value.previousMonth) insights.push(`Pengeluaran naik Rp ${monthlyComparison.value.expenseChange.toLocaleString('id-ID')} dibanding ${monthlyComparison.value.previousMonth}.`)
+    if (monthlyComparison.value.expenseChange > 0 && monthlyComparison.value.previousMonth) insights.push(`Pengeluaran naik ${formatMoney(monthlyComparison.value.expenseChange)} dibanding ${monthlyComparison.value.previousMonth}.`)
     if (topIncome) insights.push(`Sumber pemasukan terbesar Anda berasal dari ${topIncome[0]}.`)
     if (!insights.length) insights.push('Data masih sehat. Pertahankan ritme pemasukan dan pengeluaran seperti sekarang.')
     return insights
@@ -641,16 +642,16 @@ export function useFinance() {
     </style></head><body>
     <h1>Laporan Keuangan ${currentMonth()}</h1>
     <div class="meta">
-      <div class="box"><strong>Pemasukan</strong><div>Rp ${incomeTotal.value.toLocaleString('id-ID')}</div></div>
-      <div class="box"><strong>Pengeluaran</strong><div>Rp ${expenseTotal.value.toLocaleString('id-ID')}</div></div>
-      <div class="box"><strong>Saldo</strong><div>Rp ${balance.value.toLocaleString('id-ID')}</div></div>
-      <div class="box"><strong>Aset</strong><div>Rp ${totalAssets.value.toLocaleString('id-ID')}</div></div>
+      <div class="box"><strong>Pemasukan</strong><div>${formatMoney(incomeTotal.value)}</div></div>
+      <div class="box"><strong>Pengeluaran</strong><div>${formatMoney(expenseTotal.value)}</div></div>
+      <div class="box"><strong>Saldo</strong><div>${formatMoney(balance.value)}</div></div>
+      <div class="box"><strong>Aset</strong><div>${formatMoney(totalAssets.value)}</div></div>
     </div>
     <h2>Insight</h2>
     <ul>${automatedInsights.value.map((item) => `<li>${item}</li>`).join('')}</ul>
     <h2>Transaksi</h2>
     <table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Kategori</th><th>Nominal</th><th>Catatan</th></tr></thead>
-    <tbody>${filteredTransactions.value.map((item) => `<tr><td>${item.date}</td><td>${item.type}</td><td>${item.category}</td><td>Rp ${item.amount.toLocaleString('id-ID')}</td><td>${item.note || '-'}</td></tr>`).join('')}</tbody></table>
+    <tbody>${filteredTransactions.value.map((item) => `<tr><td>${item.date}</td><td>${item.type}</td><td>${item.category}</td><td>${formatMoney(item.amount)}</td><td>${item.note || '-'}</td></tr>`).join('')}</tbody></table>
     </body></html>
   `
 
@@ -715,12 +716,12 @@ export function useFinance() {
 
   const exportSummaryText = computed(() => [
     `Laporan bulan ${currentMonth()}`,
-    `Total pemasukan: Rp ${incomeTotal.value.toLocaleString('id-ID')}`,
-    `Total pengeluaran: Rp ${expenseTotal.value.toLocaleString('id-ID')}`,
-    `Saldo: Rp ${balance.value.toLocaleString('id-ID')}`,
-    `Aset: Rp ${totalAssets.value.toLocaleString('id-ID')}`,
-    `Utang terbuka: Rp ${totalDebt.value.toLocaleString('id-ID')}`,
-    `Piutang terbuka: Rp ${totalReceivable.value.toLocaleString('id-ID')}`,
+    `Total pemasukan: ${formatMoney(incomeTotal.value)}`,
+    `Total pengeluaran: ${formatMoney(expenseTotal.value)}`,
+    `Saldo: ${formatMoney(balance.value)}`,
+    `Aset: ${formatMoney(totalAssets.value)}`,
+    `Utang terbuka: ${formatMoney(totalDebt.value)}`,
+    `Piutang terbuka: ${formatMoney(totalReceivable.value)}`,
     '',
     'Insight:',
     ...automatedInsights.value.map((item) => `- ${item}`),

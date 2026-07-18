@@ -5,6 +5,7 @@ import { applyThemeSettings, getThemeSettings, type ThemeSettings, themePresets,
 import { useUi } from '../composables/useUi'
 import { useFinance } from '../composables/useFinance'
 import { usePwaInstall } from '../composables/usePwaInstall'
+import { appMode, t, currencySymbol, handleNominalKeydown, getDynamicStep } from '../composables/useUserSettings'
 
 const theme = ref<ThemeSettings>(getThemeSettings())
 const sidebarOpen = ref(false)
@@ -54,7 +55,7 @@ watch(() => route.path, () => {
 })
 
 const syncViewport = () => {
-  isDesktop.value = window.innerWidth > 900
+  isDesktop.value = window.innerWidth >= 1024
   if (isDesktop.value) {
     sidebarOpen.value = true
   }
@@ -202,7 +203,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="grid lg:grid-cols-[280px_1fr] h-screen bg-bg-soft relative overflow-hidden">
+  <div class="grid lg:grid-cols-[17.5rem_1fr] h-screen bg-bg-soft relative overflow-hidden">
     <!-- Menu Toggle (Mobile) -->
     <button
       v-if="!sidebarOpen"
@@ -247,7 +248,7 @@ onBeforeUnmount(() => {
       <!-- Brand Block -->
       <div class="brand-block flex flex-col gap-1 border-b border-white/10 pb-4">
         <div>
-          <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">Personal Finance</p>
+          <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">{{ t({ id: 'Personal Finance', en: 'Personal Finance', ja: '個人財務', es: 'Finanzas Personales' }) }}</p>
           <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
             <svg class="w-6 h-6 text-primary-muted animate-pulse" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.267-.267c.947-.946 2.482-.946 3.428 0l.27.27a2.424 2.424 0 010 3.428l-.27.27c-.947.946-2.482.946-3.428 0l-.267-.267M12 6.75V3m0 18v-3.75M8.25 12h7.5" />
@@ -255,7 +256,7 @@ onBeforeUnmount(() => {
             MyFinanceFlow
           </h2>
         </div>
-        <p class="text-xs text-white/70 leading-relaxed mt-1">Pantau uangmu dengan lebih tenang dan terarah.</p>
+        <p class="text-xs text-white/70 leading-relaxed mt-1">{{ t({ id: 'Pantau uangmu dengan lebih tenang dan terarah.', en: 'Track your money with peace of mind and direction.', ja: '安心と方向性を持ってあなたのお金を追跡します。', es: 'Rastree su dinero con tranquilidad y dirección.' }) }}</p>
       </div>
 
       <!-- Navigation Links -->
@@ -267,33 +268,33 @@ onBeforeUnmount(() => {
             <rect x="14" y="12" width="7" height="9" rx="1" />
             <rect x="3" y="16" width="7" height="5" rx="1" />
           </svg>
-          <span>Dashboard</span>
+          <span>{{ t({ id: 'Dashboard', en: 'Dashboard', ja: 'ダッシュボード', es: 'Tablero' }) }}</span>
         </RouterLink>
         <RouterLink to="/transactions" class="nav-link group" @click="closeSidebar">
           <svg class="w-5 h-5 opacity-80 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="5" width="20" height="14" rx="2" />
             <line x1="2" y1="10" x2="22" y2="10" />
           </svg>
-          <span>Transaksi</span>
+          <span>{{ t({ id: 'Transaksi', en: 'Transactions', ja: '取引履歴', es: 'Transacciones' }) }}</span>
         </RouterLink>
         <RouterLink to="/planning" class="nav-link group" @click="closeSidebar">
           <svg class="w-5 h-5 opacity-80 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>
-          <span>Planning</span>
+          <span>{{ t({ id: 'Planning', en: 'Planning', ja: '計画', es: 'Planificación' }) }}</span>
         </RouterLink>
         <RouterLink to="/savings-goal" class="nav-link group" @click="closeSidebar">
           <svg class="w-5 h-5 opacity-80 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
           </svg>
-          <span>Target Tabungan</span>
+          <span>{{ t({ id: 'Target Tabungan', en: 'Savings Goal', ja: '貯蓄目標', es: 'Meta de Ahorro' }) }}</span>
         </RouterLink>
         <RouterLink to="/assets" class="nav-link group" @click="closeSidebar">
           <svg class="w-5 h-5 opacity-80 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="7" width="20" height="14" rx="2" />
             <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
           </svg>
-          <span>Aset</span>
+          <span>{{ t({ id: 'Aset', en: 'Assets', ja: '資産', es: 'Activos' }) }}</span>
         </RouterLink>
         <RouterLink to="/debts" class="nav-link group" @click="closeSidebar">
           <svg class="w-5 h-5 opacity-80 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -301,7 +302,7 @@ onBeforeUnmount(() => {
             <path d="M14 3v4h4" />
             <circle cx="10" cy="12" r="2" />
           </svg>
-          <span>Utang Piutang</span>
+          <span>{{ t({ id: 'Utang Piutang', en: 'Debts & Receivables', ja: '債務と債権', es: 'Deudas y Cobros' }) }}</span>
         </RouterLink>
         <RouterLink to="/reports" class="nav-link group" @click="closeSidebar">
           <svg class="w-5 h-5 opacity-80 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -309,16 +310,15 @@ onBeforeUnmount(() => {
             <line x1="12" y1="20" x2="12" y2="4" />
             <line x1="6" y1="20" x2="6" y2="14" />
           </svg>
-          <span>Reports</span>
+          <span>{{ t({ id: 'Reports', en: 'Reports', ja: 'レポート', es: 'Informes' }) }}</span>
         </RouterLink>
         <RouterLink to="/settings" class="nav-link group" @click="closeSidebar">
           <svg class="w-5 h-5 opacity-80 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
-          <span>Settings</span>
+          <span>{{ t({ id: 'Settings', en: 'Settings', ja: '設定', es: 'Ajustes' }) }}</span>
         </RouterLink>
-
       </nav>
 
       <!-- PWA Install Banner (Sidebar bottom) -->
@@ -374,7 +374,7 @@ onBeforeUnmount(() => {
           <img src="https://avatars.githubusercontent.com/u/140568381?v=4" alt="XNS-ivy GitHub Profile" class="w-10 h-10 rounded-full border border-border/80 shadow-xs shrink-0" />
           <div class="flex flex-col text-left">
             <span class="font-bold text-text">Developed by XNS-ivy</span>
-            <span class="font-medium text-[10px] text-muted">Aplikasi Laporan Keuangan Pribadi (Offline-First)</span>
+            <span class="font-medium text-[10px] text-muted">{{ t({ id: 'Aplikasi Laporan Keuangan Pribadi (Offline-First)', en: 'Personal Finance App (Offline-First)', ja: '個人財務アプリ (オフラインファースト)', es: 'Aplicación de Finanzas Personales (Offline-First)' }) }}</span>
           </div>
         </div>
         <div class="flex items-center gap-4 font-semibold text-xs">
@@ -386,9 +386,9 @@ onBeforeUnmount(() => {
              Email
           </a>
           <span class="text-border/60">|</span>
-          <RouterLink to="/privacy" class="hover:text-primary transition-colors">Kebijakan Privasi</RouterLink>
+          <RouterLink to="/privacy" class="hover:text-primary transition-colors">{{ t({ id: 'Kebijakan Privasi', en: 'Privacy Policy', ja: 'プライバシーポリシー', es: 'Política de Privacidad' }) }}</RouterLink>
           <span class="text-border/60">|</span>
-          <RouterLink to="/terms" class="hover:text-primary transition-colors">Ketentuan Layanan</RouterLink>
+          <RouterLink to="/terms" class="hover:text-primary transition-colors">{{ t({ id: 'Ketentuan Layanan', en: 'Terms of Service', ja: '利用規約', es: 'Términos de Servicio' }) }}</RouterLink>
         </div>
       </footer>
     </main>
@@ -414,28 +414,28 @@ onBeforeUnmount(() => {
         class="bg-surface border border-border/50 rounded-2xl p-3.5 shadow-2xl w-48 mb-3.5 flex flex-col gap-2.5 animate-in fade-in slide-in-from-bottom-4 duration-200"
       >
         <div class="text-[9px] font-bold text-muted uppercase tracking-widest px-1 pb-1 border-b border-border/50">
-          Utilitas Cepat
+          {{ t({ id: 'Utilitas Cepat', en: 'Quick Utilities', ja: 'クイックユーティリティ', es: 'Utilidades Rápidas' }) }}
         </div>
         <button 
           class="w-full text-left px-2 py-2 rounded-xl text-xs font-bold text-text hover:bg-slate-500/10 cursor-pointer flex items-center gap-2.5 border-none bg-transparent"
           @click="showQuickTxModal = true"
         >
           <svg class="w-4 h-4 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-          Tambah Transaksi
+          {{ t({ id: 'Tambah Transaksi', en: 'Add Transaction', ja: '取引を追加', es: 'Agregar Transacción' }) }}
         </button>
         <button 
           class="w-full text-left px-2 py-2 rounded-xl text-xs font-bold text-text hover:bg-slate-500/10 cursor-pointer flex items-center gap-2.5 border-none bg-transparent"
           @click="cycleTheme"
         >
           <svg class="w-4 h-4 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></svg>
-          Ganti Tema Cepat
+          {{ t({ id: 'Ganti Tema Cepat', en: 'Quick Theme Switch', ja: 'クイックテーマ切り替え', es: 'Cambio Rápido de Tema' }) }}
         </button>
         <button 
           class="w-full text-left px-2 py-2 rounded-xl text-xs font-bold text-text hover:bg-slate-500/10 cursor-pointer flex items-center gap-2.5 border-none bg-transparent"
           @click="downloadBackup"
         >
           <svg class="w-4 h-4 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-          Ekspor Backup
+          {{ t({ id: 'Ekspor Backup', en: 'Export Backup', ja: 'バックアップのエクスポート', es: 'Exportar Respaldo' }) }}
         </button>
         <button
           v-if="canInstall && !isInstalled"
@@ -470,8 +470,8 @@ onBeforeUnmount(() => {
         <!-- Modal Header -->
         <header class="flex items-center justify-between border-b border-border px-6 py-4.5">
           <div>
-            <span class="text-[10px] font-bold text-primary uppercase tracking-widest">Pintasan Cepat</span>
-            <h3 class="text-base font-extrabold text-text mt-0.5">Tambah Transaksi Baru</h3>
+            <span class="text-[10px] font-bold text-primary uppercase tracking-widest">{{ t({ id: 'Pintasan Cepat', en: 'Quick Shortcut', ja: 'クイックショートカット', es: 'Acceso Rápido' }) }}</span>
+            <h3 class="text-base font-extrabold text-text mt-0.5">{{ t({ id: 'Tambah Transaksi Baru', en: 'Add New Transaction', ja: '新しい取引の追加', es: 'Agregar Nueva Transacción' }) }}</h3>
           </div>
           <button 
             class="text-muted hover:text-text text-lg font-bold border-none bg-transparent cursor-pointer"
@@ -484,33 +484,33 @@ onBeforeUnmount(() => {
         <!-- Modal Form Body -->
         <div class="p-6 flex flex-col gap-4 text-text">
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-            Jenis Transaksi
+            {{ t({ id: 'Jenis Transaksi', en: 'Transaction Type', ja: '取引タイプ', es: 'Tipo de Transacción' }) }}
             <select v-model="quickTxForm.type" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none transition-all">
-              <option value="expense">Pengeluaran</option>
-              <option value="income">Pemasukan</option>
+              <option value="expense">{{ t({ id: 'Pengeluaran', en: 'Expense', ja: '支出', es: 'Gasto' }) }}</option>
+              <option value="income">{{ t({ id: 'Pemasukan', en: 'Income', ja: '収入', es: 'Ingreso' }) }}</option>
             </select>
           </label>
 
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-            Nominal (Rp)
-            <input v-model="quickTxForm.amount" type="number" min="0" placeholder="10000" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
+            {{ t({ id: 'Nominal', en: 'Amount', ja: '金額', es: 'Monto' }) }} ({{ currencySymbol }})
+            <input v-model="quickTxForm.amount" type="number" min="0" :step="getDynamicStep(quickTxForm.amount)" @keydown="handleNominalKeydown" placeholder="10000" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
           </label>
 
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-            Kategori
-            <input v-model="quickTxForm.category" list="quick-categories" placeholder="Tulis atau pilih kategori..." class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
+            {{ t({ id: 'Kategori', en: 'Category', ja: 'カテゴリー', es: 'Categoría' }) }}
+            <input v-model="quickTxForm.category" list="quick-categories" :placeholder="t({ id: 'Tulis atau pilih kategori...', en: 'Write or choose category...', ja: 'カテゴリーを入力または選択...', es: 'Escribir o elegir categoría...' })" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
             <datalist id="quick-categories">
               <option v-for="cat in filteredCategories" :key="cat.id" :value="cat.name">{{ cat.name }}</option>
             </datalist>
           </label>
 
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-            Catatan
-            <input v-model="quickTxForm.note" placeholder="Makan siang, freelance, dll." class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
+            {{ t({ id: 'Catatan', en: 'Note', ja: 'メモ', es: 'Nota' }) }}
+            <input v-model="quickTxForm.note" :placeholder="t({ id: 'Makan siang, freelance, dll.', en: 'Lunch, freelance, etc.', ja: '昼食、フリーランスなど', es: 'Almuerzo, freelance, etc.' })" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
           </label>
 
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-            Tanggal
+            {{ t({ id: 'Tanggal', en: 'Date', ja: '日付', es: 'Fecha' }) }}
             <input v-model="quickTxForm.date" type="date" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:outline-none transition-all" />
           </label>
 
@@ -518,7 +518,7 @@ onBeforeUnmount(() => {
             class="w-full mt-2 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:opacity-90 active:scale-95 transition-all cursor-pointer border-none"
             @click="submitQuickTx"
           >
-            Simpan Transaksi
+            {{ t({ id: 'Simpan Transaksi', en: 'Save Transaction', ja: '取引を保存', es: 'Guardar Transacción' }) }}
           </button>
         </div>
       </div>
