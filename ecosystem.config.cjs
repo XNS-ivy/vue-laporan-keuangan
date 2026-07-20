@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "vue-laporan-keuangan",
       script: "bun",
-      args: "run preview -- --host 0.0.0.0",
+      args: "run preview",
       cwd: "./",
       interpreter: "none",
       instances: 1,
