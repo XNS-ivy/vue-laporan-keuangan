@@ -2,10 +2,9 @@ module.exports = {
   apps: [
     {
       name: "vue-laporan-keuangan",
-      script: "bun",
-      args: "run preview",
+      script: "node_modules/vite/bin/vite.js",
+      args: "preview --host 0.0.0.0 --port 3020",
       cwd: "./frontend",
-      interpreter: "none",
       instances: 1,
       autorestart: true,
       watch: false,
