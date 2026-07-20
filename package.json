@@ -1,0 +1,19 @@
+{
+  "name": "vue-laporan-keuangan-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun --cwd frontend run dev",
+    "build": "bun --cwd frontend run build",
+    "preview": "bun --cwd frontend run preview",
+    "type-check": "bun --cwd frontend run type-check"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "bun": ">=1.0.0"
+  }
+}

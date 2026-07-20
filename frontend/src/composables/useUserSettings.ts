@@ -24,22 +24,109 @@ export const currencySymbol = computed(() => {
   }
 })
 
-export const formatMoney = (amount: number | string): string => {
+export const exchangeRates = ref<Record<CurrencyType, number>>({
+  IDR: 1,
+  USD: 16000,
+  EUR: 17500,
+  SGD: 12000,
+  JPY: 105,
+  GBP: 20500,
+})
+
+export const exchangeRateLastUpdated = ref<string | null>(null)
+export const isFetchingRates = ref(false)
+
+const ratesStorageKey = 'finance-flow-live-exchange-rates'
+
+export const loadCachedRates = () => {
+  try {
+    const raw = localStorage.getItem(ratesStorageKey)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed.rates) {
+        exchangeRates.value = { ...exchangeRates.value, ...parsed.rates }
+      }
+      if (parsed.lastUpdated) {
+        exchangeRateLastUpdated.value = parsed.lastUpdated
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse cached exchange rates', e)
+  }
+}
+
+export const fetchRealtimeRates = async () => {
+  isFetchingRates.value = true
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/IDR')
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    if (data && data.rates) {
+      const newRates: Record<CurrencyType, number> = {
+        IDR: 1,
+        USD: data.rates.USD ? Math.round(1 / data.rates.USD) : exchangeRates.value.USD,
+        EUR: data.rates.EUR ? Math.round(1 / data.rates.EUR) : exchangeRates.value.EUR,
+        SGD: data.rates.SGD ? Math.round(1 / data.rates.SGD) : exchangeRates.value.SGD,
+        JPY: data.rates.JPY ? Math.round(1 / data.rates.JPY) : exchangeRates.value.JPY,
+        GBP: data.rates.GBP ? Math.round(1 / data.rates.GBP) : exchangeRates.value.GBP,
+      }
+      exchangeRates.value = newRates
+      const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' (' + new Date().toLocaleDateString('id-ID') + ')'
+      exchangeRateLastUpdated.value = timestamp
+      localStorage.setItem(ratesStorageKey, JSON.stringify({
+        rates: newRates,
+        lastUpdated: timestamp
+      }))
+    }
+  } catch (err) {
+    console.warn('Could not fetch real-time exchange rates, using cached/fallback rates:', err)
+  } finally {
+    isFetchingRates.value = false
+  }
+}
+
+// Auto load cached rates and attempt live refresh
+loadCachedRates()
+fetchRealtimeRates()
+
+export const convertCurrency = (
+  amountInBase: number, 
+  targetCurrency: CurrencyType = currency.value, 
+  sourceCurrency: CurrencyType = 'IDR'
+): number => {
+  const sourceRate = exchangeRates.value[sourceCurrency] || 1
+  const amountInIdr = sourceCurrency === 'IDR' ? amountInBase : amountInBase * sourceRate
+  const targetRate = exchangeRates.value[targetCurrency] || 1
+  return amountInIdr / targetRate
+}
+
+export const convertToIdr = (amountInSource: number, sourceCurrency: CurrencyType): number => {
+  const rate = exchangeRates.value[sourceCurrency] || 1
+  return amountInSource * rate
+}
+
+export const formatMoney = (
+  amount: number | string, 
+  sourceCurrency: CurrencyType = 'IDR',
+  targetCurrency: CurrencyType = currency.value
+): string => {
   const val = typeof amount === 'string' ? parseFloat(amount) || 0 : amount || 0
-  switch (currency.value) {
+  const converted = convertCurrency(val, targetCurrency, sourceCurrency)
+
+  switch (targetCurrency) {
     case 'USD':
-      return `$${val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+      return `$${converted.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
     case 'EUR':
-      return `€${val.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+      return `€${converted.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
     case 'SGD':
-      return `S$${val.toLocaleString('en-SG', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+      return `S$${converted.toLocaleString('en-SG', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
     case 'JPY':
-      return `¥${val.toLocaleString('ja-JP', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+      return `¥${converted.toLocaleString('ja-JP', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
     case 'GBP':
-      return `£${val.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+      return `£${converted.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
     case 'IDR':
     default:
-      return `Rp ${val.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+      return `Rp ${converted.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
   }
 }
 

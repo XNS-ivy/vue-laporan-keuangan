@@ -20,6 +20,7 @@ Semua rute didaftarkan di dalam berkas [router/index.ts](file:///home/m-riski/Pr
 | `/assets` | `assets` | `AssetsView.vue` | Pencatatan aset likuid, tabungan bank, dan portofolio investasi. |
 | `/debts` | `debts` | `DebtsView.vue` | Pencatatan utang ke pihak lain dan piutang yang harus ditagih. |
 | `/reports` | `reports` | `ReportsView.vue` | Laporan komprehensif, distribusi pengeluaran, dan grafik candlestick arus kas. |
+| `/utilities` | `utilities` | `UtilitiesView.vue` | Hub kalkulator keuangan (Zakat, PPh 21, Dana Darurat, Investasi, Bill Splitter, DTI). |
 | `/settings` | `settings` | `SettingsView.vue` | Pengaturan PIN keamanan, manajemen kategori transaksi, dan preferensi tema. |
 | `/privacy` | `privacy` | `PrivacyPolicyView.vue` | Halaman Kebijakan Privasi terkait keamanan penyimpanan data lokal peramban. |
 | `/terms` | `terms` | `TermsOfServiceView.vue` | Halaman Ketentuan Layanan penggunaan aplikasi MyFinanceFlow secara mandiri. |

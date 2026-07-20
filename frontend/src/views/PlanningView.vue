@@ -163,7 +163,7 @@ const applySmartBudget = () => {
   <div class="flex flex-col gap-6">
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
       <div>
-        <p class="uppercase tracking-widest text-[10px] text-muted font-bold">{{ t({ id: 'Planning', en: 'Planning', ja: 'プランニング', es: 'Planificación' }) }}</p>
+        <p class="uppercase tracking-widest text-xs text-muted font-bold">{{ t({ id: 'Planning', en: 'Planning', ja: 'プランニング', es: 'Planificación' }) }}</p>
         <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">{{ t({ id: 'Atur Batas Belanja & Anggaran Bulananmu', en: 'Set Spending Limits & Monthly Budget', ja: '支出制限と月間予算を設定しましょう', es: 'Establezca límites de gasto y presupuesto mensual' }) }}</h1>
         <p class="text-xs text-muted leading-relaxed font-semibold">{{ t({ id: 'Anggaran belanja dilengkapi dengan peringatan otomatis dan perbandingan dari bulan ke bulan.', en: 'Shopping budgets are equipped with automatic alerts and month-to-month comparisons.', ja: '買い物予算には、自動アラートと前月比の比較機能が搭載されています。', es: 'Los presupuestos de compras están equipados con alertas automáticas y comparaciones mes a mes.' }) }}</p>
       </div>
@@ -199,7 +199,7 @@ const applySmartBudget = () => {
               class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" 
             />
           </label>
-          <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm" type="button" @click="applySmartBudget">
+          <button class="px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm" type="button" @click="applySmartBudget">
             {{ t({ id: 'Terapkan Anggaran', en: 'Apply Budget', ja: '予算を適用', es: 'Aplicar Presupuesto' }) }}
           </button>
         </div>
@@ -208,17 +208,17 @@ const applySmartBudget = () => {
           <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs border-l-4 border-l-primary">
             <span>{{ t({ id: '50% Kebutuhan (Needs)', en: '50% Needs', ja: '50% 必要経費 (ニーズ)', es: '50% Necesidades' }) }}</span>
             <strong class="text-sm font-bold text-text mt-0.5">{{ formatMoney(smartNeeds) }}</strong>
-            <span class="text-[10px] text-muted font-normal mt-1 leading-tight">{{ t({ id: 'Makanan, tagihan, transportasi wajib, dll.', en: 'Food, bills, mandatory transport, etc.', ja: '食費、光熱費、必須の交通費など。', es: 'Comida, facturas, transporte obligatorio, etc.' }) }}</span>
+            <span class="text-xs text-muted font-normal mt-1 leading-tight">{{ t({ id: 'Makanan, tagihan, transportasi wajib, dll.', en: 'Food, bills, mandatory transport, etc.', ja: '食費、光熱費、必須の交通費など。', es: 'Comida, facturas, transporte obligatorio, etc.' }) }}</span>
           </div>
           <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs border-l-4 border-l-amber-500">
             <span>{{ t({ id: '30% Keinginan (Wants)', en: '30% Wants', ja: '30% 娯楽費 (ウォンツ)', es: '30% Deseos' }) }}</span>
             <strong class="text-sm font-bold text-text mt-0.5">{{ formatMoney(smartWants) }}</strong>
-            <span class="text-[10px] text-muted font-normal mt-1 leading-tight">{{ t({ id: 'Hiburan, belanja barang hobi, langganan, dll.', en: 'Entertainment, hobbies, subscriptions, etc.', ja: 'エンターテイメント、趣味、サブスクリプションなど。', es: 'Entretenimiento, pasatiempos, suscripciones, etc.' }) }}</span>
+            <span class="text-xs text-muted font-normal mt-1 leading-tight">{{ t({ id: 'Hiburan, belanja barang hobi, langganan, dll.', en: 'Entertainment, hobbies, subscriptions, etc.', ja: 'エンターテイメント、趣味、サブスクリプションなど。', es: 'Entretenimiento, pasatiempos, suscripciones, etc.' }) }}</span>
           </div>
           <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-1 shadow-xs border-l-4 border-l-success">
             <span>{{ t({ id: '20% Tabungan (Savings)', en: '20% Savings', ja: '20% 貯蓄 (セービング)', es: '20% Ahorros' }) }}</span>
             <strong class="text-sm font-bold text-text mt-0.5">{{ formatMoney(smartSavings) }}</strong>
-            <span class="text-[10px] text-muted font-normal mt-1 leading-tight">{{ t({ id: 'Tabungan darurat, investasi, pelunasan utang, dll.', en: 'Emergency savings, investment, debt payoff, etc.', ja: '緊急時の貯蓄、投資、債務の返済など。', es: 'Ahorros de emergencia, inversión, pago de deudas, etc.' }) }}</span>
+            <span class="text-xs text-muted font-normal mt-1 leading-tight">{{ t({ id: 'Tabungan darurat, investasi, pelunasan utang, dll.', en: 'Emergency savings, investment, debt payoff, etc.', ja: '緊急時の貯蓄、投資、債務の返済など。', es: 'Ahorros de emergencia, inversión, pago de deudas, etc.' }) }}</span>
           </div>
         </div>
       </div>
@@ -352,7 +352,7 @@ const applySmartBudget = () => {
             {{ t({ id: 'Suku Bunga Tahunan (%)', en: 'Annual Interest Rate (%)', ja: '年利率 (%)', es: 'Tasa de Interés Anual (%)' }) }}
             <input v-model.number="simRate" type="number" min="0" max="100" placeholder="6" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
           </label>
-          <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm mt-1" type="button" @click="calculateSimulation">
+          <button class="px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm mt-1" type="button" @click="calculateSimulation">
             {{ t({ id: 'Mulai Simulasi', en: 'Start Simulation', ja: 'シミュレーション開始', es: 'Iniciar Simulación' }) }}
           </button>
         </div>

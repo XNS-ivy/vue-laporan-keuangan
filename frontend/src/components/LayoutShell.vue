@@ -248,7 +248,7 @@ onBeforeUnmount(() => {
       <!-- Brand Block -->
       <div class="brand-block flex flex-col gap-1 border-b border-white/10 pb-4">
         <div>
-          <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">{{ t({ id: 'Personal Finance', en: 'Personal Finance', ja: '個人財務', es: 'Finanzas Personales' }) }}</p>
+          <p class="uppercase tracking-widest text-xs text-white/60 font-bold">{{ t({ id: 'Personal Finance', en: 'Personal Finance', ja: '個人財務', es: 'Finanzas Personales' }) }}</p>
           <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
             <svg class="w-6 h-6 text-primary-muted animate-pulse" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.267-.267c.947-.946 2.482-.946 3.428 0l.27.27a2.424 2.424 0 010 3.428l-.27.27c-.947.946-2.482.946-3.428 0l-.267-.267M12 6.75V3m0 18v-3.75M8.25 12h7.5" />
@@ -312,6 +312,17 @@ onBeforeUnmount(() => {
           </svg>
           <span>{{ t({ id: 'Reports', en: 'Reports', ja: 'レポート', es: 'Informes' }) }}</span>
         </RouterLink>
+        <RouterLink to="/utilities" class="nav-link group" @click="closeSidebar">
+          <svg class="w-5 h-5 opacity-80 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="2" width="16" height="20" rx="2"/>
+            <line x1="8" y1="6" x2="16" y2="6"/>
+            <line x1="16" y1="14" x2="16" y2="18"/>
+            <line x1="16" y1="10" x2="16" y2="10"/>
+            <line x1="12" y1="10" x2="12" y2="10"/>
+            <line x1="8" y1="10" x2="8" y2="10"/>
+          </svg>
+          <span>{{ t({ id: 'Utilities', en: 'Utilities', ja: '電卓・ツール', es: 'Utilidades' }) }}</span>
+        </RouterLink>
         <RouterLink to="/settings" class="nav-link group" @click="closeSidebar">
           <svg class="w-5 h-5 opacity-80 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3" />
@@ -347,9 +358,9 @@ onBeforeUnmount(() => {
             </svg>
           </button>
         </div>
-        <p class="text-[10px] text-white/60 leading-snug">Pasang di perangkatmu untuk akses cepat & offline.</p>
+        <p class="text-xs text-white/60 leading-snug">Pasang di perangkatmu untuk akses cepat & offline.</p>
         <button
-          class="w-full border border-white/20 rounded-lg py-2 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all"
+          class="w-full border border-white/20 rounded-lg py-2 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-xs font-bold uppercase tracking-wider cursor-pointer transition-all"
           type="button"
           @click="promptInstall"
         >
@@ -369,12 +380,12 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Footer -->
-      <footer class="mt-12 border-t border-border/80 pt-6 pb-2 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-muted select-none shrink-0">
+      <footer class="mt-12 border-t border-border/80 pt-6 pb-2 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted select-none shrink-0">
         <div class="flex items-center gap-3">
           <img src="https://avatars.githubusercontent.com/u/140568381?v=4" alt="XNS-ivy GitHub Profile" class="w-10 h-10 rounded-full border border-border/80 shadow-xs shrink-0" />
           <div class="flex flex-col text-left">
             <span class="font-bold text-text">Developed by XNS-ivy</span>
-            <span class="font-medium text-[10px] text-muted">{{ t({ id: 'Aplikasi Laporan Keuangan Pribadi (Offline-First)', en: 'Personal Finance App (Offline-First)', ja: '個人財務アプリ (オフラインファースト)', es: 'Aplicación de Finanzas Personales (Offline-First)' }) }}</span>
+            <span class="font-medium text-xs text-muted">{{ t({ id: 'Aplikasi Laporan Keuangan Pribadi (Offline-First)', en: 'Personal Finance App (Offline-First)', ja: '個人財務アプリ (オフラインファースト)', es: 'Aplicación de Finanzas Personales (Offline-First)' }) }}</span>
           </div>
         </div>
         <div class="flex items-center gap-4 font-semibold text-xs">
@@ -470,7 +481,7 @@ onBeforeUnmount(() => {
         <!-- Modal Header -->
         <header class="flex items-center justify-between border-b border-border px-6 py-4.5">
           <div>
-            <span class="text-[10px] font-bold text-primary uppercase tracking-widest">{{ t({ id: 'Pintasan Cepat', en: 'Quick Shortcut', ja: 'クイックショートカット', es: 'Acceso Rápido' }) }}</span>
+            <span class="text-xs font-bold text-primary uppercase tracking-widest">{{ t({ id: 'Pintasan Cepat', en: 'Quick Shortcut', ja: 'クイックショートカット', es: 'Acceso Rápido' }) }}</span>
             <h3 class="text-base font-extrabold text-text mt-0.5">{{ t({ id: 'Tambah Transaksi Baru', en: 'Add New Transaction', ja: '新しい取引の追加', es: 'Agregar Nueva Transacción' }) }}</h3>
           </div>
           <button 
@@ -552,12 +563,12 @@ onBeforeUnmount(() => {
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
   color: rgba(248, 250, 252, 0.8);
   text-decoration: none;
-  padding: 0.75rem 1rem;
+  padding: 0.45rem 0.75rem;
   border-radius: 12px;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.2s ease;
 }

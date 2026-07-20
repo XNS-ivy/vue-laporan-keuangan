@@ -15,8 +15,7 @@ import {
 import { useUi } from '../composables/useUi'
 import { useFinance } from '../composables/useFinance'
 import { useNotifications } from '../composables/useNotifications'
-import { currency, appMode, language, contentScale, t, categoryIcons, categoryExampleGroups } from '../composables/useUserSettings'
-import IconPickerPopup from '../components/IconPickerPopup.vue'
+import { currency, appMode, language, contentScale, t, categoryIcons, categoryExampleGroups, exchangeRates, exchangeRateLastUpdated, isFetchingRates, fetchRealtimeRates, formatMoney } from '../composables/useUserSettings'
 
 const {
   reminderInterval,
@@ -360,15 +359,148 @@ onMounted(() => {
           </select>
         </label>
 
-        <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-          {{ t({ id: 'Ukuran Teks & Tombol (Skala)', en: 'Text & Button Size (Scale)', ja: 'テキストとボタンのサイズ (倍率)', es: 'Tamaño de Texto y Botón (Escala)' }) }}
-          <select v-model="contentScale" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
-            <option value="normal">{{ t({ id: 'Normal (Standar)', en: 'Normal (Standard)', ja: '標準', es: 'Normal (Estándar)' }) }}</option>
-            <option value="large">{{ t({ id: 'Besar (Ramah Orang Tua)', en: 'Large (Elder-Friendly)', ja: '大きい (シニア向け)', es: 'Grande (Apto para Mayores)' }) }}</option>
-            <option value="xlarge">{{ t({ id: 'Ekstra Besar (Sangat Besar)', en: 'Extra Large (Very Large)', ja: '特大', es: 'Extra Grande (Muy Grande)' }) }}</option>
-          </select>
-        </label>
       </div>
+
+        <!-- Realtime Live Exchange Rates Card -->
+        <div class="border border-border rounded-2xl p-4 bg-surface-2 flex flex-col gap-3 mt-1">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border/60 pb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-xs font-bold text-text uppercase tracking-wider">{{ t({ id: 'Kurs Mata Uang Real-Time (Live FX Rates)', en: 'Real-Time Exchange Rates (Live FX)', ja: 'リアルタイム為替レート', es: 'Tasas de Cambio en Tiempo Real' }) }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-muted font-medium">{{ exchangeRateLastUpdated ? `Diperbarui: ${exchangeRateLastUpdated}` : 'Memuat data kurs...' }}</span>
+              <button 
+                type="button" 
+                @click="fetchRealtimeRates" 
+                :disabled="isFetchingRates"
+                class="px-2.5 py-1 rounded-lg text-xs font-bold text-primary bg-primary-soft hover:bg-primary-muted transition-all cursor-pointer border-none flex items-center gap-1"
+              >
+                <svg class="w-3.5 h-3.5" :class="{ 'animate-spin': isFetchingRates }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                {{ isFetchingRates ? 'Memperbarui...' : 'Refresh Kurs' }}
+              </button>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
+            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col">
+              <span class="text-muted font-semibold">1 USD ($)</span>
+              <strong class="text-text font-bold mt-0.5">{{ formatMoney(exchangeRates.USD) }}</strong>
+            </div>
+            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col">
+              <span class="text-muted font-semibold">1 EUR (€)</span>
+              <strong class="text-text font-bold mt-0.5">{{ formatMoney(exchangeRates.EUR) }}</strong>
+            </div>
+            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col">
+              <span class="text-muted font-semibold">1 SGD (S$)</span>
+              <strong class="text-text font-bold mt-0.5">{{ formatMoney(exchangeRates.SGD) }}</strong>
+            </div>
+            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col">
+              <span class="text-muted font-semibold">1 GBP (£)</span>
+              <strong class="text-text font-bold mt-0.5">{{ formatMoney(exchangeRates.GBP) }}</strong>
+            </div>
+            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col">
+              <span class="text-muted font-semibold">1 JPY (¥)</span>
+              <strong class="text-text font-bold mt-0.5">{{ formatMoney(exchangeRates.JPY) }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Text & Symbol Scale Selector with Visual Cards & Live Preview -->
+        <div class="flex flex-col gap-3 border-t border-border pt-4 mt-2">
+          <div class="flex flex-col gap-1">
+            <span class="text-xs font-bold text-muted uppercase tracking-wider">
+              {{ t({ id: 'Ukuran Teks & Simbol (Skala Layout)', en: 'Text & Symbol Size (Layout Scale)', ja: 'テキストと記号のサイズ (レイアウト倍率)', es: 'Tamaño de Texto y Símbolo (Escala)' }) }}
+            </span>
+            <p class="text-xs text-muted font-normal leading-relaxed">
+              {{ t({ id: 'Pilih tingkat perbesaran font, tombol, dan ikon agar lebih nyaman dibaca di layar HP atau Monitor.', en: 'Choose font, button, and icon magnification level for comfortable reading on phones or monitors.', ja: 'スマホやモニターで読みやすいように、フォント、ボタン、アイコンの拡大レベルを選択します。', es: 'Elija el nivel de ampliación de fuentes, botones e iconos para leer cómodamente en teléfonos o monitores.' }) }}
+            </p>
+          </div>
+
+          <!-- Interactive Selection Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <!-- Card 1: Normal -->
+            <button
+              type="button"
+              @click="contentScale = 'normal'"
+              class="flex flex-col items-center gap-2 p-3.5 rounded-2xl border transition-all cursor-pointer text-left relative overflow-hidden"
+              :class="contentScale === 'normal' ? 'border-primary bg-primary-soft/40 shadow-sm ring-2 ring-primary-soft' : 'border-border bg-surface-2 hover:bg-border/60 text-text'"
+            >
+              <div class="flex items-center justify-between w-full">
+                <span class="text-xs font-bold uppercase tracking-wider text-muted">{{ t({ id: '100% Standard', en: '100% Standard', ja: '100% 標準', es: '100% Estándar' }) }}</span>
+                <span v-if="contentScale === 'normal'" class="w-4 h-4 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">✓</span>
+              </div>
+              <div class="flex items-baseline justify-center gap-1.5 my-1 text-text">
+                <span class="text-xs font-semibold">Aa</span>
+                <span class="text-sm font-bold">Aa</span>
+                <span class="text-base font-extrabold text-primary">Aa</span>
+              </div>
+              <div class="w-full text-center border-t border-border/60 pt-2">
+                <span class="text-xs font-bold text-text">{{ t({ id: 'Normal', en: 'Normal', ja: '標準', es: 'Normal' }) }}</span>
+              </div>
+            </button>
+
+            <!-- Card 2: Large -->
+            <button
+              type="button"
+              @click="contentScale = 'large'"
+              class="flex flex-col items-center gap-2 p-3.5 rounded-2xl border transition-all cursor-pointer text-left relative overflow-hidden"
+              :class="contentScale === 'large' ? 'border-primary bg-primary-soft/40 shadow-sm ring-2 ring-primary-soft' : 'border-border bg-surface-2 hover:bg-border/60 text-text'"
+            >
+              <div class="flex items-center justify-between w-full">
+                <span class="text-xs font-bold uppercase tracking-wider text-muted">{{ t({ id: '120% Nyaman', en: '120% Comfortable', ja: '120% 快適', es: '120% Cómodo' }) }}</span>
+                <span v-if="contentScale === 'large'" class="w-4 h-4 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">✓</span>
+              </div>
+              <div class="flex items-baseline justify-center gap-1.5 my-1 text-text">
+                <span class="text-sm font-semibold">Aa</span>
+                <span class="text-base font-bold">Aa</span>
+                <span class="text-lg font-extrabold text-primary">Aa</span>
+              </div>
+              <div class="w-full text-center border-t border-border/60 pt-2">
+                <span class="text-xs font-bold text-text">{{ t({ id: 'Besar', en: 'Large', ja: '大きい', es: 'Grande' }) }}</span>
+              </div>
+            </button>
+
+            <!-- Card 3: Extra Large -->
+            <button
+              type="button"
+              @click="contentScale = 'xlarge'"
+              class="flex flex-col items-center gap-2 p-3.5 rounded-2xl border transition-all cursor-pointer text-left relative overflow-hidden"
+              :class="contentScale === 'xlarge' ? 'border-primary bg-primary-soft/40 shadow-sm ring-2 ring-primary-soft' : 'border-border bg-surface-2 hover:bg-border/60 text-text'"
+            >
+              <div class="flex items-center justify-between w-full">
+                <span class="text-xs font-bold uppercase tracking-wider text-muted">{{ t({ id: '145% Jelas', en: '145% Ultra Clear', ja: '145% 超明瞭', es: '145% Ultra Claro' }) }}</span>
+                <span v-if="contentScale === 'xlarge'" class="w-4 h-4 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">✓</span>
+              </div>
+              <div class="flex items-baseline justify-center gap-1.5 my-1 text-text">
+                <span class="text-base font-semibold">Aa</span>
+                <span class="text-lg font-bold">Aa</span>
+                <span class="text-xl font-extrabold text-primary">Aa</span>
+              </div>
+              <div class="w-full text-center border-t border-border/60 pt-2">
+                <span class="text-xs font-bold text-text">{{ t({ id: 'Ekstra Besar', en: 'Extra Large', ja: '特大', es: 'Extra Grande' }) }}</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Live Dynamic Scale Simulation Box -->
+          <div class="border border-border rounded-2xl p-4 bg-surface flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-1 shadow-sm">
+            <div class="flex items-center gap-3.5">
+              <div class="w-10 h-10 rounded-xl bg-primary-soft text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+              </div>
+              <div class="flex flex-col gap-0.5">
+                <span class="text-xs font-bold text-muted uppercase tracking-wider">{{ t({ id: 'Simulasi Ukuran Aktif', en: 'Active Size Simulation', ja: 'アクティブサイズシミュレーション', es: 'Simulación de Tamaño Activo' }) }}</span>
+                <p class="text-sm font-semibold text-text leading-snug">
+                  {{ t({ id: 'Teks & Ikon otomatis berubah besar secara real-time!', en: 'Text & Icons scale automatically in real-time!', ja: 'テキストとアイコンがリアルタイムで自動的に拡大縮小します！', es: '¡El texto y los iconos se escalan automáticamente en tiempo real!' }) }}
+                </p>
+              </div>
+            </div>
+            <button type="button" class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary shrink-0 border-none shadow-sm cursor-default">
+              {{ contentScale === 'normal' ? t({ id: 'Skala Normal', en: 'Normal Scale', ja: '標準スケール', es: 'Escala Normal' }) : contentScale === 'large' ? t({ id: 'Skala Besar', en: 'Large Scale', ja: '大スケール', es: 'Escala Grande' }) : t({ id: 'Skala Ekstra Besar', en: 'Extra Large Scale', ja: '特大スケール', es: 'Escala Extra Grande' }) }}
+            </button>
+          </div>
+        </div>
     </section>
 
     <!-- Tema Section -->
@@ -488,59 +620,52 @@ onMounted(() => {
             {{ editingCategoryId ? t({ id: 'Edit Kategori', en: 'Edit Category', ja: 'カテゴリーの編集', es: 'Editar Categoría' }) : t({ id: 'Tambah Kategori Baru', en: 'Add New Category', ja: '新しいカテゴリーの追加', es: 'Agregar Nueva Categoría' }) }}
           </h3>
           
-          <div v-if="!editingCategoryId" class="flex flex-col gap-3.5 text-xs">
-            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+          <div v-if="!editingCategoryId" class="flex flex-col gap-3.5">
+            <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
               {{ t({ id: 'Nama Kategori', en: 'Category Name', ja: 'カテゴリー名', es: 'Nombre de Categoría' }) }}
-              <input v-model="categoryForm.name" :placeholder="t({ id: 'Contoh: Belanja', en: 'e.g., Shopping', ja: '例: ショッピング', es: 'ej. Compras' })" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
+              <input v-model="categoryForm.name" :placeholder="t({ id: 'Contoh: Belanja', en: 'e.g., Shopping', ja: '例: ショッピング', es: 'ej. Compras' })" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft focus:border-primary transition-all" />
             </label>
-            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+            <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
               {{ t({ id: 'Jenis Kategori', en: 'Category Type', ja: 'カテゴリータイプ', es: 'Tipo de Categoría' }) }}
-              <select v-model="categoryForm.type" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none">
+              <select v-model="categoryForm.type" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft focus:border-primary transition-all">
                 <option value="expense">{{ t({ id: 'Pengeluaran', en: 'Expense', ja: '支出', es: 'Gasto' }) }}</option>
                 <option value="income">{{ t({ id: 'Pemasukan', en: 'Income', ja: '収入', es: 'Ingreso' }) }}</option>
               </select>
             </label>
-            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+            <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
               {{ t({ id: 'Warna Identitas', en: 'Color Identity', ja: '色彩識別', es: 'Identidad de Color' }) }}
               <input v-model="categoryForm.color" type="color" class="w-full h-10 p-0.5 bg-surface border border-border rounded-lg cursor-pointer" />
             </label>
             
             <!-- Popup Icon Picker Trigger (With Color Preview) -->
-            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
-              {{ t({ id: 'Ikon Kategori', en: 'Category Icon', ja: 'カテゴリーアイコン', es: 'Icono de Categoría' }) }}
+            <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+              {{ t({ id: 'Ikon Kategori', en: 'Category Icon', ja: 'カテゴリーアイコン', es: 'Icono di Categoría' }) }}
               <div class="flex items-center gap-3">
-  <div class="w-11 h-11 rounded-xl border border-border flex items-center justify-center bg-surface text-text shadow-sm" :style="{ color: categoryForm.color }">
-    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" v-html="categoryIcons[categoryForm.icon || 'tag']"></svg>
-  </div>
-  <button type="button" @click="openIconPicker(false)" class="px-4 py-2.5 rounded-xl border border-border bg-surface hover:bg-border text-xs font-bold uppercase tracking-wider text-text transition-all cursor-pointer">
-    {{ t({ id: 'Pilih Ikon...', en: 'Choose Icon...', ja: 'アイコンを選択...', es: 'Elegir Icono...' }) }}
-  </button>
-</div>
-<!-- Icon Picker Popup Component -->
-<IconPickerPopup
-  :show="showIconPicker"
-  :groups="categoryExampleGroups"
-  @select="selectCategoryIcon"
-  @close="showIconPicker = false"
-/>
+                <div class="w-11 h-11 rounded-xl border border-border flex items-center justify-center bg-surface text-text shadow-sm" :style="{ color: categoryForm.color }">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" v-html="categoryIcons[categoryForm.icon || 'tag']"></svg>
+                </div>
+                <button type="button" @click="openIconPicker(false)" class="px-4 py-2.5 rounded-xl border border-border bg-surface hover:bg-border text-xs font-bold uppercase tracking-wider text-text transition-all cursor-pointer">
+                  {{ t({ id: 'Pilih Ikon...', en: 'Choose Icon...', ja: 'アイコンを選択...', es: 'Elegir Icono...' }) }}
+                </button>
+              </div>
             </label>
 
-            <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm mt-1" type="button" @click="handleAddCategory">
+            <button class="px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm mt-1" type="button" @click="handleAddCategory">
               {{ t({ id: 'Tambah Kategori', en: 'Add Category', ja: 'カテゴリーを追加', es: 'Agregar Categoría' }) }}
             </button>
           </div>
 
-          <div v-else class="flex flex-col gap-3.5 text-xs">
-            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+          <div v-else class="flex flex-col gap-3.5">
+            <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
               {{ t({ id: 'Nama Kategori', en: 'Category Name', ja: 'カテゴリー名', es: 'Nombre di Categoría' }) }}
-              <input v-model="editingCategoryForm.name" :placeholder="t({ id: 'Contoh: Belanja', en: 'e.g., Shopping', ja: '例: ショッピング', es: 'ej. Compras' })" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text font-semibold focus:outline-none" />
+              <input v-model="editingCategoryForm.name" :placeholder="t({ id: 'Contoh: Belanja', en: 'e.g., Shopping', ja: '例: ショッピング', es: 'ej. Compras' })" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft focus:border-primary transition-all" />
             </label>
-            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+            <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
               {{ t({ id: 'Warna Identitas', en: 'Color Identity', ja: '色彩識別', es: 'Identidad di Color' }) }}
               <input v-model="editingCategoryForm.color" type="color" class="w-full h-10 p-0.5 bg-surface border border-border rounded-lg cursor-pointer" />
             </label>
             <!-- Popup Icon Picker Trigger for Editing -->
-            <label class="flex flex-col gap-1.5 font-bold text-muted uppercase tracking-wider">
+            <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
               {{ t({ id: 'Ikon Kategori', en: 'Category Icon', ja: 'カテゴリーアイコン', es: 'Icono de Categoría' }) }}
               <div class="flex items-center gap-3">
                 <div class="w-11 h-11 rounded-xl border border-border flex items-center justify-center bg-surface text-text shadow-sm" :style="{ color: editingCategoryForm.color }">
@@ -553,10 +678,10 @@ onMounted(() => {
             </label>
 
             <div class="flex gap-2 mt-1">
-              <button class="grow px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm" type="button" @click="handleUpdateCategory">
+              <button class="grow px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm" type="button" @click="handleUpdateCategory">
                 {{ t({ id: 'Simpan', en: 'Save', ja: '保存', es: 'Guardar' }) }}
               </button>
-              <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-text bg-surface border border-border hover:bg-surface-2 transition-all cursor-pointer" type="button" @click="cancelEditCategory">
+              <button class="px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-text bg-surface border border-border hover:bg-surface-2 transition-all cursor-pointer" type="button" @click="cancelEditCategory">
                 {{ t({ id: 'Batal', en: 'Cancel', ja: 'キャンセル', es: 'Cancelar' }) }}
               </button>
             </div>
@@ -740,7 +865,7 @@ onMounted(() => {
       <div class="bg-surface border border-border rounded-3xl w-full max-w-md shadow-2xl p-5 lg:p-6 flex flex-col gap-4 max-h-[85vh] relative animate-in zoom-in-95 duration-200">
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-border/60 pb-3">
-          <h3 class="text-sm font-bold text-text">
+          <h3 class="text-base font-bold text-text">
             {{ t({ id: 'Pilih Ikon Kategori', en: 'Select Category Icon', ja: 'カテゴリーアイコンの選択', es: 'Seleccionar Icono de Categoría' }) }}
           </h3>
           <button @click="showIconPicker = false" class="w-8 h-8 rounded-full flex items-center justify-center bg-surface-2 hover:bg-border text-muted hover:text-text border-none cursor-pointer transition-all">
@@ -754,7 +879,7 @@ onMounted(() => {
           <input
             v-model="iconSearchQuery"
             :placeholder="t({ id: 'Cari nama ikon / kategori...', en: 'Search icon / category name...', ja: 'アイコンやカテゴリーを検索...', es: 'Buscar icono / nombre de categoría...' })"
-            class="w-full pl-10 pr-4 py-2.5 border border-border rounded-xl bg-surface-2 text-text text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft focus:border-primary transition-all"
+            class="w-full pl-10 pr-4 py-2.5 border border-border rounded-xl bg-surface-2 text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft focus:border-primary transition-all"
             autofocus
           />
         </div>
@@ -762,7 +887,7 @@ onMounted(() => {
         <!-- Content Area -->
         <div class="overflow-y-auto flex-1 pr-1 flex flex-col gap-4">
           <div v-for="group in filteredIconGroups" :key="group.name" class="flex flex-col gap-1.5">
-            <span class="text-[9px] font-extrabold text-muted uppercase tracking-widest border-b border-border pb-1">
+            <span class="text-sm font-extrabold text-muted uppercase tracking-wider border-b border-border pb-1">
               {{ t(group.nameTranslations as any) }}
             </span>
             <div class="grid grid-cols-6 gap-2 mt-1">

@@ -263,7 +263,7 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
     <header class="bg-linear-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
       <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
       <div class="z-10 grow max-w-2xl">
-        <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">{{ t({ id: 'Dashboard', en: 'Dashboard', ja: 'ダッシュボード', es: 'Tablero' }) }}</p>
+        <p class="uppercase tracking-widest text-xs text-white/60 font-bold">{{ t({ id: 'Dashboard', en: 'Dashboard', ja: 'ダッシュボード', es: 'Tablero' }) }}</p>
         <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">{{ t({ id: 'Yuk, Lacak & Atur Keuanganmu!', en: "Let's Track & Manage Your Finances!", ja: 'お金を追跡して管理しましょう！', es: '¡Hagamos un seguimiento de sus finanzas!' }) }}</h1>
         <p class="text-sm text-white/80 leading-relaxed mt-2">
           {{ appMode === 'simple' 
@@ -325,7 +325,7 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
         <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
           <div class="flex items-center justify-between border-b border-border pb-3">
             <h3 class="text-base font-bold text-text tracking-tight">{{ t({ id: 'Insight Utama', en: 'Key Insights', ja: '主なインサイト', es: 'Perspectivas Clave' }) }}</h3>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold text-primary bg-primary-soft uppercase tracking-wider">
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold text-primary bg-primary-soft uppercase tracking-wider">
               {{ t({ id: 'Transaksi', en: 'Transactions', ja: '取引数', es: 'Transacciones' }) }}: {{ transactionCount }}
             </span>
           </div>
@@ -360,7 +360,7 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
               <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
               <span>{{ t({ id: 'Smart Forecast', en: 'Smart Forecast', ja: 'スマート予測', es: 'Pronóstico Inteligente' }) }}</span>
             </h3>
-            <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-primary-soft text-primary uppercase tracking-wider">
+            <span class="px-2 py-0.5 rounded-md text-xs font-bold bg-primary-soft text-primary uppercase tracking-wider">
               {{ t({ id: 'Prediksi AI', en: 'AI Prediction', ja: 'AI予測', es: 'Predicción de IA' }) }}
             </span>
           </div>
@@ -373,7 +373,7 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
           <div v-else class="flex flex-col gap-3.5">
             <!-- Prediksi Total -->
             <div>
-              <p class="text-[10px] text-muted font-bold uppercase tracking-wider">{{ t({ id: 'Prakiraan Pengeluaran Bulan Depan', en: 'Forecasted Expenses Next Month', ja: '来月の予測支出', es: 'Gastos Previstos para el Próximo Mes' }) }}</p>
+              <p class="text-xs text-muted font-bold uppercase tracking-wider">{{ t({ id: 'Prakiraan Pengeluaran Bulan Depan', en: 'Forecasted Expenses Next Month', ja: '来月の予測支出', es: 'Gastos Previstos para el Próximo Mes' }) }}</p>
               <div class="flex items-baseline gap-2 mt-1">
                 <strong class="text-xl font-extrabold text-text">
                   {{ formatMoney(nextMonthForecast.predictedExpense) }}
@@ -385,7 +385,7 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
                   {{ nextMonthForecast.percentageChange > 0 ? '▲ +' : nextMonthForecast.percentageChange < 0 ? '▼ ' : '' }}{{ nextMonthForecast.percentageChange }}%
                 </span>
               </div>
-              <p class="text-[11px] text-muted font-semibold mt-1">
+              <p class="text-xs text-muted font-semibold mt-1">
                 {{ nextMonthForecast.trendDirection === 'up' 
                   ? t({ id: 'Tren pengeluaran Anda cenderung naik. Disarankan untuk memangkas beberapa biaya non-esensial.', en: 'Your expense trend is up. It is recommended to cut some non-essential costs.', ja: '支出傾向は上昇しています。不要不急のコストを削減することをお勧めします。', es: 'Su tendencia de gastos es alcista. Se recomienda recortar algunos costos no esenciales.' })
                   : nextMonthForecast.trendDirection === 'down'
@@ -396,14 +396,14 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
 
             <!-- Breakdown Kategori Teratas -->
             <div v-if="categoryForecasts.length > 0" class="border-t border-border/40 pt-3 flex flex-col gap-2">
-              <p class="text-[10px] text-muted font-bold uppercase tracking-wider mb-1">{{ t({ id: 'Prediksi Pengeluaran per Kategori', en: 'Expense Forecast by Category', ja: 'カテゴリー別の予測支出', es: 'Predicción de Gastos por Categoría' }) }}</p>
+              <p class="text-xs text-muted font-bold uppercase tracking-wider mb-1">{{ t({ id: 'Prediksi Pengeluaran per Kategori', en: 'Expense Forecast by Category', ja: 'カテゴリー別の予測支出', es: 'Predicción de Gastos por Categoría' }) }}</p>
               <div class="flex flex-col gap-2 max-h-36 overflow-y-auto pr-1">
                 <div v-for="cf in categoryForecasts.slice(0, 3)" :key="cf.category" class="flex justify-between items-center text-xs font-semibold">
                   <span class="text-muted">{{ cf.category }}</span>
                   <div class="flex items-center gap-2">
                     <span class="text-text">{{ formatMoney(cf.predictedAmount) }}</span>
                     <span 
-                      class="text-[10px] font-bold"
+                      class="text-xs font-bold"
                       :class="cf.percentageChange > 0 ? 'text-danger' : cf.percentageChange < 0 ? 'text-success' : 'text-muted'"
                     >
                       ({{ cf.percentageChange > 0 ? '+' : '' }}{{ cf.percentageChange }}%)
@@ -529,7 +529,7 @@ const healthiestCategory = computed(() => categoryAnalytics.value[0])
     <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
       <div class="flex items-center justify-between border-b border-border pb-3">
         <h2 class="text-base font-bold text-text tracking-tight">{{ t({ id: 'Transaksi Terbaru', en: 'Recent Transactions', ja: '最近の取引', es: 'Transacciones Recientes' }) }}</h2>
-        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold text-success bg-emerald-600/10 uppercase tracking-wider border border-emerald-600/10">
+        <span class="px-2.5 py-1 rounded-full text-xs font-bold text-success bg-emerald-600/10 uppercase tracking-wider border border-emerald-600/10">
           {{ t({ id: 'Kategori Aktif', en: 'Active Categories', ja: '有効なカテゴリー', es: 'Categorías Activas' }) }}: {{ categories.length }}
         </span>
       </div>

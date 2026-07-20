@@ -154,7 +154,7 @@ const assetGrowthChartData = computed(() => ({
   <div class="flex flex-col gap-6">
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
       <div>
-        <p class="uppercase tracking-widest text-[10px] text-muted font-bold">{{ t({ id: 'Aset', en: 'Assets', ja: '資産', es: 'Activos' }) }}</p>
+        <p class="uppercase tracking-widest text-xs text-muted font-bold">{{ t({ id: 'Aset', en: 'Assets', ja: '資産', es: 'Activos' }) }}</p>
         <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">{{ t({ id: 'Pantau Nilai & Perkembangan Asetmu', en: 'Monitor Asset Value & Growth', ja: '資産価値と成長を監視しましょう', es: 'Monitoree el Valor y Crecimiento de sus Activos' }) }}</h1>
       </div>
       <div class="px-4.5 py-2.5 rounded-full text-sm font-bold text-success bg-emerald-600/10 border border-emerald-600/10 shrink-0">
@@ -239,7 +239,7 @@ const assetGrowthChartData = computed(() => ({
         
         <h3 class="text-xs font-bold text-muted uppercase tracking-wider border-t border-border pt-4 mt-2 mb-1 flex items-center justify-between">
           <span>{{ t({ id: 'Daftar Rincian (Klik untuk Edit/Penyusutan)', en: 'Detailed List (Click to Edit/Depreciate)', ja: '詳細リスト (クリックして編集/減価償却)', es: 'Lista Detallada (Haga clic para editar/depreciar)' }) }}</span>
-          <span class="text-[10px] text-primary lowercase italic font-semibold">interactive mode *</span>
+          <span class="text-xs text-primary lowercase italic font-semibold">interactive mode *</span>
         </h3>
         
         <div class="max-h-96 overflow-y-auto pr-1">
@@ -254,7 +254,7 @@ const assetGrowthChartData = computed(() => ({
                 <strong class="text-sm font-bold text-text group-hover:text-primary transition-colors">{{ item.name }}</strong>
                 <p class="text-xs text-muted font-semibold mt-0.5">{{ formatAssetType(item.type) }} • {{ item.date }}</p>
                 <div v-if="item.adjustments && item.adjustments.length" class="flex gap-1.5 mt-1.5">
-                  <span class="text-[9px] px-1.5 py-0.5 rounded-sm bg-blue-500/10 text-blue-500 font-bold flex items-center gap-0.5">
+                  <span class="text-xs px-1.5 py-0.5 rounded-sm bg-blue-500/10 text-blue-500 font-bold flex items-center gap-0.5">
                     <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.26.61.27 1.3.07 1.93" /></svg>
                     {{ item.adjustments.length }} {{ t({ id: 'Penyesuaian', en: 'Adjustments', ja: '調整', es: 'Ajustes' }) }}
                   </span>
@@ -293,7 +293,7 @@ const assetGrowthChartData = computed(() => ({
         <!-- Modal Header -->
         <header class="flex items-center justify-between border-b border-border px-6 py-4.5">
           <div>
-            <span class="text-[10px] font-bold text-primary uppercase tracking-widest">{{ t({ id: 'Detail & Penyesuaian Nilai', en: 'Details & Value Adjustment', ja: '詳細と価値の調整', es: 'Detalles y Ajuste de Valor' }) }}</span>
+            <span class="text-xs font-bold text-primary uppercase tracking-widest">{{ t({ id: 'Detail & Penyesuaian Nilai', en: 'Details & Value Adjustment', ja: '詳細と価値の調整', es: 'Detalles y Ajuste de Valor' }) }}</span>
             <h3 class="text-base font-extrabold text-text mt-0.5">{{ selectedAsset.name }}</h3>
           </div>
           <button 
@@ -345,7 +345,7 @@ const assetGrowthChartData = computed(() => ({
             </label>
 
             <div class="mt-2 bg-slate-500/5 border border-border rounded-xl p-3.5 flex flex-col gap-1">
-              <span class="text-[10px] font-bold text-muted uppercase tracking-wide">{{ t({ id: 'Kalkulasi Nilai Saat Ini', en: 'Current Value Calculation', ja: '現在の価値計算', es: 'Cálculo de Valor Actual' }) }}</span>
+              <span class="text-xs font-bold text-muted uppercase tracking-wide">{{ t({ id: 'Kalkulasi Nilai Saat Ini', en: 'Current Value Calculation', ja: '現在の価値計算', es: 'Cálculo de Valor Actual' }) }}</span>
               <div class="flex justify-between items-baseline mt-1">
                 <span class="text-xs text-muted">{{ t({ id: 'Nilai Bersih', en: 'Net Value', ja: '純価値', es: 'Valor Neto' }) }}:</span>
                 <span class="text-base font-extrabold text-primary">{{ formatMoney(selectedAsset.amount) }}</span>
@@ -419,7 +419,7 @@ const assetGrowthChartData = computed(() => ({
             <div class="flex flex-col gap-3">
               <h4 class="text-xs font-bold text-muted uppercase tracking-wider border-b border-border pb-2 flex justify-between items-center">
                 <span>{{ t({ id: 'Riwayat Penyesuaian Aset', en: 'Asset Adjustment History', ja: '資産調整履歴', es: 'Historial de Ajustes de Activos' }) }}</span>
-                <span class="text-[10px] text-muted normal-case">{{ selectedAsset.adjustments?.length || 0 }} {{ t({ id: 'catatan', en: 'notes', ja: '件の記録', es: 'registros' }) }}</span>
+                <span class="text-xs text-muted normal-case">{{ selectedAsset.adjustments?.length || 0 }} {{ t({ id: 'catatan', en: 'notes', ja: '件の記録', es: 'registros' }) }}</span>
               </h4>
 
               <div class="max-h-56 overflow-y-auto pr-1 flex flex-col gap-2">
@@ -437,7 +437,7 @@ const assetGrowthChartData = computed(() => ({
                       <p class="font-bold text-text leading-snug">
                         {{ adj.type === 'appreciation' ? t({ id: 'Apresiasi (Mengembang)', en: 'Appreciation (Increase)', ja: '評価増 (増加)', es: 'Apreciación (Incremento)' }) : t({ id: 'Penyusutan (Menyusut)', en: 'Depreciation (Decrease)', ja: '減価償却 (減少)', es: 'Depreciación (Disminución)' }) }}
                       </p>
-                      <p class="text-[10px] text-muted font-medium mt-0.5">
+                      <p class="text-xs text-muted font-medium mt-0.5">
                         {{ adj.note || t({ id: 'Tanpa keterangan', en: 'No description', ja: '説明なし', es: 'Sin descripción' }) }} • {{ adj.date }}
                       </p>
                     </div>

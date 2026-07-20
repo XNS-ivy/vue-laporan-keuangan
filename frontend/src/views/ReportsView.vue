@@ -14,7 +14,7 @@ const { globalDateFilter, hasDateFilter, resetGlobalDateFilter, setGlobalDateFil
     <header class="bg-linear-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom relative overflow-hidden">
       <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
       <div class="z-10 grow max-w-2xl">
-        <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">{{ t({ id: 'Reports', en: 'Reports', ja: 'レポート', es: 'Informes' }) }}</p>
+        <p class="uppercase tracking-widest text-xs text-white/60 font-bold">{{ t({ id: 'Reports', en: 'Reports', ja: 'レポート', es: 'Informes' }) }}</p>
         <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">{{ t({ id: 'Unduh Laporan & Analisis Uangmu', en: 'Download Reports & Analyze Money', ja: 'レポートのダウンロードとお金の分析', es: 'Descargar Informes y Analizar su Dinero' }) }}</h1>
         <p class="text-sm text-white/80 leading-relaxed mt-2">{{ t({ id: 'Unduh laporanmu dalam format CSV, Excel, atau PDF. Data yang diunduh otomatis mengikuti rentang tanggal filter aktif.', en: 'Download reports in CSV, Excel, or PDF format. The downloaded data automatically follows the active date filter range.', ja: 'CSV、Excel、またはPDF形式でレポートをダウンロードします。ダウンロードされたデータは自動的にアクティブな日付フィルター範囲に従います。', es: 'Descargue informes en formato CSV, Excel o PDF. Los datos descargados siguen automáticamente el rango de filtro de fecha activo.' }) }}</p>
       </div>

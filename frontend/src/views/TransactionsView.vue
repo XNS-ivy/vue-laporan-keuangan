@@ -105,7 +105,7 @@ const submitRecurring = () => {
   <div class="flex flex-col gap-6">
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
       <div>
-        <p class="uppercase tracking-widest text-[10px] text-muted font-bold">{{ t({ id: 'Transaksi', en: 'Transactions', ja: '取引', es: 'Transacciones' }) }}</p>
+        <p class="uppercase tracking-widest text-xs text-muted font-bold">{{ t({ id: 'Transaksi', en: 'Transactions', ja: '取引', es: 'Transacciones' }) }}</p>
         <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">
           {{ appMode === 'simple' 
               ? t({ id: 'Catat Transaksi Harianmu', en: 'Record Your Daily Transactions', ja: '日々の取引を記録する', es: 'Registre sus Transacciones Diarias' })
@@ -155,28 +155,28 @@ const submitRecurring = () => {
               class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" 
             />
           </div>
-          <div class="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
-            <label class="flex flex-col gap-1 text-[10px] font-bold text-muted uppercase tracking-wider">
+          <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+            <label class="flex-1 flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
               {{ t({ id: 'Dari Tanggal', en: 'From Date', ja: '開始日', es: 'Desde Fecha' }) }}
               <input
                 :value="globalDateFilter.start"
                 type="date"
-                class="w-full border border-border rounded-xl px-3 py-2 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:outline-none transition-all"
+                class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:outline-none transition-all"
                 @input="setGlobalDateFilter({ start: ($event.target as HTMLInputElement).value })"
               />
             </label>
-            <label class="flex flex-col gap-1 text-[10px] font-bold text-muted uppercase tracking-wider">
+            <label class="flex-1 flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
               {{ t({ id: 'Sampai Tanggal', en: 'To Date', ja: '終了日', es: 'Hasta Fecha' }) }}
               <input
                 :value="globalDateFilter.end"
                 type="date"
-                class="w-full border border-border rounded-xl px-3 py-2 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:outline-none transition-all"
+                class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:outline-none transition-all"
                 @input="setGlobalDateFilter({ end: ($event.target as HTMLInputElement).value })"
               />
             </label>
             <button
               v-if="hasDateFilter"
-              class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-danger-text bg-danger-soft hover:opacity-90 transition-all cursor-pointer border-none"
+              class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-danger-text bg-danger-soft hover:opacity-90 active:scale-95 transition-all cursor-pointer border-none w-full sm:w-auto h-10.5 flex items-center justify-center shrink-0"
               type="button"
               @click="resetGlobalDateFilter"
             >
@@ -190,7 +190,7 @@ const submitRecurring = () => {
             <div>
               <div class="flex items-center gap-2 flex-wrap">
                 <strong class="text-sm font-bold text-text">{{ item.category }}</strong>
-                <span v-if="item.subCategory" class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-primary-soft text-primary border border-primary/10">
+                <span v-if="item.subCategory" class="px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider bg-primary-soft text-primary border border-primary/10">
                   {{ item.subCategory }}
                 </span>
               </div>
@@ -273,7 +273,7 @@ const submitRecurring = () => {
             <div>
               <strong class="text-sm font-bold text-text">{{ item.title }}</strong>
               <p class="text-xs text-muted font-semibold mt-0.5">{{ item.category }} • {{ t({ id: 'Tanggal', en: 'Date', ja: '日付', es: 'Fecha' }) }} {{ item.dayOfMonth }} • {{ formatMoney(item.amount) }}</p>
-              <p class="text-[10px] text-muted font-bold mt-1 inline-block px-2 py-0.5 bg-surface-2 rounded-md border border-border">{{ item.isApplied ? t({ id: 'Sudah diterapkan bulan ini', en: 'Applied this month', ja: '今月適用済み', es: 'Aplicado este mes' }) : t({ id: 'Belum diterapkan', en: 'Not applied yet', ja: '未適用', es: 'No aplicado aún' }) }}</p>
+              <p class="text-xs text-muted font-bold mt-1 inline-block px-2 py-0.5 bg-surface-2 rounded-md border border-border">{{ item.isApplied ? t({ id: 'Sudah diterapkan bulan ini', en: 'Applied this month', ja: '今月適用済み', es: 'Aplicado este mes' }) : t({ id: 'Belum diterapkan', en: 'Not applied yet', ja: '未適用', es: 'No aplicado aún' }) }}</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
               <button class="px-3.5 py-1.5 rounded-full text-xs font-bold text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm" type="button" @click="applyRecurringTransaction(item.id)">{{ t({ id: 'Terapkan', en: 'Apply', ja: '適用', es: 'Aplicar' }) }}</button>

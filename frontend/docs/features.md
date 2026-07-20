@@ -136,7 +136,22 @@ Halaman penyambutan (`WelcomeView.vue`) menyajikan setup langkah demi langkah (o
 
 ---
 
-## 🔢 13. Logika Kelipatan Nominal Dinamis (Dynamic Nominal Stepping)
-Fitur kenyamanan input nominal yang terintegrasi pada seluruh kolom nominal numerik di aplikasi:
-* **Deteksi Orde Nilai**: Secara otomatis mendeteksi orde magnitude dari nominal yang sedang dimasukkan (misalnya ratusan, ribuan, jutaan).
-* **Langkah Dinamis (Arrow Keys & Stepper)**: Menekan tombol ArrowUp / ArrowDown pada keyboard atau tombol spinner input akan menaikkan atau menurunkan nilai sebesar satu digit di belakang angka depan terbesarnya (contoh: `1.000` naik menjadi `1.100`, `1.000.000` naik menjadi `1.100.000`).
+## 🧮 14. Hub Utilitas & Kalkulator Keuangan (Utilities Hub)
+Halaman `UtilitiesView.vue` (`/utilities`) menyediakan sekumpulan alat bantu kalkulasi keuangan interaktif:
+* **Kalkulator Hitung Ekspres**: Papan hitung matematika interaktif dengan riwayat perhitungan (history log) dan preset nominal cepat (+10rb, +50rb, +100rb, +1jt).
+* **Kalkulator Zakat (Maal & Profesi)**: Menghitung zakat 2.5% otomatis berdasarkan standar Nisab 85 gram emas.
+* **Estimator Pajak Penghasilan (PPh 21)**: Menghitung estimasi potongan PPh 21 bulanan & tahunan sesuai status PTKP (TK/0 hingga K/3) dan tarif progresif Pasal 17 UU HPP.
+* **Kalkulator Target Dana Darurat**: Menghitung rekomendasi dana cadangan (3x, 6x, 12x pengeluaran) berdasarkan status tanggungan keluarga.
+* **Kalkulator Investasi & Bunga Bergulung (Compound Interest)**: Memproyeksikan total aset & akumulasi keuntungan bunga dari modal awal, setoran bulanan, dan estimasi return per tahun.
+* **Kalkulator Pembagian Patungan (Bill Splitter)**: Membagi struk / tagihan makan bersama teman secara adil lengkap dengan persentase pajak (PPN/PB1 11%) dan tip.
+* **Pemeriksa Rasio Utang (Debt-to-Income / DTI Ratio)**: Mengevaluasi kesehatan finansial pengguna (*Sangat Sehat*, *Sehat*, *Waspada*, *Bahaya*) dari perbandingan angsuran utang terhadap penghasilan bulanan.
+* **Pengisian Input Kosong (Empty Default Inputs)**: Seluruh input pada halaman utilitas diinisialisasi kosong (bukan nilai bawaan hardcoded) dengan teks petunjuk (*placeholder*) yang informatif demi kenyamanan pengisian pengguna.
+
+---
+
+## 🌐 15. Mesin Kurs Mata Uang Real-Time & Target Multi-Mata Uang
+* **Real-time Live Exchange Rate Engine**: Aplikasi secara otomatis mengambil data nilai tukar mata uang real-time dari API pasar uang internasional (`open.er-api.com/v6/latest/IDR`).
+* **Cache Offline-First**: Hasil fetching nilai tukar tersimpan di `localStorage`. Jika perangkat offline, aplikasi menggunakan nilai tukar terakhir secara otomatis.
+* **Konversi Matematis Tepat**: Pengubahan mata uang utama di Settings mengonversi nilai nominal secara matematis akurat (contoh: Rp 20.000 menjadi $1,25 USD pada kurs Rp 16.000/USD).
+* **Target Tabungan Multi-Mata Uang**: Setiap target tabungan pada `SavingsGoalView.vue` dapat ditentukan mata uang targetnya secara individual (IDR, USD, EUR, SGD, JPY, GBP).
+

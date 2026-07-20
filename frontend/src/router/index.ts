@@ -7,6 +7,7 @@ import SettingsView from '../views/SettingsView.vue'
 import SavingsGoalView from '../views/SavingsGoalView.vue'
 import DebtsView from '../views/DebtsView.vue'
 import ReportsView from '../views/ReportsView.vue'
+import UtilitiesView from '../views/UtilitiesView.vue'
 import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
 import TermsOfServiceView from '../views/TermsOfServiceView.vue'
 import WelcomeView from '../views/WelcomeView.vue'
@@ -23,6 +24,7 @@ const router = createRouter({
     { path: '/assets', name: 'assets', component: AssetsView },
     { path: '/debts', name: 'debts', component: DebtsView },
     { path: '/reports', name: 'reports', component: ReportsView },
+    { path: '/utilities', name: 'utilities', component: UtilitiesView },
     { path: '/settings', name: 'settings', component: SettingsView },
     { path: '/privacy', name: 'privacy', component: PrivacyPolicyView },
     { path: '/terms', name: 'terms', component: TermsOfServiceView },

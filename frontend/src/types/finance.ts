@@ -1,3 +1,5 @@
+import type { CurrencyType } from '../composables/useUserSettings'
+
 export type TransactionType = 'income' | 'expense'
 
 export interface Transaction {
@@ -39,6 +41,7 @@ export interface AssetItem {
   amount: number
   type: 'cash' | 'bank' | 'investment'
   date: string
+  currency?: CurrencyType
   initialAmount?: number
   adjustments?: AssetAdjustment[]
 }
@@ -50,6 +53,7 @@ export interface SavingsGoal {
   currentAmount: number
   monthlyContribution: number
   targetDate: string
+  currency?: CurrencyType
 }
 
 export interface RecurringTransaction {

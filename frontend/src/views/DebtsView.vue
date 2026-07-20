@@ -91,7 +91,7 @@ const saveDebtChanges = () => {
   <div class="flex flex-col gap-6">
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
       <div>
-        <p class="uppercase tracking-widest text-[10px] text-muted font-bold">{{ t({ id: 'Utang & Piutang', en: 'Debts & Receivables', ja: '負債と債権', es: 'Deudas y Cuentas por Cobrar' }) }}</p>
+        <p class="uppercase tracking-widest text-xs text-muted font-bold">{{ t({ id: 'Utang & Piutang', en: 'Debts & Receivables', ja: '負債と債権', es: 'Deudas y Cuentas por Cobrar' }) }}</p>
         <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight text-text mt-0.5">{{ t({ id: 'Lacak Utang, Piutang, & Tagihanmu', en: 'Track Your Debts, Receivables, & Bills', ja: '負債、債権、請求書を追跡しましょう', es: 'Realice un Seguimiento de sus Deudas, Cuentas por Cobrar y Facturas' }) }}</h1>
       </div>
       <div class="flex flex-wrap gap-2 shrink-0">
@@ -224,14 +224,14 @@ const saveDebtChanges = () => {
             
             <div class="flex items-center gap-2 shrink-0" @click.stop>
               <span 
-                class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider border select-none" 
+                class="px-2 py-0.5 rounded-md text-xs font-extrabold uppercase tracking-wider border select-none" 
                 :class="item.status === 'open' ? 'bg-amber-500/10 text-amber-500 border-amber-500/10' : 'bg-emerald-600/10 text-success border-success/10'"
               >
                 {{ item.status === 'open' ? t({ id: 'Belum lunas', en: 'Unpaid', ja: '未清算', es: 'No pagado' }) : t({ id: 'Lunas', en: 'Paid', ja: '清算済み', es: 'Pagado' }) }}
               </span>
               
               <button 
-                class="px-3 py-1.5 rounded-xl text-[10px] font-bold text-primary bg-primary-soft hover:scale-105 active:scale-95 transition-all cursor-pointer border-none" 
+                class="px-3 py-1.5 rounded-xl text-xs font-bold text-primary bg-primary-soft hover:scale-105 active:scale-95 transition-all cursor-pointer border-none" 
                 type="button" 
                 @click="toggleDebtStatus(item.id)"
                 :title="item.status === 'open' ? t({ id: 'Lunas', en: 'Paid', ja: '清算済み', es: 'Pagado' }) : t({ id: 'Batal', en: 'Cancel', ja: 'キャンセル', es: 'Cancelar' })"
@@ -266,7 +266,7 @@ const saveDebtChanges = () => {
         <!-- Modal Header -->
         <header class="flex items-center justify-between border-b border-border px-6 py-4.5">
           <div>
-            <span class="text-[10px] font-bold text-primary uppercase tracking-widest">{{ t({ id: 'Detail & Koreksi Data', en: 'Details & Correction', ja: '詳細とデータ修正', es: 'Detalles y Corrección de Datos' }) }}</span>
+            <span class="text-xs font-bold text-primary uppercase tracking-widest">{{ t({ id: 'Detail & Koreksi Data', en: 'Details & Correction', ja: '詳細とデータ修正', es: 'Detalles y Corrección de Datos' }) }}</span>
             <h3 class="text-base font-extrabold text-text mt-0.5">{{ t({ id: 'Ubah Rincian Catatan', en: 'Edit Note Details', ja: 'メモ詳細の編集', es: 'Editar Detalles de la Nota' }) }}</h3>
           </div>
           <button 

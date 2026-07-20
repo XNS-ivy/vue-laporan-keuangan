@@ -21,6 +21,7 @@ const form = ref({
   currentAmount: '',
   monthlyContribution: '',
   targetDate: '',
+  currency: 'IDR' as any,
 })
 
 const activeDepositGoalId = ref<number | null>(null)
@@ -36,8 +37,9 @@ const submitGoal = () => {
     currentAmount: Number(form.value.currentAmount),
     monthlyContribution: Number(form.value.monthlyContribution),
     targetDate: form.value.targetDate,
+    currency: form.value.currency || 'IDR',
   })
-  form.value = { name: '', targetAmount: '', currentAmount: '', monthlyContribution: '', targetDate: '' }
+  form.value = { name: '', targetAmount: '', currentAmount: '', monthlyContribution: '', targetDate: '', currency: 'IDR' }
 }
 
 const startDeposit = (id: number) => {
@@ -62,7 +64,7 @@ const handleDeposit = () => {
     <header class="bg-linear-to-br from-sidebar-bg to-sidebar-accent text-white rounded-3xl p-6 lg:p-8 shadow-custom relative overflow-hidden">
       <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
       <div class="z-10 grow max-w-2xl">
-        <p class="uppercase tracking-widest text-[10px] text-white/60 font-bold">{{ t({ id: 'Target Tabungan', en: 'Savings Goal', ja: '貯蓄目標', es: 'Meta de Ahorro' }) }}</p>
+        <p class="uppercase tracking-widest text-xs text-white/60 font-bold">{{ t({ id: 'Target Tabungan', en: 'Savings Goal', ja: '貯蓄目標', es: 'Meta de Ahorro' }) }}</p>
         <h1 class="text-2xl lg:text-3xl font-extrabold tracking-tight mt-1">{{ t({ id: 'Wujudkan Celengan & Target Nabungmu', en: 'Realize Your Savings & Goals', ja: '貯金と目標を達成しましょう', es: 'Haga Realidad sus Ahorros y Metas' }) }}</h1>
         <p class="text-sm text-white/80 leading-relaxed mt-2">{{ t({ id: 'Biar impianmu cepat terwujud, yuk buat target tabungan yang spesifik seperti dana darurat, liburan, investasi, atau beli gadget impianmu.', en: 'To make your dreams come true quickly, let\'s create specific savings goals like emergency funds, holidays, investments, or buying your dream gadgets.', ja: '夢を早く実現するために、緊急資金、休暇、投資、または夢のガジェットの購入など、具体的な貯蓄目標を設定しましょう。', es: 'Para hacer realidad sus sueños rápidamente, creemos metas de ahorro específicas como fondos de emergencia, vacaciones, inversiones o la compra de sus dispositivos de ensueño.' }) }}</p>
       </div>
@@ -75,6 +77,17 @@ const handleDeposit = () => {
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             {{ t({ id: 'Nama Goal', en: 'Goal Name', ja: '目標名', es: 'Nombre de la Meta' }) }}
             <input v-model="form.name" :placeholder="t({ id: 'Contoh: Dana Darurat', en: 'e.g., Emergency Fund', ja: '例: 緊急資金', es: 'ej. Fondo de Emergencia' })" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" />
+          </label>
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            {{ t({ id: 'Mata Uang Target', en: 'Goal Currency', ja: '目標通貨', es: 'Moneda de la Meta' }) }}
+            <select v-model="form.currency" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all">
+              <option value="IDR">IDR (Rp)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="SGD">SGD (S$)</option>
+              <option value="JPY">JPY (¥)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
           </label>
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
             {{ t({ id: 'Target Nominal', en: 'Target Amount', ja: '目標金額', es: 'Monto de Meta' }) }}
@@ -163,9 +176,12 @@ const handleDeposit = () => {
         <article v-for="item in savingsGoals" :key="item.id" class="pb-4 border-b border-border last:border-0 last:pb-0">
           <div class="flex justify-between items-center gap-4">
             <div>
-              <strong class="text-sm font-bold text-text">{{ item.name }}</strong>
-              <p class="text-xs text-muted font-semibold mt-0.5">{{ t({ id: 'Target', en: 'Target', ja: '目標', es: 'Meta' }) }} {{ formatMoney(item.targetAmount) }} • {{ t({ id: 'Terkumpul', en: 'Saved', ja: '積立', es: 'Ahorrado' }) }} {{ formatMoney(item.currentAmount) }}</p>
-              <p class="text-xs text-muted font-semibold mt-0.5">{{ t({ id: 'Setoran bulanan', en: 'Monthly contribution', ja: '毎月の積立', es: 'Contribución mensual' }) }} {{ formatMoney(item.monthlyContribution) }} • {{ item.targetDate || t({ id: 'Tanpa target tanggal', en: 'No target date', ja: '目標日なし', es: 'Sin fecha límite' }) }}</p>
+              <div class="flex items-center gap-2">
+                <span v-if="item.currency && item.currency !== 'IDR'" class="text-[10px] px-1.5 py-0.5 rounded bg-primary-soft text-primary font-bold uppercase tracking-wide">{{ item.currency }}</span>
+                <strong class="text-sm font-bold text-text">{{ item.name }}</strong>
+              </div>
+              <p class="text-xs text-muted font-semibold mt-0.5">{{ t({ id: 'Target', en: 'Target', ja: '目標', es: 'Meta' }) }} {{ formatMoney(item.targetAmount, item.currency || 'IDR') }} • {{ t({ id: 'Terkumpul', en: 'Saved', ja: '積立', es: 'Ahorrado' }) }} {{ formatMoney(item.currentAmount, item.currency || 'IDR') }}</p>
+              <p class="text-xs text-muted font-semibold mt-0.5">{{ t({ id: 'Setoran bulanan', en: 'Monthly contribution', ja: '毎月の積立', es: 'Contribución mensual' }) }} {{ formatMoney(item.monthlyContribution, item.currency || 'IDR') }} • {{ item.targetDate || t({ id: 'Tanpa target tanggal', en: 'No target date', ja: '目標日なし', es: 'Sin fecha límite' }) }}</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
               <button class="px-3.5 py-1.5 rounded-full text-xs font-bold text-primary bg-primary-soft hover:bg-primary-muted transition-all cursor-pointer border-none" type="button" @click="startDeposit(item.id)">{{ t({ id: 'Setor', en: 'Deposit', ja: '積立する', es: 'Depositar' }) }}</button>
@@ -191,8 +207,8 @@ const handleDeposit = () => {
               <span>{{ t({ id: 'Potong dari Saldo Utama (catat sebagai pengeluaran)', en: 'Deduct from Main Balance (record as expense)', ja: 'メイン残高から差し引く (支出として記録)', es: 'Deducir del Saldo Principal (registrar como gasto)' }) }}</span>
             </label>
             <div class="flex gap-2 mt-2">
-              <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm" type="button" @click="handleDeposit">{{ t({ id: 'Konfirmasi', en: 'Confirm', ja: '確認', es: 'Confirmar' }) }}</button>
-              <button class="px-4 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-text bg-surface border border-border hover:bg-surface-2 transition-all cursor-pointer" type="button" @click="activeDepositGoalId = null">{{ t({ id: 'Batal', en: 'Cancel', ja: 'キャンセル', es: 'Cancelar' }) }}</button>
+              <button class="px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm" type="button" @click="handleDeposit">{{ t({ id: 'Konfirmasi', en: 'Confirm', ja: '確認', es: 'Confirmar' }) }}</button>
+              <button class="px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-text bg-surface border border-border hover:bg-surface-2 transition-all cursor-pointer" type="button" @click="activeDepositGoalId = null">{{ t({ id: 'Batal', en: 'Cancel', ja: 'キャンセル', es: 'Cancelar' }) }}</button>
             </div>
           </div>
         </article>
