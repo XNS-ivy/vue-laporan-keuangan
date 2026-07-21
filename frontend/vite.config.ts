@@ -31,5 +31,23 @@ export default defineConfig({
     port: 3020,
     host: true,
     allowedHosts: true
+  },
+  build: {
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/vue/') || id.includes('node_modules/vue-router/')) {
+            return 'vendor-vue'
+          }
+          if (id.includes('node_modules/chart.js/') || id.includes('node_modules/vue-chartjs/')) {
+            return 'vendor-charts'
+          }
+          if (id.includes('node_modules/xlsx/')) {
+            return 'vendor-xlsx'
+          }
+        }
+      }
+    }
   }
 })

@@ -124,25 +124,51 @@ textarea:focus {
   height: 100%;
 }
 
-/* Content Scale Global System */
+/* Content Scale Global System - Optimized for Desktop & Mobile Screens */
 html.scale-normal {
   font-size: 16px;
 }
 html.scale-large {
-  font-size: 19.5px;
+  font-size: 18px;
 }
 html.scale-xlarge {
-  font-size: 23px;
+  font-size: 20px;
 }
 
 @media (max-width: 640px) {
   html.scale-normal {
-    font-size: 15px;
+    font-size: 14.5px;
   }
   html.scale-large {
-    font-size: 18.5px;
+    font-size: 16.5px;
   }
   html.scale-xlarge {
-    font-size: 22px;
+    font-size: 18.5px;
+  }
+}
+
+/* Mobile Typography & Scale Overflow Protection */
+html.scale-large,
+html.scale-xlarge {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+html.scale-large button,
+html.scale-xlarge button,
+html.scale-large input,
+html.scale-xlarge input,
+html.scale-large select,
+html.scale-xlarge select {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .scale-xlarge .grid-cols-2 {
+    gap: 0.5rem;
+  }
+  .scale-xlarge button {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 }

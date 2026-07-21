@@ -1,34 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import DashboardView from '../views/DashboardView.vue'
-import TransactionsView from '../views/TransactionsView.vue'
-import PlanningView from '../views/PlanningView.vue'
-import AssetsView from '../views/AssetsView.vue'
-import SettingsView from '../views/SettingsView.vue'
-import SavingsGoalView from '../views/SavingsGoalView.vue'
-import DebtsView from '../views/DebtsView.vue'
-import ReportsView from '../views/ReportsView.vue'
-import UtilitiesView from '../views/UtilitiesView.vue'
-import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
-import TermsOfServiceView from '../views/TermsOfServiceView.vue'
-import WelcomeView from '../views/WelcomeView.vue'
-import NotFoundView from '../views/NotFoundView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', name: 'dashboard', component: DashboardView },
-    { path: '/welcome', name: 'welcome', component: WelcomeView },
-    { path: '/transactions', name: 'transactions', component: TransactionsView },
-    { path: '/planning', name: 'planning', component: PlanningView },
-    { path: '/savings-goal', name: 'savings-goal', component: SavingsGoalView },
-    { path: '/assets', name: 'assets', component: AssetsView },
-    { path: '/debts', name: 'debts', component: DebtsView },
-    { path: '/reports', name: 'reports', component: ReportsView },
-    { path: '/utilities', name: 'utilities', component: UtilitiesView },
-    { path: '/settings', name: 'settings', component: SettingsView },
-    { path: '/privacy', name: 'privacy', component: PrivacyPolicyView },
-    { path: '/terms', name: 'terms', component: TermsOfServiceView },
-    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView },
+    { path: '/', name: 'dashboard', component: () => import('../views/DashboardView.vue') },
+    { path: '/welcome', name: 'welcome', component: () => import('../views/WelcomeView.vue') },
+    { path: '/transactions', name: 'transactions', component: () => import('../views/TransactionsView.vue') },
+    { path: '/planning', name: 'planning', component: () => import('../views/PlanningView.vue') },
+    { path: '/savings-goal', name: 'savings-goal', component: () => import('../views/SavingsGoalView.vue') },
+    { path: '/assets', name: 'assets', component: () => import('../views/AssetsView.vue') },
+    { path: '/debts', name: 'debts', component: () => import('../views/DebtsView.vue') },
+    { path: '/reports', name: 'reports', component: () => import('../views/ReportsView.vue') },
+    { path: '/utilities', name: 'utilities', component: () => import('../views/UtilitiesView.vue') },
+    { path: '/settings', name: 'settings', component: () => import('../views/SettingsView.vue') },
+    { path: '/privacy', name: 'privacy', component: () => import('../views/PrivacyPolicyView.vue') },
+    { path: '/terms', name: 'terms', component: () => import('../views/TermsOfServiceView.vue') },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue') },
   ],
 })
 
