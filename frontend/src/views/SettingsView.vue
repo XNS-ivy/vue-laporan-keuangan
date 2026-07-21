@@ -15,7 +15,7 @@ import {
 import { useUi } from '../composables/useUi'
 import { useFinance } from '../composables/useFinance'
 import { useNotifications } from '../composables/useNotifications'
-import { currency, appMode, language, contentScale, t, categoryIcons, categoryExampleGroups, exchangeRates, exchangeRateLastUpdated, isFetchingRates, fetchRealtimeRates, formatMoney } from '../composables/useUserSettings'
+import { currency, appMode, language, contentScale, t, categoryIcons, categoryExampleGroups, exchangeRates, exchangeRateLastUpdated, isFetchingRates, fetchRealtimeRates, updateExchangeRate, resetExchangeRates, formatMoney, type CurrencyType } from '../composables/useUserSettings'
 
 const {
   reminderInterval,
@@ -52,6 +52,28 @@ const handleResetAllData = () => {
     resetAllData()
   }
 }
+
+const handleSyncRates = async () => {
+  const res = await fetchRealtimeRates()
+  if (res?.success) {
+    pushToast(`Kurs live berhasil diperbarui! (1 USD = Rp ${exchangeRates.value.USD.toLocaleString('id-ID')})`, 'success')
+  } else {
+    pushToast('Gagal terhubung ke server kurs live. Menggunakan kurs tersimpan.', 'error')
+  }
+}
+
+const handleResetRates = () => {
+  resetExchangeRates()
+  pushToast('Kurs mata uang telah dikembalikan ke nilai default.', 'info')
+}
+
+const calcAmount = ref(100)
+const calcFromCurrency = ref<CurrencyType>('USD')
+const calcToCurrency = ref<CurrencyType>('IDR')
+
+const calcResultFormatted = computed(() => {
+  return formatMoney(calcAmount.value, calcFromCurrency.value, calcToCurrency.value)
+})
 
 const quickSwatches = ['#2563eb', '#0f766e', '#ea580c', '#dc2626', '#4f46e5', '#0f172a', '#f59e0b', '#14b8a6']
 
@@ -366,42 +388,129 @@ onMounted(() => {
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border/60 pb-2.5">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="text-xs font-bold text-text uppercase tracking-wider">{{ t({ id: 'Kurs Mata Uang Real-Time (Live FX Rates)', en: 'Real-Time Exchange Rates (Live FX)', ja: 'リアルタイム為替レート', es: 'Tasas de Cambio en Tiempo Real' }) }}</span>
+              <span class="text-xs font-bold text-text uppercase tracking-wider">{{ t({ id: 'Kurs Mata Uang Real-Time & Pengaturan Manual', en: 'Real-Time Exchange Rates & Manual Config', ja: 'リアルタイム為替レートと手動設定', es: 'Tasas de Cambio en Tiempo Real y Config' }) }}</span>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs text-muted font-medium">{{ exchangeRateLastUpdated ? `Diperbarui: ${exchangeRateLastUpdated}` : 'Memuat data kurs...' }}</span>
               <button 
                 type="button" 
-                @click="fetchRealtimeRates" 
+                @click="handleSyncRates" 
                 :disabled="isFetchingRates"
                 class="px-2.5 py-1 rounded-lg text-xs font-bold text-primary bg-primary-soft hover:bg-primary-muted transition-all cursor-pointer border-none flex items-center gap-1"
               >
                 <svg class="w-3.5 h-3.5" :class="{ 'animate-spin': isFetchingRates }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                {{ isFetchingRates ? 'Memperbarui...' : 'Refresh Kurs' }}
+                {{ isFetchingRates ? 'Memperbarui...' : 'Sync Live FX' }}
+              </button>
+              <button 
+                type="button" 
+                @click="handleResetRates" 
+                class="px-2.5 py-1 rounded-lg text-xs font-bold text-muted bg-surface hover:bg-border transition-all cursor-pointer border border-border flex items-center gap-1"
+              >
+                {{ t({ id: 'Reset', en: 'Reset', ja: 'リセット', es: 'Restablecer' }) }}
               </button>
             </div>
           </div>
           
           <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
-            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col">
+            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col gap-1">
               <span class="text-muted font-semibold">1 USD ($)</span>
-              <strong class="text-text font-bold mt-0.5">{{ formatMoney(exchangeRates.USD) }}</strong>
+              <div class="flex items-center gap-1">
+                <span class="text-muted font-bold text-xs">Rp</span>
+                <input 
+                  :value="exchangeRates.USD" 
+                  @input="updateExchangeRate('USD', Number(($event.target as HTMLInputElement).value))"
+                  type="number"
+                  min="1"
+                  class="w-full bg-surface-2 border border-border rounded-lg px-2 py-1 text-xs font-bold text-text focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
             </div>
-            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col">
+            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col gap-1">
               <span class="text-muted font-semibold">1 EUR (€)</span>
-              <strong class="text-text font-bold mt-0.5">{{ formatMoney(exchangeRates.EUR) }}</strong>
+              <div class="flex items-center gap-1">
+                <span class="text-muted font-bold text-xs">Rp</span>
+                <input 
+                  :value="exchangeRates.EUR" 
+                  @input="updateExchangeRate('EUR', Number(($event.target as HTMLInputElement).value))"
+                  type="number"
+                  min="1"
+                  class="w-full bg-surface-2 border border-border rounded-lg px-2 py-1 text-xs font-bold text-text focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
             </div>
-            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col">
+            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col gap-1">
               <span class="text-muted font-semibold">1 SGD (S$)</span>
-              <strong class="text-text font-bold mt-0.5">{{ formatMoney(exchangeRates.SGD) }}</strong>
+              <div class="flex items-center gap-1">
+                <span class="text-muted font-bold text-xs">Rp</span>
+                <input 
+                  :value="exchangeRates.SGD" 
+                  @input="updateExchangeRate('SGD', Number(($event.target as HTMLInputElement).value))"
+                  type="number"
+                  min="1"
+                  class="w-full bg-surface-2 border border-border rounded-lg px-2 py-1 text-xs font-bold text-text focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
             </div>
-            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col">
+            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col gap-1">
               <span class="text-muted font-semibold">1 GBP (£)</span>
-              <strong class="text-text font-bold mt-0.5">{{ formatMoney(exchangeRates.GBP) }}</strong>
+              <div class="flex items-center gap-1">
+                <span class="text-muted font-bold text-xs">Rp</span>
+                <input 
+                  :value="exchangeRates.GBP" 
+                  @input="updateExchangeRate('GBP', Number(($event.target as HTMLInputElement).value))"
+                  type="number"
+                  min="1"
+                  class="w-full bg-surface-2 border border-border rounded-lg px-2 py-1 text-xs font-bold text-text focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
             </div>
-            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col">
+            <div class="p-2.5 rounded-xl bg-surface border border-border flex flex-col gap-1">
               <span class="text-muted font-semibold">1 JPY (¥)</span>
-              <strong class="text-text font-bold mt-0.5">{{ formatMoney(exchangeRates.JPY) }}</strong>
+              <div class="flex items-center gap-1">
+                <span class="text-muted font-bold text-xs">Rp</span>
+                <input 
+                  :value="exchangeRates.JPY" 
+                  @input="updateExchangeRate('JPY', Number(($event.target as HTMLInputElement).value))"
+                  type="number"
+                  min="1"
+                  class="w-full bg-surface-2 border border-border rounded-lg px-2 py-1 text-xs font-bold text-text focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini Live FX Calculator for Live Verification -->
+          <div class="mt-2 pt-3 border-t border-border/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <span class="font-bold text-muted uppercase tracking-wider shrink-0">
+              {{ t({ id: 'Kalkulator Konversi Kurs Live:', en: 'Live FX Converter Calc:', ja: 'ライブ為替計算ツール:', es: 'Calc de Conversión FX:' }) }}
+            </span>
+            <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+              <input 
+                v-model.number="calcAmount" 
+                type="number" 
+                min="0"
+                class="w-24 bg-surface border border-border rounded-lg px-2.5 py-1.5 font-bold text-text focus:outline-none focus:ring-1 focus:ring-primary" 
+              />
+              <select v-model="calcFromCurrency" class="bg-surface border border-border rounded-lg px-2 py-1.5 font-bold text-text focus:outline-none focus:ring-1 focus:ring-primary">
+                <option value="IDR">IDR (Rp)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="SGD">SGD (S$)</option>
+                <option value="JPY">JPY (¥)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+              <span class="font-bold text-muted">➔</span>
+              <select v-model="calcToCurrency" class="bg-surface border border-border rounded-lg px-2 py-1.5 font-bold text-text focus:outline-none focus:ring-1 focus:ring-primary">
+                <option value="IDR">IDR (Rp)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="SGD">SGD (S$)</option>
+                <option value="JPY">JPY (¥)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+              <span class="font-extrabold text-xs text-primary px-3 py-1.5 rounded-lg bg-primary-soft border border-primary/20">
+                = {{ calcResultFormatted }}
+              </span>
             </div>
           </div>
         </div>
@@ -617,10 +726,10 @@ onMounted(() => {
         <!-- Form Editor Kategori -->
         <div class="border border-border rounded-xl p-4 bg-surface-2 flex flex-col gap-3 height-fit">
           <h3 class="text-sm font-bold text-text border-b border-border/60 pb-2">
-            {{ editingCategoryId ? t({ id: 'Edit Kategori', en: 'Edit Category', ja: 'カテゴリーの編集', es: 'Editar Categoría' }) : t({ id: 'Tambah Kategori Baru', en: 'Add New Category', ja: '新しいカテゴリーの追加', es: 'Agregar Nueva Categoría' }) }}
+            {{ t({ id: 'Tambah Kategori Baru', en: 'Add New Category', ja: '新しいカテゴリーの追加', es: 'Agregar Nueva Categoría' }) }}
           </h3>
           
-          <div v-if="!editingCategoryId" class="flex flex-col gap-3.5">
+          <div class="flex flex-col gap-3.5">
             <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
               {{ t({ id: 'Nama Kategori', en: 'Category Name', ja: 'カテゴリー名', es: 'Nombre de Categoría' }) }}
               <input v-model="categoryForm.name" :placeholder="t({ id: 'Contoh: Belanja', en: 'e.g., Shopping', ja: '例: ショッピング', es: 'ej. Compras' })" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft focus:border-primary transition-all" />
@@ -653,38 +762,6 @@ onMounted(() => {
             <button class="px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm mt-1" type="button" @click="handleAddCategory">
               {{ t({ id: 'Tambah Kategori', en: 'Add Category', ja: 'カテゴリーを追加', es: 'Agregar Categoría' }) }}
             </button>
-          </div>
-
-          <div v-else class="flex flex-col gap-3.5">
-            <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-              {{ t({ id: 'Nama Kategori', en: 'Category Name', ja: 'カテゴリー名', es: 'Nombre di Categoría' }) }}
-              <input v-model="editingCategoryForm.name" :placeholder="t({ id: 'Contoh: Belanja', en: 'e.g., Shopping', ja: '例: ショッピング', es: 'ej. Compras' })" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface text-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft focus:border-primary transition-all" />
-            </label>
-            <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-              {{ t({ id: 'Warna Identitas', en: 'Color Identity', ja: '色彩識別', es: 'Identidad di Color' }) }}
-              <input v-model="editingCategoryForm.color" type="color" class="w-full h-10 p-0.5 bg-surface border border-border rounded-lg cursor-pointer" />
-            </label>
-            <!-- Popup Icon Picker Trigger for Editing -->
-            <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-              {{ t({ id: 'Ikon Kategori', en: 'Category Icon', ja: 'カテゴリーアイコン', es: 'Icono de Categoría' }) }}
-              <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-xl border border-border flex items-center justify-center bg-surface text-text shadow-sm" :style="{ color: editingCategoryForm.color }">
-                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" v-html="categoryIcons[editingCategoryForm.icon || 'tag']"></svg>
-                </div>
-                <button type="button" @click="openIconPicker(true)" class="px-4 py-2.5 rounded-xl border border-border bg-surface hover:bg-border text-xs font-bold uppercase tracking-wider text-text transition-all cursor-pointer">
-                  {{ t({ id: 'Pilih Ikon...', en: 'Choose Icon...', ja: 'アイコンを選択...', es: 'Elegir Icono...' }) }}
-                </button>
-              </div>
-            </label>
-
-            <div class="flex gap-2 mt-1">
-              <button class="grow px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary cursor-pointer border-none shadow-sm" type="button" @click="handleUpdateCategory">
-                {{ t({ id: 'Simpan', en: 'Save', ja: '保存', es: 'Guardar' }) }}
-              </button>
-              <button class="px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-text bg-surface border border-border hover:bg-surface-2 transition-all cursor-pointer" type="button" @click="cancelEditCategory">
-                {{ t({ id: 'Batal', en: 'Cancel', ja: 'キャンセル', es: 'Cancelar' }) }}
-              </button>
-            </div>
           </div>
         </div>
 
@@ -860,8 +937,66 @@ onMounted(() => {
       </div>
     </section>
 
+    <!-- MODAL EDIT KATEGORI -->
+    <div 
+      v-if="editingCategoryId" 
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4"
+      @click.self="cancelEditCategory"
+    >
+      <div class="bg-surface border border-border rounded-3xl w-full max-w-md overflow-hidden flex flex-col shadow-2xl animate-in fade-in duration-200">
+        <!-- Modal Header -->
+        <header class="flex items-center justify-between border-b border-border px-6 py-4.5">
+          <div>
+            <span class="text-xs font-bold text-primary uppercase tracking-widest">{{ t({ id: 'Detail & Koreksi Data', en: 'Details & Correction', ja: '詳細とデータ修正', es: 'Detalles y Corrección de Datos' }) }}</span>
+            <h3 class="text-base font-extrabold text-text mt-0.5">{{ t({ id: 'Edit Kategori', en: 'Edit Category', ja: 'カテゴリーの編集', es: 'Editar Categoría' }) }}</h3>
+          </div>
+          <button 
+            class="text-muted hover:text-text text-lg font-bold border-none bg-transparent cursor-pointer"
+            @click="cancelEditCategory"
+          >
+            ✕
+          </button>
+        </header>
+
+        <!-- Modal Form Body -->
+        <div class="p-6 flex flex-col gap-4">
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            {{ t({ id: 'Nama Kategori', en: 'Category Name', ja: 'カテゴリー名', es: 'Nombre di Categoría' }) }}
+            <input v-model="editingCategoryForm.name" :placeholder="t({ id: 'Contoh: Belanja', en: 'e.g., Shopping', ja: '例: ショッピング', es: 'ej. Compras' })" class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-semibold focus:outline-none transition-all" />
+          </label>
+          
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            {{ t({ id: 'Warna Identitas', en: 'Color Identity', ja: '色彩識別', es: 'Identidad di Color' }) }}
+            <input v-model="editingCategoryForm.color" type="color" class="w-full h-10 p-0.5 bg-surface border border-border rounded-lg cursor-pointer" />
+          </label>
+
+          <!-- Popup Icon Picker Trigger for Editing -->
+          <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
+            {{ t({ id: 'Ikon Kategori', en: 'Category Icon', ja: 'カテゴリーアイコン', es: 'Icono de Categoría' }) }}
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl border border-border flex items-center justify-center bg-surface-2 text-text shadow-sm" :style="{ color: editingCategoryForm.color }">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" v-html="categoryIcons[editingCategoryForm.icon || 'tag']"></svg>
+              </div>
+              <button type="button" @click="openIconPicker(true)" class="px-4 py-2.5 rounded-xl border border-border bg-surface-2 hover:bg-border text-xs font-bold uppercase tracking-wider text-text transition-all cursor-pointer">
+                {{ t({ id: 'Pilih Ikon...', en: 'Choose Icon...', ja: 'アイコンを選択...', es: 'Elegir Icono...' }) }}
+              </button>
+            </div>
+          </label>
+
+          <div class="flex gap-3 mt-2 border-t border-border pt-4">
+            <button class="grow px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-primary-contrast bg-primary hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-lg hover:shadow-primary/20 border-none" type="button" @click="handleUpdateCategory">
+              {{ t({ id: 'Simpan', en: 'Save', ja: '保存', es: 'Guardar' }) }}
+            </button>
+            <button class="px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-text bg-surface-2 border border-border hover:bg-border transition-all cursor-pointer" type="button" @click="cancelEditCategory">
+              {{ t({ id: 'Batal', en: 'Cancel', ja: 'キャンセル', es: 'Cancelar' }) }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Icon Picker Popup -->
-    <div v-if="showIconPicker" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs select-none animate-in fade-in duration-200">
+    <div v-if="showIconPicker" class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs select-none animate-in fade-in duration-200">
       <div class="bg-surface border border-border rounded-3xl w-full max-w-md shadow-2xl p-5 lg:p-6 flex flex-col gap-4 max-h-[85vh] relative animate-in zoom-in-95 duration-200">
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-border/60 pb-3">

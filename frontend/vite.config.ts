@@ -18,7 +18,14 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3020
+    port: 3020,
+    proxy: {
+      '/api-fx': {
+        target: 'https://open.er-api.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api-fx/, '')
+      }
+    }
   },
   preview: {
     port: 3020,

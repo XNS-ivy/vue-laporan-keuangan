@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { TransactionType, Transaction } from '../composables/useFinance'
-import { getDynamicStep, handleNominalKeydown, t } from '../composables/useUserSettings'
+import { getDynamicStep, handleNominalKeydown, t, currency, currencySymbol, convertCurrency, convertToIdr } from '../composables/useUserSettings'
 
 const props = defineProps<{
   categories: Array<{ name: string; type: TransactionType }>
   editTransaction?: Transaction | null
+  isModal?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -40,9 +41,10 @@ watch(
   () => props.editTransaction,
   (newVal) => {
     if (newVal) {
+      const activeAmount = convertCurrency(newVal.amount, currency.value, 'IDR')
       form.value = {
         type: newVal.type,
-        amount: String(newVal.amount),
+        amount: String(Math.round(activeAmount * 100) / 100),
         category: newVal.category,
         subCategory: newVal.subCategory || '',
         note: newVal.note,
@@ -68,12 +70,14 @@ const canAddCategory = computed(() => {
 })
 
 const submit = () => {
-  const amount = Number(form.value.amount)
-  if (!amount || amount <= 0) return
+  const rawAmount = Number(form.value.amount)
+  if (!rawAmount || rawAmount <= 0) return
+
+  const amountInIdr = convertToIdr(rawAmount, currency.value)
 
   const payload = {
     type: form.value.type,
-    amount,
+    amount: amountInIdr,
     category: form.value.category,
     subCategory: form.value.subCategory.trim() || undefined,
     note: form.value.note,
@@ -102,8 +106,8 @@ const addCategory = () => {
 </script>
 
 <template>
-  <section class="bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4">
-    <h2 class="text-lg font-bold text-text tracking-tight border-b border-border pb-2">
+  <section :class="props.isModal ? 'flex flex-col gap-4 w-full' : 'bg-surface border border-border rounded-2xl p-5 shadow-custom flex flex-col gap-4'">
+    <h2 v-if="!props.isModal" class="text-lg font-bold text-text tracking-tight border-b border-border pb-2">
       {{ props.editTransaction ? t({ id: 'Edit Transaksi', en: 'Edit Transaction', ja: '取引の編集', es: 'Editar Transacción' }) : t({ id: 'Tambah Transaksi', en: 'Add Transaction', ja: '取引の追加', es: 'Agregar Transacción' }) }}
     </h2>
     
@@ -117,14 +121,14 @@ const addCategory = () => {
       </label>
       
       <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-        {{ t({ id: 'Nominal', en: 'Amount', ja: '金額', es: 'Monto' }) }}
+        {{ t({ id: `Nominal (${currencySymbol})`, en: `Amount (${currencySymbol})`, ja: `金額 (${currencySymbol})`, es: `Monto (${currencySymbol})` }) }}
         <input 
           v-model="form.amount" 
           type="number" 
           min="0" 
           :step="getDynamicStep(form.amount)"
           @keydown="handleNominalKeydown"
-          placeholder="100000" 
+          placeholder="100" 
           class="w-full border border-border rounded-xl px-4 py-2.5 bg-surface-2 text-text text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none transition-all placeholder:text-muted/60" 
         />
       </label>

@@ -7,9 +7,19 @@ export type ContentScaleType = 'normal' | 'large' | 'xlarge'
 
 const settingsKey = 'finance-flow-user-preferences'
 
+export const getDefaultSystemLanguage = (): LanguageType => {
+  if (typeof navigator === 'undefined') return 'id'
+  const sysLang = (navigator.language || (navigator as any).userLanguage || '').toLowerCase()
+  if (sysLang.startsWith('en')) return 'en'
+  if (sysLang.startsWith('ja')) return 'ja'
+  if (sysLang.startsWith('es')) return 'es'
+  if (sysLang.startsWith('id')) return 'id'
+  return 'id'
+}
+
 export const currency = ref<CurrencyType>('IDR')
 export const appMode = ref<AppModeType>('advance')
-export const language = ref<LanguageType>('id')
+export const language = ref<LanguageType>(getDefaultSystemLanguage())
 export const contentScale = ref<ContentScaleType>('normal')
 
 export const currencySymbol = computed(() => {
@@ -55,31 +65,120 @@ export const loadCachedRates = () => {
   }
 }
 
+export const updateExchangeRate = (key: CurrencyType, value: number) => {
+  const num = Math.max(0, Number(value) || 0)
+  if (num > 0) {
+    exchangeRates.value = {
+      ...exchangeRates.value,
+      [key]: num
+    }
+    const timestamp = 'Manual (' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ')'
+    exchangeRateLastUpdated.value = timestamp
+    localStorage.setItem(ratesStorageKey, JSON.stringify({
+      rates: exchangeRates.value,
+      lastUpdated: timestamp
+    }))
+  }
+}
+
+export const resetExchangeRates = () => {
+  const defaultRates: Record<CurrencyType, number> = {
+    IDR: 1,
+    USD: 16000,
+    EUR: 17500,
+    SGD: 12000,
+    JPY: 105,
+    GBP: 20500,
+  }
+  exchangeRates.value = defaultRates
+  exchangeRateLastUpdated.value = 'Default'
+  localStorage.setItem(ratesStorageKey, JSON.stringify({
+    rates: defaultRates,
+    lastUpdated: 'Default'
+  }))
+}
+
 export const fetchRealtimeRates = async () => {
   isFetchingRates.value = true
   try {
-    const res = await fetch('https://open.er-api.com/v6/latest/IDR')
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
-    if (data && data.rates) {
-      const newRates: Record<CurrencyType, number> = {
-        IDR: 1,
-        USD: data.rates.USD ? Math.round(1 / data.rates.USD) : exchangeRates.value.USD,
-        EUR: data.rates.EUR ? Math.round(1 / data.rates.EUR) : exchangeRates.value.EUR,
-        SGD: data.rates.SGD ? Math.round(1 / data.rates.SGD) : exchangeRates.value.SGD,
-        JPY: data.rates.JPY ? Math.round(1 / data.rates.JPY) : exchangeRates.value.JPY,
-        GBP: data.rates.GBP ? Math.round(1 / data.rates.GBP) : exchangeRates.value.GBP,
+    let data: any = null
+
+    // Attempt 1: Localhost Vite Proxy (server-side proxy, bypasses browser CORS)
+    try {
+      const res = await fetch('/api-fx/v6/latest/USD')
+      if (res.ok) data = await res.json()
+    } catch {
+      // Ignored, try next mirror
+    }
+
+    // Attempt 2: jsdelivr CDN (CORS open, highly reliable globally)
+    if (!data || (!data.rates && !data.usd)) {
+      try {
+        const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json')
+        if (res.ok) data = await res.json()
+      } catch {
+        // Ignored, try next mirror
       }
-      exchangeRates.value = newRates
+    }
+
+    // Attempt 3: Direct Open ER API
+    if (!data || (!data.rates && !data.usd)) {
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/USD')
+        if (res.ok) data = await res.json()
+      } catch {
+        // Ignored, try next mirror
+      }
+    }
+
+    // Attempt 4: Direct ExchangeRate-API
+    if (!data || (!data.rates && !data.usd)) {
+      try {
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD')
+        if (res.ok) data = await res.json()
+      } catch {
+        // Ignored
+      }
+    }
+
+    let parsedRates: Record<CurrencyType, number> | null = null
+
+    if (data && data.rates && data.rates.IDR) {
+      const idrRate = Number(data.rates.IDR)
+      parsedRates = {
+        IDR: 1,
+        USD: Math.round(idrRate),
+        EUR: data.rates.EUR ? Math.round(idrRate / Number(data.rates.EUR)) : exchangeRates.value.EUR,
+        SGD: data.rates.SGD ? Math.round(idrRate / Number(data.rates.SGD)) : exchangeRates.value.SGD,
+        JPY: data.rates.JPY ? Math.round(idrRate / Number(data.rates.JPY)) : exchangeRates.value.JPY,
+        GBP: data.rates.GBP ? Math.round(idrRate / Number(data.rates.GBP)) : exchangeRates.value.GBP,
+      }
+    } else if (data && data.usd && (data.usd.idr || data.usd.IDR)) {
+      const idrRate = Number(data.usd.idr || data.usd.IDR)
+      parsedRates = {
+        IDR: 1,
+        USD: Math.round(idrRate),
+        EUR: data.usd.eur ? Math.round(idrRate / Number(data.usd.eur)) : exchangeRates.value.EUR,
+        SGD: data.usd.sgd ? Math.round(idrRate / Number(data.usd.sgd)) : exchangeRates.value.SGD,
+        JPY: data.usd.jpy ? Math.round(idrRate / Number(data.usd.jpy)) : exchangeRates.value.JPY,
+        GBP: data.usd.gbp ? Math.round(idrRate / Number(data.usd.gbp)) : exchangeRates.value.GBP,
+      }
+    }
+
+    if (parsedRates) {
+      exchangeRates.value = parsedRates
       const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' (' + new Date().toLocaleDateString('id-ID') + ')'
       exchangeRateLastUpdated.value = timestamp
       localStorage.setItem(ratesStorageKey, JSON.stringify({
-        rates: newRates,
+        rates: parsedRates,
         lastUpdated: timestamp
       }))
+      return { success: true, rates: parsedRates }
     }
+    return { success: false, error: 'Rates data unreadable' }
   } catch (err) {
     console.warn('Could not fetch real-time exchange rates, using cached/fallback rates:', err)
+    return { success: false, error: err }
   } finally {
     isFetchingRates.value = false
   }

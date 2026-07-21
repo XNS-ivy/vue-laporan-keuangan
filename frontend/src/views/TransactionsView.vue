@@ -123,10 +123,7 @@ const submitRecurring = () => {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <TransactionForm
         :categories="categories"
-        :edit-transaction="editingTransaction"
         @submit="addTransaction"
-        @update="handleUpdateTransaction"
-        @cancel-edit="handleCancelEdit"
         @add-category="({ name, type }) => addCategory(name, type)"
       />
       
@@ -309,5 +306,40 @@ const submitRecurring = () => {
         </div>
       </div>
     </section>
+
+    <!-- MODAL EDIT TRANSAKSI -->
+    <div 
+      v-if="editingTransaction" 
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4"
+      @click.self="handleCancelEdit"
+    >
+      <div class="bg-surface border border-border rounded-3xl w-full max-w-xl overflow-hidden flex flex-col shadow-2xl animate-in fade-in duration-200">
+        <!-- Modal Header -->
+        <header class="flex items-center justify-between border-b border-border px-6 py-4.5">
+          <div>
+            <span class="text-xs font-bold text-primary uppercase tracking-widest">{{ t({ id: 'Koreksi Data', en: 'Correction', ja: 'データ修正', es: 'Corrección de Datos' }) }}</span>
+            <h3 class="text-base font-extrabold text-text mt-0.5">{{ t({ id: 'Edit Transaksi', en: 'Edit Transaction', ja: '取引の編集', es: 'Editar Transacción' }) }}</h3>
+          </div>
+          <button 
+            class="text-muted hover:text-text text-lg font-bold border-none bg-transparent cursor-pointer"
+            @click="handleCancelEdit"
+          >
+            ✕
+          </button>
+        </header>
+
+        <!-- Modal Form Body -->
+        <div class="p-6">
+          <TransactionForm
+            :categories="categories"
+            :edit-transaction="editingTransaction"
+            :is-modal="true"
+            @update="handleUpdateTransaction"
+            @cancel-edit="handleCancelEdit"
+            @add-category="({ name, type }) => addCategory(name, type)"
+          />
+        </div>
+      </div>
+    </div>
   </div>
 </template>

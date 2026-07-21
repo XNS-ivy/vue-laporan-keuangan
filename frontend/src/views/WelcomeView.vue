@@ -109,21 +109,21 @@ const finishOnboarding = () => {
           </p>
         </div>
 
-        <!-- Language & Currency & Size Quick Setup Selection -->
-        <div class="grid grid-cols-1 gap-3 bg-slate-500/5 p-4 border border-border rounded-2xl">
-          <div class="grid grid-cols-2 gap-3">
+        <!-- Language, Currency & Scale Setup Card -->
+        <div class="grid grid-cols-1 gap-3.5 bg-slate-500/5 p-4 border border-border rounded-2xl">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-              {{ t({ id: 'Bahasa Preferensi', en: 'Preferred Language', ja: '優先言語', es: 'Idioma Preferido' }) }}
-              <select v-model="language" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text text-xs font-semibold focus:outline-none transition-all">
-                <option value="id">Bahasa Indonesia</option>
+              {{ t({ id: 'Bahasa (Otomatis Sistem)', en: 'Language (Auto-Detect)', ja: '言語 (自動検出)', es: 'Idioma (Auto-Detectado)' }) }}
+              <select v-model="language" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
+                <option value="id">Bahasa Indonesia (Default)</option>
                 <option value="en">English</option>
-                <option value="ja">日本語</option>
-                <option value="es">Español</option>
+                <option value="ja">日本語 (Japanese)</option>
+                <option value="es">Español (Spanish)</option>
               </select>
             </label>
             <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
               {{ t({ id: 'Mata Uang Utama', en: 'Primary Currency', ja: '主要通貨', es: 'Moneda Principal' }) }}
-              <select v-model="currency" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text text-xs font-semibold focus:outline-none transition-all">
+              <select v-model="currency" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
                 <option value="IDR">IDR (Rp)</option>
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
@@ -134,8 +134,8 @@ const finishOnboarding = () => {
             </label>
           </div>
           <label class="flex flex-col gap-1.5 text-xs font-bold text-muted uppercase tracking-wider">
-            {{ t({ id: 'Ukuran Teks & Tombol (Skala)', en: 'Text & Button Size (Scale)', ja: 'テキストとボタンのサイズ (倍率)', es: 'Tamaño de Texto y Botón (Escala)' }) }}
-            <select v-model="contentScale" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text text-xs font-semibold focus:outline-none transition-all">
+            {{ t({ id: 'Ukuran Teks & Tombol (Skala Layout)', en: 'Text & Button Size (Scale)', ja: 'テキストとボタンのサイズ (倍率)', es: 'Tamaño de Texto y Botón (Escala)' }) }}
+            <select v-model="contentScale" class="w-full border border-border rounded-xl px-3 py-2 bg-surface text-text text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-soft transition-all">
               <option value="normal">{{ t({ id: 'Normal (Standar)', en: 'Normal (Standard)', ja: '標準', es: 'Normal (Estándar)' }) }}</option>
               <option value="large">{{ t({ id: 'Besar (Ramah Orang Tua)', en: 'Large (Elder-Friendly)', ja: '大きい (シニア向け)', es: 'Grande (Apto para Mayores)' }) }}</option>
               <option value="xlarge">{{ t({ id: 'Ekstra Besar (Sangat Besar)', en: 'Extra Large (Very Large)', ja: '特大', es: 'Extra Grande (Muy Grande)' }) }}</option>
